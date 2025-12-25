@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "workv2",
-    "slug": "workv2",
+    "name": "Work Log",
+    "slug": "worklog",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "workv2",
+    "scheme": "worklog",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
@@ -23,7 +23,8 @@
     },
     "web": {
       "output": "static",
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./assets/images/favicon.png",
+      "bundler": "metro"
     },
     "plugins": [
       "expo-router",
