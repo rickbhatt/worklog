@@ -1,3 +1,38 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  /* You can add global styles here if needed */
+}
+
+@layer utilities {
+  .flex-center {
+    @apply flex items-center justify-center;
+  }
+
+  .flex-between {
+    @apply flex items-center justify-between;
+  }
+
+  .flex-start {
+    @apply flex items-start justify-center;
+  }
+}
+
+@layer components {
+  .screen-x-padding {
+    @apply px-4;
+  }
+
+  .screen-header {
+    @apply text-2xl font-bold;
+  }
+  .screen-header {
+    @apply border border-black flex-between flex-row screen-x-padding pt-safe h-28;
+  }
+
+  .screen-title {
+    @apply text-xl font-bold;
+  }
+}
