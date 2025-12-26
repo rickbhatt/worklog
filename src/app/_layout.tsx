@@ -1,6 +1,7 @@
 import { createDrizzleDb } from "@/db/client";
 import migrations from "@/drizzle/migrations";
 import "@/global.css";
+import { PortalHost } from "@rn-primitives/portal";
 import { useMigrations } from "drizzle-orm/expo-sqlite/migrator";
 import { useDrizzleStudio } from "expo-drizzle-studio-plugin";
 import { Stack } from "expo-router";
@@ -42,18 +43,21 @@ export default function RootLayout() {
   console.log("🚀 ~ RootLayout ~ error:", error);
   console.log("🚀 ~ RootLayout ~ success:", success);
   return (
-    <KeyboardProvider>
-      <GestureHandlerRootView>
-        <Suspense fallback={<ActivityIndicator />}>
-          <SQLiteProvider
-            useSuspense
-            databaseName={DATABASE_NAME}
-            options={{ enableChangeListener: true }}
-          >
-            <Layout />
-          </SQLiteProvider>
-        </Suspense>
-      </GestureHandlerRootView>
-    </KeyboardProvider>
+    <>
+      <KeyboardProvider>
+        <GestureHandlerRootView>
+          <Suspense fallback={<ActivityIndicator />}>
+            <SQLiteProvider
+              useSuspense
+              databaseName={DATABASE_NAME}
+              options={{ enableChangeListener: true }}
+            >
+              <Layout />
+            </SQLiteProvider>
+          </Suspense>
+        </GestureHandlerRootView>
+      </KeyboardProvider>
+      <PortalHost />
+    </>
   );
 }
