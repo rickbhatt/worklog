@@ -1,0 +1,1 @@
+ALTER TABLE `file_logs` ADD `page_count` integer NOT NULL;
