@@ -1,12 +1,12 @@
 import React from "react";
 import { Text, View } from "react-native";
 
-const DummyCreateLog = () => {
+const edit = () => {
   return (
     <View>
-      <Text>DummyCreateLog</Text>
+      <Text>edit</Text>
     </View>
   );
 };
 
-export default DummyCreateLog;
+export default edit;

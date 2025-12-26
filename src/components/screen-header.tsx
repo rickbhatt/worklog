@@ -7,8 +7,8 @@ interface ScreenHeaderProps {
 
 const ScreenHeader = ({ title }: ScreenHeaderProps) => {
   return (
-    <View className="screen-header">
-      <Text className="screen-title">{title}</Text>
+    <View className="screen-header bg-bg-primary">
+      <Text className="screen-title text-text-primary">{title}</Text>
     </View>
   );
 };

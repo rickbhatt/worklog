@@ -3,7 +3,9 @@ import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 export const fileLogs = sqliteTable("file_logs", {
   id: text("id").primaryKey(),
 
-  fileName: text("file_name").notNull(),
+  journalId: text("journal_id").notNull(),
+
+  articleId: text("article_id").notNull(),
 
   timeTaken: integer("time_taken").notNull(), // time in minutes
 

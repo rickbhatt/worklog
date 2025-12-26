@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "572f3be8-b64d-47dc-903f-54c324e3fb62",
+  "id": "c65a10a9-d4ce-4acc-a9de-351b9c0cae4b",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "file_logs": {
@@ -14,8 +14,15 @@
           "notNull": true,
           "autoincrement": false
         },
-        "file_name": {
-          "name": "file_name",
+        "journal_id": {
+          "name": "journal_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "article_id": {
+          "name": "article_id",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
@@ -23,6 +30,13 @@
         },
         "time_taken": {
           "name": "time_taken",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "page_count": {
+          "name": "page_count",
           "type": "integer",
           "primaryKey": false,
           "notNull": true,

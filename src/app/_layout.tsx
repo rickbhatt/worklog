@@ -15,6 +15,7 @@ import { Suspense } from "react";
 import { ActivityIndicator } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
+import { Toaster } from "sonner-native";
 
 const DATABASE_NAME = "worklog.db";
 
@@ -23,9 +24,10 @@ const Layout = () => {
   useDrizzleStudio(db);
   return (
     <>
-      <StatusBar style="dark" />
+      <StatusBar style="light" />
       <Stack>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="work-log" options={{ headerShown: false }} />
       </Stack>
     </>
   );
@@ -58,6 +60,7 @@ export default function RootLayout() {
         </GestureHandlerRootView>
       </KeyboardProvider>
       <PortalHost />
+      <Toaster position="top-center" />
     </>
   );
 }
