@@ -89,4 +89,11 @@
   .tab-btn {
     @apply flex flex-col items-center justify-center min-h-full min-w-20 gap-1;
   }
+
+  .form-group {
+    @apply flex-col gap-3;
+  }
+  .form-label {
+    @apply text-base text-text-primary font-semibold;
+  }
 }

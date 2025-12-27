@@ -46,8 +46,8 @@ export default function RootLayout() {
   console.log("🚀 ~ RootLayout ~ success:", success);
   return (
     <>
-      <KeyboardProvider>
-        <GestureHandlerRootView>
+      <GestureHandlerRootView>
+        <KeyboardProvider>
           <Suspense fallback={<ActivityIndicator />}>
             <SQLiteProvider
               useSuspense
@@ -57,10 +57,10 @@ export default function RootLayout() {
               <Layout />
             </SQLiteProvider>
           </Suspense>
-        </GestureHandlerRootView>
-      </KeyboardProvider>
-      <PortalHost />
-      <Toaster position="top-center" />
+          <PortalHost />
+          <Toaster position="top-center" />
+        </KeyboardProvider>
+      </GestureHandlerRootView>
     </>
   );
 }

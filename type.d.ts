@@ -66,3 +66,13 @@ interface TabBarIconProps {
   icon: React.ReactNode;
   title: string;
 }
+
+export type InputModeOptions =
+  | "none"
+  | "text"
+  | "decimal"
+  | "numeric"
+  | "tel"
+  | "search"
+  | "email"
+  | "url";

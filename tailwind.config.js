@@ -41,6 +41,7 @@ module.exports = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        accent: "#F36040",
         "bg-primary": "#070707",
         "text-primary": "#FFFFFF",
         "tab-acitve-tint": "#F36040",
