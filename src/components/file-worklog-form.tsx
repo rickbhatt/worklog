@@ -1,15 +1,17 @@
 import FormInput from "@/components/form-input";
 import { Button } from "@/components/ui/button";
+import { formatDateTime } from "@/lib/utils";
 import React, { useState } from "react";
 import { Text, View } from "react-native";
+import { FileLogsInsertType } from "type";
 
 const FileWorklogForm = () => {
-  const [formData, setFormData] = useState({
-    journalId: null,
-    articleId: null,
-    lepPages: null,
-    timeTaken: null,
-    workedAt: null,
+  const [formData, setFormData] = useState<Partial<FileLogsInsertType>>({
+    journalId: undefined,
+    articleId: undefined,
+    pageCount: undefined,
+    timeTaken: undefined,
+    workedAt: undefined,
   });
 
   const handleInputChange = (field: string | number, value: string) => {
@@ -22,6 +24,8 @@ const FileWorklogForm = () => {
 
   const handleSubmit = () => {
     // Handle form submission logic here
+
+    console.log(formatDateTime(new Date()).shortDateWithYear);
   };
 
   return (
@@ -44,9 +48,9 @@ const FileWorklogForm = () => {
       />
       <FormInput
         label="Lep Pages"
-        value={formData.lepPages}
+        value={formData.pageCount}
         placeholder="63"
-        name="lepPages"
+        name="pageCount"
         onChange={handleInputChange}
       />
       <FormInput

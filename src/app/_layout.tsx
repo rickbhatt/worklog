@@ -1,3 +1,4 @@
+import LoadingScreen from "@/components/loading-screen";
 import { createDrizzleDb } from "@/db/client";
 import migrations from "@/drizzle/migrations";
 import "@/global.css";
@@ -12,7 +13,6 @@ import {
 } from "expo-sqlite";
 import { StatusBar } from "expo-status-bar";
 import { Suspense } from "react";
-import { ActivityIndicator } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { Toaster } from "sonner-native";
@@ -48,7 +48,7 @@ export default function RootLayout() {
     <>
       <GestureHandlerRootView>
         <KeyboardProvider>
-          <Suspense fallback={<ActivityIndicator />}>
+          <Suspense fallback={<LoadingScreen />}>
             <SQLiteProvider
               useSuspense
               databaseName={DATABASE_NAME}

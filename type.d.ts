@@ -1,3 +1,5 @@
+import { fileLogs } from "@/db/models/log.schema";
+
 import {
   AntDesign,
   Entypo,
@@ -76,3 +78,7 @@ export type InputModeOptions =
   | "search"
   | "email"
   | "url";
+
+export type FileLogsInsertType = typeof fileLogs.$inferInsert;
+export type FileLogsUpdateType = typeof fileLogs.$inferUpdate;
+export type FileLogsType = typeof fileLogs.$inferSelect;
