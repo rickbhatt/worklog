@@ -27,7 +27,8 @@ const CreateWorkLog = () => {
       !formData.timeTaken ||
       !formData.workedAt
     ) {
-      throw new Error("Please fill all required fields");
+      toast.error("Please fill all the fields");
+      return;
     }
 
     const payload: FileLogsCreateInput = {
@@ -57,7 +58,9 @@ const CreateWorkLog = () => {
     <>
       <Tabs.Screen
         options={{
-          header: () => <ScreenHeader title="Create Log" />,
+          header: () => (
+            <ScreenHeader backButtonVisible={true} title="Create Log" />
+          ),
           headerShown: true,
         }}
       />

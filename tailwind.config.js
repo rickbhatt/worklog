@@ -29,10 +29,6 @@ module.exports = {
           DEFAULT: "hsl(var(--muted))",
           foreground: "hsl(var(--muted-foreground))",
         },
-        accent: {
-          DEFAULT: "hsl(var(--accent))",
-          foreground: "hsl(var(--accent-foreground))",
-        },
         popover: {
           DEFAULT: "hsl(var(--popover))",
           foreground: "hsl(var(--popover-foreground))",
@@ -42,6 +38,10 @@ module.exports = {
           foreground: "hsl(var(--card-foreground))",
         },
         accent: "#F36040",
+        dark: {
+          100: "#070707",
+          200: "#242424",
+        },
         "bg-primary": "#070707",
         "text-primary": "#FFFFFF",
         "tab-acitve-tint": "#F36040",

@@ -85,6 +85,11 @@ export interface FileWorklogFormProps {
   onSubmit: (data: Partial<FileLogsInsertType>) => void;
 }
 
+interface ScreenHeaderProps {
+  title: string;
+  backButtonVisible?: boolean;
+}
+
 export type FileLogsCreateInput = Omit<
   FileLogsInsertType,
   "id" | "createdAt" | "updatedAt"

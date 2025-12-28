@@ -77,9 +77,6 @@
   }
 
   .screen-header {
-    @apply text-2xl font-bold;
-  }
-  .screen-header {
     @apply border border-black flex-between flex-row screen-x-padding pt-safe h-28;
   }
 
@@ -88,6 +85,10 @@
   }
   .tab-btn {
     @apply flex flex-col items-center justify-center min-h-full min-w-20 gap-1;
+  }
+
+  .btn-touch-scale {
+    @apply active:scale-95;
   }
 
   .form-group {
