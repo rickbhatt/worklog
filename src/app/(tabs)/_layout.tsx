@@ -82,7 +82,7 @@ const TabsLayout = () => {
         })}
         options={{
           tabBarIcon: ({ focused }) => (
-            <View className="h-20 w-20 flex-row items-center justify-center rounded-full mb-16 bg-tab-acitve-tint">
+            <View className="h-16 w-16 flex-row items-center justify-center rounded-full mb-16 bg-accent">
               <DynamicIcon
                 family="MaterialIcons"
                 name="add"

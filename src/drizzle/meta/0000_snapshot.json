@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "c65a10a9-d4ce-4acc-a9de-351b9c0cae4b",
+  "id": "1686987b-5647-4bd0-8b6c-95348c0005f8",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "file_logs": {
@@ -35,8 +35,8 @@
           "notNull": true,
           "autoincrement": false
         },
-        "page_count": {
-          "name": "page_count",
+        "lep_pages": {
+          "name": "lep_pages",
           "type": "integer",
           "primaryKey": false,
           "notNull": true,

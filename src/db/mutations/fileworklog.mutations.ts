@@ -1,11 +1,11 @@
 import { fileLogs } from "@/db/models/log.schema";
 import type { ExpoSQLiteDatabase } from "drizzle-orm/expo-sqlite";
 import * as Crypto from "expo-crypto";
-import { FileLogsInsertType } from "type";
+import { FileLogsCreateInput } from "type";
 
 export const createFileLog = async (
   db: ExpoSQLiteDatabase,
-  logData: FileLogsInsertType
+  logData: FileLogsCreateInput
 ) => {
   try {
     const id = Crypto.randomUUID();

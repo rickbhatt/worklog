@@ -79,6 +79,18 @@ export type InputModeOptions =
   | "email"
   | "url";
 
+export interface FileWorklogFormProps {
+  value: Partial<FileLogsInsertType>;
+  onChange: (data: Partial<FileLogsInsertType>) => void;
+  onSubmit: (data: Partial<FileLogsInsertType>) => void;
+}
+
+export type FileLogsCreateInput = Omit<
+  FileLogsInsertType,
+  "id" | "createdAt" | "updatedAt"
+>;
+
+export type FieldName = keyof FileLogsInsertType;
 export type FileLogsInsertType = typeof fileLogs.$inferInsert;
 export type FileLogsUpdateType = typeof fileLogs.$inferUpdate;
 export type FileLogsType = typeof fileLogs.$inferSelect;

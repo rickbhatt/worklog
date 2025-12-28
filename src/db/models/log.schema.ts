@@ -9,7 +9,7 @@ export const fileLogs = sqliteTable("file_logs", {
 
   timeTaken: integer("time_taken").notNull(), // time in minutes
 
-  pageCount: integer("page_count").notNull(),
+  lepPages: integer("lep_pages").notNull(),
 
   workedAt: text("worked_at").notNull(), // when the work actually happened
 

@@ -1,31 +1,31 @@
 import FormInput from "@/components/form-input";
 import { Button } from "@/components/ui/button";
-import { formatDateTime } from "@/lib/utils";
-import React, { useState } from "react";
+import React from "react";
 import { Text, View } from "react-native";
-import { FileLogsInsertType } from "type";
+import { FieldName, FileWorklogFormProps } from "type";
 
-const FileWorklogForm = () => {
-  const [formData, setFormData] = useState<Partial<FileLogsInsertType>>({
-    journalId: undefined,
-    articleId: undefined,
-    pageCount: undefined,
-    timeTaken: undefined,
-    workedAt: undefined,
-  });
+const FileWorklogForm = ({
+  value,
+  onSubmit,
+  onChange,
+}: FileWorklogFormProps) => {
+  const numericFields: FieldName[] = ["articleId", "lepPages", "timeTaken"];
 
-  const handleInputChange = (field: string | number, value: string) => {
-    console.log(field, value);
-    setFormData((prevData) => ({
-      ...prevData,
-      [field]: value,
-    }));
-  };
+  const handleInputChange = (field: FieldName, rawValue: string) => {
+    let sanitizedValue = rawValue;
 
-  const handleSubmit = () => {
-    // Handle form submission logic here
+    if (numericFields.includes(field)) {
+      sanitizedValue = rawValue.replace(/\D+/g, "");
+    }
 
-    console.log(formatDateTime(new Date()).shortDateWithYear);
+    if (field === "journalId") {
+      sanitizedValue = sanitizedValue.toUpperCase();
+    }
+
+    onChange({
+      ...value,
+      [field]: sanitizedValue,
+    });
   };
 
   return (
@@ -34,41 +34,48 @@ const FileWorklogForm = () => {
         label="Journal ID"
         autoCapitalize="words"
         name="journalId"
+        maxLength={4}
         autoFocus={true}
         placeholder="NPP2, MDR2,..."
-        value={formData.journalId}
+        value={value.journalId}
         onChange={handleInputChange}
       />
       <FormInput
         label="Article ID"
         name="articleId"
+        inputMode="numeric"
+        maxLength={5}
         placeholder="2345"
-        value={formData.articleId}
+        value={value.articleId}
         onChange={handleInputChange}
       />
       <FormInput
-        label="Lep Pages"
-        value={formData.pageCount}
+        label="LEP Pages"
+        value={value.lepPages}
+        inputMode="numeric"
+        maxLength={3}
         placeholder="63"
-        name="pageCount"
+        name="lepPages"
         onChange={handleInputChange}
       />
       <FormInput
         label="Time taken (minutes)"
         name="timeTaken"
-        value={formData.timeTaken}
+        inputMode="numeric"
+        maxLength={3}
+        value={value.timeTaken}
         placeholder="60"
         onChange={handleInputChange}
       />
       <FormInput
         label="Worked At"
         name="workedAt"
-        placeholder={"2024-06-01"}
-        value={formData.workedAt}
+        placeholder={"YYYY-MM-DD"}
+        value={value.workedAt}
         onChange={handleInputChange}
         inputType="date"
       />
-      <Button className="py-3 mt-2" onPress={handleSubmit}>
+      <Button className="py-3 mt-2" onPress={() => onSubmit(value)}>
         <Text className="text-text-primary font-bold text-base">Save</Text>
       </Button>
     </View>
