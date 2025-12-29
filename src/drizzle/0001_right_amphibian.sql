@@ -1,0 +1,1 @@
+CREATE INDEX `file_logs_worked_at_idx` ON `file_logs` (`worked_at`);

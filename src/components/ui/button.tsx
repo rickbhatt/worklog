@@ -5,7 +5,7 @@ import { Platform, Pressable } from "react-native";
 
 const buttonVariants = cva(
   cn(
-    "group shrink-0 flex-row items-center justify-center gap-2 rounded-md shadow-none",
+    "group btn-touch-scale shrink-0 flex-row items-center justify-center gap-2 rounded-md shadow-none",
     Platform.select({
       web: "focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive whitespace-nowrap outline-none transition-all focus-visible:ring-[3px] disabled:pointer-events-none [&_svg:not([class*='size-'])]:size-4 [&_svg]:pointer-events-none [&_svg]:shrink-0",
     })
@@ -14,7 +14,7 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default: cn(
-          "bg-accent active:bg-accent/90 btn-touch-scale shadow-sm shadow-black/5",
+          "bg-accent active:bg-accent/90 shadow-sm shadow-black/5",
           Platform.select({ web: "hover:bg-primary/90" })
         ),
         destructive: cn(
@@ -37,7 +37,7 @@ const buttonVariants = cva(
           "active:bg-accent dark:active:bg-accent/50",
           Platform.select({ web: "hover:bg-accent dark:hover:bg-accent/50" })
         ),
-        link: "",
+        iconOnly: cn("h-10 w-10"),
       },
       size: {
         default: cn(" px-4 py-2 ", Platform.select({ web: "has-[>svg]:px-3" })),
@@ -49,7 +49,7 @@ const buttonVariants = cva(
           " rounded-md px-6 ",
           Platform.select({ web: "has-[>svg]:px-4" })
         ),
-        icon: "w-10",
+        icon: "h-10 w-10",
       },
     },
     defaultVariants: {
@@ -81,6 +81,7 @@ const buttonTextVariants = cva(
             web: "underline-offset-4 hover:underline group-hover:underline",
           })
         ),
+        iconOnly: "h-10 w-10",
       },
       size: {
         default: "",

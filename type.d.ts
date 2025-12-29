@@ -5,6 +5,7 @@ import {
   Entypo,
   Feather,
   FontAwesome,
+  Foundation,
   Ionicons,
   MaterialCommunityIcons,
   MaterialIcons,
@@ -17,7 +18,8 @@ export type IconFamily =
   | "AntDesign"
   | "Entypo"
   | "MaterialIcons"
-  | "Feather";
+  | "Feather"
+  | "Foundation";
 
 type DynamicIconProps =
   | {
@@ -61,6 +63,12 @@ type DynamicIconProps =
       name: React.ComponentProps<typeof Feather>["name"];
       size?: number;
       color?: string;
+    }
+  | {
+      family: Extract<IconFamily, "Foundation">;
+      name: React.ComponentProps<typeof Foundation>["name"];
+      size?: number;
+      color?: string;
     };
 
 interface TabBarIconProps {
@@ -95,7 +103,13 @@ export type FileLogsCreateInput = Omit<
   "id" | "createdAt" | "updatedAt"
 >;
 
+export interface FileLogsSection {
+  title: string;
+  totalLepPages: number;
+  data: FileLogsSelectType[];
+}
+
 export type FieldName = keyof FileLogsInsertType;
 export type FileLogsInsertType = typeof fileLogs.$inferInsert;
 export type FileLogsUpdateType = typeof fileLogs.$inferUpdate;
-export type FileLogsType = typeof fileLogs.$inferSelect;
+export type FileLogsSelectType = typeof fileLogs.$inferSelect;

@@ -97,4 +97,12 @@
   .form-label {
     @apply text-base text-text-primary font-semibold;
   }
+
+  .h3-bold {
+    @apply text-xl font-bold;
+  }
+
+  .base-bold {
+    @apply text-base font-bold;
+  }
 }

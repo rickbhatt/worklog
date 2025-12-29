@@ -16,7 +16,8 @@ interface FormInputProps {
   autoFocus?: boolean;
   autoCorrect?: boolean;
   returnKeyType?: "done" | "go" | "next" | "search" | "send";
-
+  maxDate?: Date | undefined;
+  minDate?: Date | undefined;
   inputMode?: InputModeOptions | undefined;
   maxLength?: number;
   inputType?: "text" | "date";
@@ -34,6 +35,8 @@ const FormInput = ({
   returnKeyType,
   inputMode,
   name,
+  maxDate = undefined,
+  minDate = undefined,
   maxLength = undefined,
   inputType = "text",
 }: FormInputProps) => {
@@ -80,6 +83,8 @@ const FormInput = ({
               value={value ? new Date(value) : new Date()}
               mode="date"
               display="calendar"
+              maximumDate={maxDate}
+              minimumDate={minDate}
               onChange={(event, selectedDate) => {
                 if (selectedDate) {
                   let timestamp = formatDateTime(selectedDate).dateToISOString;

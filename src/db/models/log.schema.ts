@@ -1,19 +1,25 @@
-import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import { index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 
-export const fileLogs = sqliteTable("file_logs", {
-  id: text("id").primaryKey(),
+export const fileLogs = sqliteTable(
+  "file_logs",
+  {
+    id: text("id").primaryKey(),
 
-  journalId: text("journal_id").notNull(),
+    journalId: text("journal_id").notNull(),
 
-  articleId: text("article_id").notNull(),
+    articleId: text("article_id").notNull(),
 
-  timeTaken: integer("time_taken").notNull(), // time in minutes
+    timeTaken: integer("time_taken").notNull(), // time in minutes
 
-  lepPages: integer("lep_pages").notNull(),
+    lepPages: integer("lep_pages").notNull(),
 
-  workedAt: text("worked_at").notNull(), // when the work actually happened
+    workedAt: text("worked_at").notNull(), // when the work actually happened
 
-  createdAt: text("created_at").notNull().default("CURRENT_TIMESTAMP"),
+    createdAt: text("created_at").notNull().default("CURRENT_TIMESTAMP"),
 
-  updatedAt: text("updated_at").notNull().default("CURRENT_TIMESTAMP"),
-});
+    updatedAt: text("updated_at").notNull().default("CURRENT_TIMESTAMP"),
+  },
+  (t) => ({
+    workedAtIdx: index("file_logs_worked_at_idx").on(t.workedAt),
+  })
+);

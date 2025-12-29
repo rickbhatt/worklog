@@ -2,6 +2,7 @@ import LoadingScreen from "@/components/loading-screen";
 import { createDrizzleDb } from "@/db/client";
 import migrations from "@/drizzle/migrations";
 import "@/global.css";
+import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { PortalHost } from "@rn-primitives/portal";
 import { useMigrations } from "drizzle-orm/expo-sqlite/migrator";
 import { useDrizzleStudio } from "expo-drizzle-studio-plugin";
@@ -47,19 +48,21 @@ export default function RootLayout() {
   return (
     <>
       <GestureHandlerRootView>
-        <KeyboardProvider>
-          <Suspense fallback={<LoadingScreen />}>
-            <SQLiteProvider
-              useSuspense
-              databaseName={DATABASE_NAME}
-              options={{ enableChangeListener: true }}
-            >
-              <Layout />
-            </SQLiteProvider>
-          </Suspense>
-          <PortalHost />
-          <Toaster position="top-center" />
-        </KeyboardProvider>
+        <BottomSheetModalProvider>
+          <KeyboardProvider>
+            <Suspense fallback={<LoadingScreen />}>
+              <SQLiteProvider
+                useSuspense
+                databaseName={DATABASE_NAME}
+                options={{ enableChangeListener: true }}
+              >
+                <Layout />
+              </SQLiteProvider>
+            </Suspense>
+            <PortalHost />
+            <Toaster position="top-center" />
+          </KeyboardProvider>
+        </BottomSheetModalProvider>
       </GestureHandlerRootView>
     </>
   );

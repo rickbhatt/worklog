@@ -1,5 +1,6 @@
 import FormInput from "@/components/form-input";
 import { Button } from "@/components/ui/button";
+import { getCurrentDate } from "@/lib/utils";
 import React from "react";
 import { Text, View } from "react-native";
 import { FieldName, FileWorklogFormProps } from "type";
@@ -74,6 +75,7 @@ const FileWorklogForm = ({
         value={value.workedAt}
         onChange={handleInputChange}
         inputType="date"
+        maxDate={new Date(getCurrentDate())}
       />
       <Button className="py-3 mt-2" onPress={() => onSubmit(value)}>
         <Text className="text-text-primary font-bold text-base">Save</Text>

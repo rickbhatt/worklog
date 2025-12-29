@@ -6,7 +6,10 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export const formatDateTime = (date: string | Date) => {
+export const formatDateTime = (date: string | Date | undefined) => {
+  if (!date)
+    return { dateMonthOnly: "", shortDateWithYear: "", dateToISOString: "" };
+
   const formatDateMonth = format(new Date(date), "d MMM");
 
   const formatShortDateWithYear = format(new Date(date), "d MMM yyyy");
@@ -18,4 +21,35 @@ export const formatDateTime = (date: string | Date) => {
     shortDateWithYear: formatShortDateWithYear,
     dateToISOString: formatDateToISOString,
   };
+};
+
+export const getCurrentMonthRange = () => {
+  const now = new Date();
+
+  const start = new Date(now.getFullYear(), now.getMonth(), 1);
+  const end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+
+  const toDateString = (d: Date) => d.toISOString().slice(0, 10); // YYYY-MM-DD
+
+  return {
+    start: formatDateTime(start).dateToISOString,
+    end: formatDateTime(end).dateToISOString,
+  };
+};
+
+export const getCurrentDate = (): string => {
+  return formatDateTime(new Date()).dateToISOString;
+};
+
+export const convertTimeTakenToHoursMins = (time: number | undefined) => {
+  if (!time) return "";
+
+  const hours = Math.floor(time / 60);
+  const minutes = time % 60;
+
+  if (hours === 0) {
+    return `${minutes}m`;
+  } else {
+    return `${hours}h ${minutes}m`;
+  }
 };

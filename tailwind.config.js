@@ -21,10 +21,7 @@ module.exports = {
           DEFAULT: "hsl(var(--secondary))",
           foreground: "hsl(var(--secondary-foreground))",
         },
-        destructive: {
-          DEFAULT: "hsl(var(--destructive))",
-          foreground: "hsl(var(--destructive-foreground))",
-        },
+        destructive: "#EF4444",
         muted: {
           DEFAULT: "hsl(var(--muted))",
           foreground: "hsl(var(--muted-foreground))",
@@ -41,9 +38,14 @@ module.exports = {
         dark: {
           100: "#070707",
           200: "#242424",
+          300: "#c3c3c3",
+        },
+        light: {
+          100: "#FFFFFF",
         },
         "bg-primary": "#070707",
         "text-primary": "#FFFFFF",
+        "text-secondary": "#c3c3c3",
         "tab-acitve-tint": "#F36040",
       },
       borderRadius: {

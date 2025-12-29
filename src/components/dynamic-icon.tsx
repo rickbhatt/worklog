@@ -3,6 +3,7 @@ import {
   Entypo,
   Feather,
   FontAwesome,
+  Foundation,
   Ionicons,
   MaterialCommunityIcons,
   MaterialIcons,
@@ -18,6 +19,7 @@ const ICON_FAMILIES = {
   Entypo,
   MaterialIcons,
   Feather,
+  Foundation,
 };
 
 const DynamicIcon = ({
