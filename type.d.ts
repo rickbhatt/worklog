@@ -109,6 +109,16 @@ export interface FileLogsSection {
   data: FileLogsSelectType[];
 }
 
+export interface AlertDialogBoxProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  title?: string;
+  description?: string;
+  cancelText?: string;
+  actionText?: string;
+  onAction?: () => void;
+}
+
 export type FieldName = keyof FileLogsInsertType;
 export type FileLogsInsertType = typeof fileLogs.$inferInsert;
 export type FileLogsUpdateType = typeof fileLogs.$inferUpdate;

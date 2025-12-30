@@ -5,7 +5,7 @@ const WorkLogLayout = () => {
   return (
     <Stack>
       <Stack.Screen name="create" options={{ headerShown: false }} />
-      <Stack.Screen name="edit" options={{ headerShown: false }} />
+      <Stack.Screen name="edit/[id]" options={{ headerShown: false }} />
     </Stack>
   );
 };

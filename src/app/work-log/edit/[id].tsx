@@ -1,12 +1,12 @@
 import React from "react";
 import { Text, View } from "react-native";
 
-const edit = () => {
+const EditFileLog = () => {
   return (
     <View>
-      <Text>edit</Text>
+      <Text>EditFileLog</Text>
     </View>
   );
 };
 
-export default edit;
+export default EditFileLog;
