@@ -54,7 +54,7 @@ const FormInput = ({
             autoFocus={autoFocus}
             maxLength={maxLength}
             placeholder={placeholder}
-            value={value}
+            value={value?.toString()}
             className="h-12 text-base"
           />
         </View>

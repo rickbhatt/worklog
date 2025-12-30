@@ -2,7 +2,7 @@ import { fileLogs } from "@/db/models/log.schema";
 import { eq } from "drizzle-orm";
 import type { ExpoSQLiteDatabase } from "drizzle-orm/expo-sqlite";
 import * as Crypto from "expo-crypto";
-import { FileLogsCreateInput } from "type";
+import { FileLogsCreateInput, FileLogsInsertType } from "type";
 
 export const createFileLog = async (
   db: ExpoSQLiteDatabase,
@@ -44,6 +44,36 @@ export const deleteFileLogById = async (db: ExpoSQLiteDatabase, id: string) => {
 
     return row;
   } catch (error) {
+    throw error;
+  }
+};
+
+export const updateFileLogById = async ({
+  db,
+  id,
+  data,
+}: {
+  db: ExpoSQLiteDatabase;
+  id: string;
+  data: Partial<Omit<FileLogsInsertType, "id" | "createdAt">>;
+}) => {
+  try {
+    let [row] = await db
+      .update(fileLogs)
+      .set({
+        updatedAt: new Date().toISOString(),
+        ...data,
+      })
+      .where(eq(fileLogs.id, id))
+      .returning({
+        id: fileLogs.id,
+        journalId: fileLogs.journalId,
+        articleId: fileLogs.articleId,
+      });
+
+    return row;
+  } catch (error) {
+    console.log("Could not update file log");
     throw error;
   }
 };
