@@ -36,7 +36,7 @@ const Layout = () => {
 
 export default function RootLayout() {
   // Open SQLite DB
-  const sqliteDb = openDatabaseSync(DATABASE_NAME);
+  const sqliteDb = openDatabaseSync(DATABASE_NAME, { useNewConnection: true }); // remove useNewConnection in production
 
   // Create Drizzle instance
   const db = createDrizzleDb(sqliteDb);

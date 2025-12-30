@@ -98,6 +98,10 @@
     @apply text-base text-text-primary font-semibold;
   }
 
+  .h2-bold {
+    @apply text-2xl font-bold;
+  }
+
   .h3-bold {
     @apply text-xl font-bold;
   }

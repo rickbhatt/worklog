@@ -1,13 +1,12 @@
 import {
   AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
 import { AlertDialogBoxProps } from "type";
 
@@ -26,18 +25,28 @@ const AlertDialogBox = ({
   };
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent>
+      <AlertDialogContent className=" bg-dark-200 border-0">
         <AlertDialogHeader>
           <AlertDialogTitle>{title}</AlertDialogTitle>
-          <AlertDialogDescription>{description}</AlertDialogDescription>
+          <AlertDialogDescription className="">
+            {description}
+          </AlertDialogDescription>
         </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel onPress={() => onOpenChange(false)}>
-            <Text>{cancelText}</Text>
-          </AlertDialogCancel>
-          <AlertDialogAction onPress={handleAction}>
-            <Text>{actionText}</Text>
-          </AlertDialogAction>
+        <AlertDialogFooter className="flex-row gap-2">
+          <Button
+            variant="outline"
+            className="flex-1 h-12 justify-center"
+            onPress={() => onOpenChange(false)}
+          >
+            <Text className="text-text-primary font-bold text-base">
+              {cancelText}
+            </Text>
+          </Button>
+          <Button className="flex-1 h-12" onPress={handleAction}>
+            <Text className="text-text-primary font-bold text-base">
+              {actionText}
+            </Text>
+          </Button>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
