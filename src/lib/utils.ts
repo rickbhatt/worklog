@@ -29,8 +29,6 @@ export const getCurrentMonthRange = () => {
   const start = new Date(now.getFullYear(), now.getMonth(), 1);
   const end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
 
-  const toDateString = (d: Date) => d.toISOString().slice(0, 10); // YYYY-MM-DD
-
   return {
     start: formatDateTime(start).dateToISOString,
     end: formatDateTime(end).dateToISOString,

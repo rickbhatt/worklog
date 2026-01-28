@@ -60,10 +60,7 @@ const LogDetailBottomsheet = ({
   // handles edit button press
   const handleEditPress = () => {
     ref.current?.close();
-    router.push({
-      pathname: "/work-log/edit/[id]",
-      params: { id },
-    });
+    router.push(`/work-log/edit/${id}`);
   };
 
   // handles delete button press and opens alert dialog

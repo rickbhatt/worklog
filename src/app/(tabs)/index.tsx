@@ -1,17 +1,20 @@
 import DynamicIcon from "@/components/dynamic-icon";
+import FilterLogsBottomSheetModal from "@/components/filter-logs-bottomsheet";
 import LogCard from "@/components/log-card";
 import ScreenHeader from "@/components/screen-header";
-import { getFileLogsForCurrentMonth } from "@/db/queries/fileworklog.queries";
+import { getFileLogs } from "@/db/queries/fileworklog.queries";
 import { useDb } from "@/hooks/useDb";
 import { formatDateTime, getCurrentDate } from "@/lib/utils";
+import { BottomSheetModal } from "@gorhom/bottom-sheet";
+
 import { useLiveQuery } from "drizzle-orm/expo-sqlite";
-import { Tabs } from "expo-router";
-import React, { useMemo } from "react";
+import { Tabs, useLocalSearchParams } from "expo-router";
+import React, { useMemo, useRef } from "react";
 import { SectionList, Text, View } from "react-native";
-import { FileLogsSection, FileLogsSelectType } from "type";
+import { FileLogsSection, FileLogsSelectType, ScreenHeaderProps } from "type";
 
 const ListHeader = () => {
-  return <Text className="text-text-primary">List Header</Text>;
+  return <></>;
 };
 
 const SectionHeader = ({ section }: { section: FileLogsSection }) => {
@@ -73,9 +76,39 @@ const SectionItem = ({ item }: { item: FileLogsSelectType }) => {
 };
 
 const History = () => {
+  const { journalId, articleId, workedAt, month } = useLocalSearchParams<{
+    journalId?: string;
+    articleId?: string;
+    workedAt?: string;
+    month?: string;
+  }>();
+
   const db = useDb();
 
-  const { data: logs, error } = useLiveQuery(getFileLogsForCurrentMonth(db));
+  const { data: logs, error } = useLiveQuery(
+    getFileLogs({
+      db,
+      filters: { journalId, articleId, workedAt, month },
+    }),
+    [journalId, articleId, workedAt, month], //deps: re-run live query when filters change
+  );
+  // console.log("🚀 ~ History ~ logs:", logs);
+  const filterBottomSheetModalRef = useRef<BottomSheetModal>(null);
+
+  const SCREEN_HEADER_RIGHT_BUTTONS: ScreenHeaderProps["rightButtons"] = [
+    {
+      name: "filter",
+      icon: (
+        <DynamicIcon
+          family="FontAwesome"
+          name="filter"
+          size={20}
+          color="#FFFFFF"
+        />
+      ),
+      onPress: () => filterBottomSheetModalRef.current?.present(),
+    },
+  ];
 
   const fileLogsGroupedByWorkedAt = useMemo(() => {
     if (!logs) return [];
@@ -96,7 +129,7 @@ const History = () => {
     }, new Map());
 
     return Array.from(groupedLogs.values()).sort((a, b) =>
-      b.title.localeCompare(a.title)
+      b.title.localeCompare(a.title),
     );
   }, [logs]);
 
@@ -105,20 +138,32 @@ const History = () => {
       <Tabs.Screen
         options={{
           headerShown: true,
-          header: () => <ScreenHeader title="History" />,
+          header: () => (
+            <ScreenHeader
+              title="History"
+              rightButtons={SCREEN_HEADER_RIGHT_BUTTONS}
+            />
+          ),
         }}
       />
 
       <SectionList
         sections={fileLogsGroupedByWorkedAt}
         showsVerticalScrollIndicator={false}
-        ListHeaderComponent={() => <ListHeader />}
         renderSectionHeader={({ section }) => (
           <SectionHeader section={section} />
         )}
+        ListHeaderComponent={<ListHeader />}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => <SectionItem item={item} />}
         className="bg-bg-primary flex-1 screen-x-padding"
+      />
+      <FilterLogsBottomSheetModal
+        journalId={journalId}
+        articleId={articleId}
+        workedAt={workedAt}
+        month={month}
+        ref={filterBottomSheetModalRef}
       />
     </>
   );

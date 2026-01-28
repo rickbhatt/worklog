@@ -77,7 +77,7 @@
   }
 
   .screen-header {
-    @apply border border-black flex-between flex-row screen-x-padding pt-safe h-28;
+    @apply flex-between flex-row screen-x-padding pt-safe h-28;
   }
 
   .screen-title {
@@ -108,5 +108,9 @@
 
   .base-bold {
     @apply text-base font-bold;
+  }
+
+  .base-paragraph {
+    @apply text-base text-text-primary;
   }
 }

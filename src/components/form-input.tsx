@@ -21,6 +21,8 @@ interface FormInputProps {
   inputMode?: InputModeOptions | undefined;
   maxLength?: number;
   inputType?: "text" | "date";
+  inputClassname?: string;
+  rowMode?: boolean;
 }
 
 const FormInput = ({
@@ -39,30 +41,51 @@ const FormInput = ({
   minDate = undefined,
   maxLength = undefined,
   inputType = "text",
+  inputClassname,
+  rowMode = false,
 }: FormInputProps) => {
   const [isDatePicketOpen, setIsDatePickerOpen] = useState(false);
+  const numericFields: FieldName[] = ["articleId", "lepPages", "timeTaken"];
+
+  const handleOnChangeTextInput = (field: FieldName, rawValue: string) => {
+    let sanitizedValue = rawValue;
+
+    if (numericFields.includes(field)) {
+      sanitizedValue = rawValue.replace(/\D+/g, "");
+    }
+
+    if (field === "journalId") {
+      sanitizedValue = sanitizedValue.toUpperCase();
+    }
+
+    onChange(name, sanitizedValue);
+  };
 
   switch (inputType) {
     case "text":
       return (
-        <View className="form-group">
+        <View className={cn("form-group", rowMode && "flex-1")}>
           <Text className="form-label">{label}</Text>
           <Input
-            onChangeText={(text) => onChange(name, text)}
+            onChangeText={(text) => handleOnChangeTextInput(name, text)}
             inputMode={inputMode}
             autoCapitalize={autoCapitalize}
             autoFocus={autoFocus}
             maxLength={maxLength}
             placeholder={placeholder}
             value={value?.toString()}
-            className="h-12 text-base"
+            className={cn(
+              rowMode ? "flex-1 w-full" : "w-full",
+              "h-12 text-base py-0",
+              inputClassname, // Override if passed
+            )}
           />
         </View>
       );
     case "date":
       return (
         <>
-          <View className="form-group">
+          <View className={cn("form-group", rowMode && "flex-1")}>
             <Text className="form-label">{label}</Text>
             <Pressable
               onPress={() => setIsDatePickerOpen(true)}
@@ -71,13 +94,14 @@ const FormInput = ({
               <Text
                 className={cn(
                   "text-base text-left",
-                  value ? "text-text-primary" : "text-text-primary/60"
+                  value ? "text-text-primary" : "text-text-primary/60",
                 )}
               >
                 {value ?? placeholder}
               </Text>
             </Pressable>
           </View>
+
           {isDatePicketOpen && (
             <DateTimePicker
               value={value ? new Date(value) : new Date()}

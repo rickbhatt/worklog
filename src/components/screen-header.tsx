@@ -1,4 +1,5 @@
 import DynamicIcon from "@/components/dynamic-icon";
+import { Button } from "@/components/ui/button";
 import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
 import React from "react";
@@ -8,6 +9,7 @@ import { ScreenHeaderProps } from "type";
 const ScreenHeader = ({
   title,
   backButtonVisible = false,
+  rightButtons = [],
 }: ScreenHeaderProps) => {
   const router = useRouter();
 
@@ -18,7 +20,7 @@ const ScreenHeader = ({
   };
 
   return (
-    <View className="screen-header bg-bg-primary">
+    <View className="screen-header flex-row flex-between bg-bg-primary">
       <View className="flex-row items-center gap-x-4">
         {backButtonVisible && (
           <Pressable
@@ -33,6 +35,18 @@ const ScreenHeader = ({
           </Pressable>
         )}
         <Text className="screen-title text-text-primary">{title}</Text>
+      </View>
+      <View className="flex flex-row items-center justify-end gap-x-2">
+        {rightButtons.map((button) => (
+          <Button
+            variant={"outline"}
+            className="h-12 w-12 rounded-full bg-dark-200"
+            key={button.name}
+            onPress={() => button.onPress()}
+          >
+            {button.icon}
+          </Button>
+        ))}
       </View>
     </View>
   );

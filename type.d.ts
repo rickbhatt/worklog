@@ -96,6 +96,11 @@ export interface FileWorklogFormProps {
 interface ScreenHeaderProps {
   title: string;
   backButtonVisible?: boolean;
+  rightButtons?: {
+    icon: React.ReactNode;
+    onPress: () => void;
+    name: string;
+  }[];
 }
 
 export type FileLogsCreateInput = Omit<

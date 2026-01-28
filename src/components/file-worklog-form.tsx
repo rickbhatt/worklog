@@ -13,24 +13,14 @@ const FileWorklogForm = ({
   const numericFields: FieldName[] = ["articleId", "lepPages", "timeTaken"];
 
   const handleInputChange = (field: FieldName, rawValue: string) => {
-    let sanitizedValue = rawValue;
-
-    if (numericFields.includes(field)) {
-      sanitizedValue = rawValue.replace(/\D+/g, "");
-    }
-
-    if (field === "journalId") {
-      sanitizedValue = sanitizedValue.toUpperCase();
-    }
-
     onChange({
       ...value,
-      [field]: sanitizedValue,
+      [field]: rawValue,
     });
   };
 
   return (
-    <View className="flex-col gap-5">
+    <View className="flex-col pb-safe flex-1 gap-5">
       <FormInput
         label="Journal ID"
         autoCapitalize="words"

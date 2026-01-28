@@ -43,8 +43,7 @@ export default function RootLayout() {
 
   // Run migrations
   const { success, error } = useMigrations(db, migrations);
-  console.log("🚀 ~ RootLayout ~ error:", error);
-  console.log("🚀 ~ RootLayout ~ success:", success);
+
   return (
     <>
       <GestureHandlerRootView>
