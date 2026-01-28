@@ -25,6 +25,10 @@ export const getFileLogs = ({ db, filters }: FileLogsWithFilers) => {
     conditions.push(eq(fileLogs.journalId, filters.journalId));
   }
 
+  if (filters.articleId) {
+    conditions.push(eq(fileLogs.articleId, filters.articleId));
+  }
+
   let logs = db
     .select({
       id: fileLogs.id,

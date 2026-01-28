@@ -13,8 +13,25 @@ import React, { useMemo, useRef } from "react";
 import { SectionList, Text, View } from "react-native";
 import { FileLogsSection, FileLogsSelectType, ScreenHeaderProps } from "type";
 
-const ListHeader = () => {
-  return <></>;
+const ListHeader = ({
+  isParams,
+  dataLength,
+}: {
+  isParams: boolean;
+  dataLength: number;
+}) => {
+  return (
+    <View>
+      {isParams ? (
+        <Text className="text-text-secondary body-medium mb-3">
+          {dataLength} log{dataLength !== 1 ? "s" : ""} found with applied
+          filters
+        </Text>
+      ) : (
+        <></>
+      )}
+    </View>
+  );
 };
 
 const SectionHeader = ({ section }: { section: FileLogsSection }) => {
@@ -82,6 +99,11 @@ const History = () => {
     workedAt?: string;
     month?: string;
   }>();
+
+  // check if any filter param is present
+  const isParams = (journalId || articleId || workedAt || month) !== undefined;
+
+  console.log("isParams", isParams);
 
   const db = useDb();
 
@@ -153,7 +175,9 @@ const History = () => {
         renderSectionHeader={({ section }) => (
           <SectionHeader section={section} />
         )}
-        ListHeaderComponent={<ListHeader />}
+        ListHeaderComponent={
+          <ListHeader isParams={isParams} dataLength={logs?.length ?? 0} />
+        }
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => <SectionItem item={item} />}
         className="bg-bg-primary flex-1 screen-x-padding"
