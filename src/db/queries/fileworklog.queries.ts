@@ -8,18 +8,22 @@ interface FileLogsWithFilers {
   filters: {
     journalId?: string | undefined;
     articleId?: string | undefined;
-    workedAt?: string | undefined;
-    month?: string | undefined;
+    startDate?: string | undefined;
+    endDate?: string | undefined;
   };
 }
 
 export const getFileLogs = ({ db, filters }: FileLogsWithFilers) => {
   const { start, end } = getCurrentMonthRange();
 
-  const conditions = [
-    gte(fileLogs.workedAt, start),
-    lte(fileLogs.workedAt, end),
-  ];
+  const conditions = [];
+
+  if (filters.startDate && filters.endDate) {
+    conditions.push(gte(fileLogs.workedAt, filters.startDate));
+    conditions.push(lte(fileLogs.workedAt, filters.endDate));
+  } else {
+    conditions.push(gte(fileLogs.workedAt, start), lte(fileLogs.workedAt, end));
+  }
 
   if (filters.journalId) {
     conditions.push(eq(fileLogs.journalId, filters.journalId));

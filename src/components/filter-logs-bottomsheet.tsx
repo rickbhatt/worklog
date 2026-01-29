@@ -24,14 +24,14 @@ const FilterLogsBottomSheetModal = ({
   ref,
   journalId,
   articleId,
-  workedAt,
-  month,
+  startDate,
+  endDate,
 }: {
   ref: RefObject<BottomSheetModal | null>;
   journalId?: string | undefined;
   articleId?: string | undefined;
-  workedAt?: string | undefined;
-  month?: string | undefined;
+  startDate?: string | undefined;
+  endDate?: string | undefined;
 }) => {
   const { top } = useSafeAreaInsets();
 
@@ -40,8 +40,8 @@ const FilterLogsBottomSheetModal = ({
   const [filters, setFilters] = useState({
     journalId: journalId,
     articleId: articleId,
-    workedAt: workedAt,
-    month: month,
+    startDate: startDate,
+    endDate: endDate,
   });
 
   const handleApplyFilters = () => {
@@ -50,8 +50,8 @@ const FilterLogsBottomSheetModal = ({
       params: {
         journalId: filters.journalId || undefined,
         articleId: filters.articleId || undefined,
-        workedAt: filters.workedAt || undefined,
-        month: filters.month || undefined,
+        startDate: filters.startDate || undefined,
+        endDate: filters.endDate || undefined,
       },
     });
     ref.current?.close();
@@ -62,23 +62,23 @@ const FilterLogsBottomSheetModal = ({
   };
 
   useEffect(() => {
-    setFilters({ journalId, articleId, workedAt, month });
-  }, [journalId, articleId, workedAt, month]);
+    setFilters({ journalId, articleId, startDate, endDate });
+  }, [journalId, articleId, startDate]);
 
   const handleClearFilters = () => {
     setFilters({
       journalId: undefined,
       articleId: undefined,
-      workedAt: undefined,
-      month: undefined,
+      startDate: undefined,
+      endDate: undefined,
     });
     router.replace({
       pathname: "/(tabs)",
       params: {
         journalId: undefined,
         articleId: undefined,
-        workedAt: undefined,
-        month: undefined,
+        startDate: undefined,
+        endDate: undefined,
       },
     });
     ref.current?.close();
@@ -153,7 +153,30 @@ const FilterLogsBottomSheetModal = ({
             rowMode
           />
         </View>
-        {/* worked at and month */}
+        {/* start date and end date */}
+        <View className="flex-col mt-3">
+          <Text className="base-paragraph">Worked between</Text>
+          <View className="items-center flex-row gap-x-2 mt-3">
+            <FormInput
+              inputType="date"
+              label="From"
+              name="startDate"
+              placeholder="YYYY-MM-DD"
+              value={filters.startDate}
+              onChange={handleOnChangeFilters}
+              rowMode
+            />
+            <FormInput
+              inputType="date"
+              label="To"
+              name="endDate"
+              placeholder="YYYY-MM-DD"
+              value={filters.endDate}
+              onChange={handleOnChangeFilters}
+              rowMode
+            />
+          </View>
+        </View>
       </BottomSheetView>
     </BottomSheetModal>
   );

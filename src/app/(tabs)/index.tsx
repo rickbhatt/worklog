@@ -4,7 +4,7 @@ import LogCard from "@/components/log-card";
 import ScreenHeader from "@/components/screen-header";
 import { getFileLogs } from "@/db/queries/fileworklog.queries";
 import { useDb } from "@/hooks/useDb";
-import { formatDateTime, getCurrentDate } from "@/lib/utils";
+import { cn, formatDateTime, getCurrentDate } from "@/lib/utils";
 import { BottomSheetModal } from "@gorhom/bottom-sheet";
 
 import { useLiveQuery } from "drizzle-orm/expo-sqlite";
@@ -23,7 +23,7 @@ const ListHeader = ({
   return (
     <View>
       {isParams ? (
-        <Text className="text-text-secondary body-medium mb-3">
+        <Text className={cn("base-paragraph", "text-text-secondary")}>
           {dataLength} log{dataLength !== 1 ? "s" : ""} found with applied
           filters
         </Text>
@@ -93,26 +93,27 @@ const SectionItem = ({ item }: { item: FileLogsSelectType }) => {
 };
 
 const History = () => {
-  const { journalId, articleId, workedAt, month } = useLocalSearchParams<{
+  const { journalId, articleId, startDate, endDate } = useLocalSearchParams<{
     journalId?: string;
     articleId?: string;
-    workedAt?: string;
-    month?: string;
+    startDate?: string;
+    endDate?: string;
   }>();
+  console.log("🚀 ~ History ~ endDate:", endDate);
+  console.log("🚀 ~ History ~ startDate:", startDate);
 
   // check if any filter param is present
-  const isParams = (journalId || articleId || workedAt || month) !== undefined;
-
-  console.log("isParams", isParams);
+  const isParams =
+    (journalId || articleId || startDate || endDate) !== undefined;
 
   const db = useDb();
 
   const { data: logs, error } = useLiveQuery(
     getFileLogs({
       db,
-      filters: { journalId, articleId, workedAt, month },
+      filters: { journalId, articleId, startDate, endDate },
     }),
-    [journalId, articleId, workedAt, month], //deps: re-run live query when filters change
+    [journalId, articleId, startDate, endDate], //deps: re-run live query when filters change
   );
   // console.log("🚀 ~ History ~ logs:", logs);
   const filterBottomSheetModalRef = useRef<BottomSheetModal>(null);
@@ -185,8 +186,8 @@ const History = () => {
       <FilterLogsBottomSheetModal
         journalId={journalId}
         articleId={articleId}
-        workedAt={workedAt}
-        month={month}
+        startDate={startDate}
+        endDate={endDate}
         ref={filterBottomSheetModalRef}
       />
     </>

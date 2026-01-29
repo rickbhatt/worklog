@@ -89,7 +89,11 @@ const FormInput = ({
             <Text className="form-label">{label}</Text>
             <Pressable
               onPress={() => setIsDatePickerOpen(true)}
-              className="bg-bg-primary border-input h-12 flex w-full min-w flex-row items-center border px-3 py-1 text-base leading-5 sm:h-9 rounded-md"
+              className={cn(
+                "bg-bg-primary border-input h-12 flex flex-row items-center border px-3 py-1 text-base leading-5 sm:h-9 rounded-md",
+                rowMode ? "flex-1 w-full" : "w-full",
+                "h-12 text-base py-0",
+              )}
             >
               <Text
                 className={cn(
