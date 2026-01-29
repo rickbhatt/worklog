@@ -99,8 +99,6 @@ const History = () => {
     startDate?: string;
     endDate?: string;
   }>();
-  console.log("🚀 ~ History ~ endDate:", endDate);
-  console.log("🚀 ~ History ~ startDate:", startDate);
 
   // check if any filter param is present
   const isParams =
