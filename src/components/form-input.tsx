@@ -23,6 +23,8 @@ interface FormInputProps {
   inputType?: "text" | "date";
   inputClassname?: string;
   rowMode?: boolean;
+  onFocus?: () => void;
+  onBlur?: () => void;
 }
 
 const FormInput = ({
@@ -43,6 +45,8 @@ const FormInput = ({
   inputType = "text",
   inputClassname,
   rowMode = false,
+  onBlur,
+  onFocus,
 }: FormInputProps) => {
   const [isDatePicketOpen, setIsDatePickerOpen] = useState(false);
   const numericFields: FieldName[] = ["articleId", "lepPages", "timeTaken"];
@@ -74,9 +78,11 @@ const FormInput = ({
             maxLength={maxLength}
             placeholder={placeholder}
             value={value?.toString()}
+            onFocus={onFocus}
+            onBlur={onBlur}
             className={cn(
+              "h-12 text-base py-0 bg-bg-primary",
               rowMode ? "flex-1 w-full" : "w-full",
-              "h-12 text-base py-0",
               inputClassname, // Override if passed
             )}
           />

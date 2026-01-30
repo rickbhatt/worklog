@@ -7,7 +7,7 @@ import {
   BottomSheetView,
 } from "@gorhom/bottom-sheet";
 import { useRouter } from "expo-router";
-import { RefObject, useEffect, useState } from "react";
+import { RefObject, useEffect, useMemo, useState } from "react";
 import { Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -36,6 +36,8 @@ const FilterLogsBottomSheetModal = ({
   const { top } = useSafeAreaInsets();
 
   const router = useRouter();
+
+  const snapPoints = useMemo(() => ["50%", "80%"], []);
 
   const [filters, setFilters] = useState({
     journalId: journalId,
@@ -84,14 +86,22 @@ const FilterLogsBottomSheetModal = ({
     ref.current?.close();
   };
 
+  const handleTextInputFocus = () => {
+    ref.current?.snapToIndex(1);
+  };
+
   return (
     <BottomSheetModal
       ref={ref}
       name="log-filter"
       backdropComponent={renderBackdrop}
-      snapPoints={["100%"]}
+      keyboardBehavior="interactive"
+      keyboardBlurBehavior="restore"
+      snapPoints={snapPoints}
+      android_keyboardInputMode="adjustPan"
       enableContentPanningGesture={true}
       enableDismissOnClose
+      enablePanDownToClose
       enableDynamicSizing={false}
       topInset={top}
       handleIndicatorStyle={{
@@ -141,6 +151,7 @@ const FilterLogsBottomSheetModal = ({
             value={filters.journalId}
             onChange={handleOnChangeFilters}
             rowMode
+            onFocus={handleTextInputFocus}
           />
           <FormInput
             label="Article ID"
@@ -150,6 +161,7 @@ const FilterLogsBottomSheetModal = ({
             placeholder="2345"
             value={filters.articleId}
             onChange={handleOnChangeFilters}
+            onFocus={handleTextInputFocus}
             rowMode
           />
         </View>
