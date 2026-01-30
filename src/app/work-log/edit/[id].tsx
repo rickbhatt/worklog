@@ -27,6 +27,9 @@ const EditFileLog = () => {
         lepPages: row.lepPages,
         timeTaken: row.timeTaken,
         workedAt: row.workedAt,
+        isSml: row.isSml,
+        isOT: row.isOT,
+        remarks: row.remarks,
       };
 
       setFormData(initialData);

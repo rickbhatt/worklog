@@ -1,15 +1,18 @@
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { cn, formatDateTime } from "@/lib/utils";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import React, { useState } from "react";
-import { Pressable, Text, View } from "react-native";
+import { Platform, Pressable, Text, View } from "react-native";
 import { FieldName, InputModeOptions } from "type";
 
 interface FormInputProps {
   label: string;
   name: FieldName;
   value: string | null | number | undefined;
-  onChange: (field: FieldName, rawValue: string) => void;
+  onChange: (field: FieldName, rawValue: string | number) => void;
   placeholder?: string;
   secureTextEntry?: boolean;
   autoCapitalize?: "none" | "sentences" | "words" | "characters";
@@ -20,9 +23,10 @@ interface FormInputProps {
   minDate?: Date | undefined;
   inputMode?: InputModeOptions | undefined;
   maxLength?: number;
-  inputType?: "text" | "date";
+  inputType?: "text" | "date" | "checkbox" | "textarea";
   inputClassname?: string;
   rowMode?: boolean;
+  editable?: boolean;
   onFocus?: () => void;
   onBlur?: () => void;
 }
@@ -43,6 +47,7 @@ const FormInput = ({
   minDate = undefined,
   maxLength = undefined,
   inputType = "text",
+  editable = true,
   inputClassname,
   rowMode = false,
   onBlur,
@@ -50,6 +55,7 @@ const FormInput = ({
 }: FormInputProps) => {
   const [isDatePicketOpen, setIsDatePickerOpen] = useState(false);
   const numericFields: FieldName[] = ["articleId", "lepPages", "timeTaken"];
+  const [isChecked, setIsChecked] = useState(false);
 
   const handleOnChangeTextInput = (field: FieldName, rawValue: string) => {
     let sanitizedValue = rawValue;
@@ -65,6 +71,8 @@ const FormInput = ({
     onChange(name, sanitizedValue);
   };
 
+  const boolToInt = (value: boolean) => (value ? 1 : 0);
+
   switch (inputType) {
     case "text":
       return (
@@ -76,6 +84,7 @@ const FormInput = ({
             autoCapitalize={autoCapitalize}
             autoFocus={autoFocus}
             maxLength={maxLength}
+            editable={editable}
             placeholder={placeholder}
             value={value?.toString()}
             onFocus={onFocus}
@@ -119,7 +128,7 @@ const FormInput = ({
               display="calendar"
               maximumDate={maxDate}
               minimumDate={minDate}
-              onChange={(event, selectedDate) => {
+              onChange={(_, selectedDate) => {
                 if (selectedDate) {
                   let timestamp = formatDateTime(selectedDate).dateToISOString;
 
@@ -130,6 +139,42 @@ const FormInput = ({
             />
           )}
         </>
+      );
+
+    case "checkbox":
+      return (
+        <View className={cn("form-group", rowMode && "flex-1")}>
+          <View className="flex-row items-center gap-x-3.5">
+            <Checkbox
+              id={name}
+              checked={value === 1}
+              onCheckedChange={(checked) => onChange(name, boolToInt(checked))}
+              className="w-5 h-5"
+            />
+            <Label
+              onPress={Platform.select({
+                native: () => onChange(name, value === 1 ? 0 : 1),
+              })}
+              htmlFor={name}
+              className="text-base text-text-primary font-semibold"
+            >
+              {label}
+            </Label>
+          </View>
+        </View>
+      );
+
+    case "textarea":
+      return (
+        <View className={cn("form-group", rowMode && "flex-1")}>
+          <Text className="form-label">{label}</Text>
+          <Textarea
+            value={value}
+            placeholder={placeholder}
+            className="bg-bg-primary"
+            onChangeText={(text) => handleOnChangeTextInput(name, text)}
+          />
+        </View>
       );
   }
 };

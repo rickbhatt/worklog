@@ -10,13 +10,21 @@ const FileWorklogForm = ({
   onSubmit,
   onChange,
 }: FileWorklogFormProps) => {
-  const numericFields: FieldName[] = ["articleId", "lepPages", "timeTaken"];
+  const handleInputChange = (field: FieldName, rawValue: string | number) => {
+    if (field === "isSml") {
+      let smlValue = Number(rawValue);
 
-  const handleInputChange = (field: FieldName, rawValue: string) => {
-    onChange({
-      ...value,
-      [field]: rawValue,
-    });
+      onChange({
+        ...value,
+        isSml: smlValue,
+        lepPages: smlValue === 1 ? 15 : undefined,
+      });
+    } else {
+      onChange({
+        ...value,
+        [field]: rawValue,
+      });
+    }
   };
 
   return (
@@ -40,13 +48,31 @@ const FileWorklogForm = ({
         value={value.articleId}
         onChange={handleInputChange}
       />
+
+      <FormInput
+        inputType="checkbox"
+        label="SML file?"
+        name="isSml"
+        value={value.isSml}
+        onChange={handleInputChange}
+      />
+
       <FormInput
         label="LEP Pages"
         value={value.lepPages}
         inputMode="numeric"
         maxLength={3}
         placeholder="63"
+        editable={value.isSml === 0}
         name="lepPages"
+        onChange={handleInputChange}
+      />
+
+      <FormInput
+        inputType="checkbox"
+        label="OT file?"
+        name="isOT"
+        value={value.isOT}
         onChange={handleInputChange}
       />
       <FormInput
@@ -66,6 +92,14 @@ const FileWorklogForm = ({
         onChange={handleInputChange}
         inputType="date"
         maxDate={new Date(getCurrentDate())}
+      />
+      <FormInput
+        label="Remarks"
+        name="remarks"
+        inputType="textarea"
+        placeholder="Type your remarks here..."
+        value={value.remarks}
+        onChange={handleInputChange}
       />
       <Button className="py-3 mt-2" onPress={() => onSubmit(value)}>
         <Text className="text-text-primary font-bold text-base">Save</Text>

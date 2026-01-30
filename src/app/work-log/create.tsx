@@ -15,6 +15,9 @@ const CreateWorkLog = () => {
     lepPages: undefined,
     timeTaken: undefined,
     workedAt: undefined,
+    isSml: 0,
+    isOT: 0,
+    remarks: undefined,
   });
 
   const db = useDb();
@@ -37,6 +40,9 @@ const CreateWorkLog = () => {
       lepPages: formData.lepPages,
       timeTaken: formData.timeTaken,
       workedAt: formData.workedAt,
+      isSml: formData.isSml,
+      isOT: formData.isOT,
+      remarks: formData.remarks,
     };
 
     try {
@@ -47,6 +53,9 @@ const CreateWorkLog = () => {
         lepPages: undefined,
         timeTaken: undefined,
         workedAt: undefined,
+        isSml: 0,
+        isOT: 0,
+        remarks: undefined,
       });
       toast.success("Log saved successfully");
     } catch (error) {
