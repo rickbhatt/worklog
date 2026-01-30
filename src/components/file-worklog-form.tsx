@@ -69,19 +69,19 @@ const FileWorklogForm = ({
       />
 
       <FormInput
-        inputType="checkbox"
-        label="OT file?"
-        name="isOT"
-        value={value.isOT}
-        onChange={handleInputChange}
-      />
-      <FormInput
         label="Time taken (minutes)"
         name="timeTaken"
         inputMode="numeric"
         maxLength={3}
         value={value.timeTaken}
         placeholder="60"
+        onChange={handleInputChange}
+      />
+      <FormInput
+        inputType="checkbox"
+        label="OT file?"
+        name="isOT"
+        value={value.isOT}
         onChange={handleInputChange}
       />
       <FormInput
