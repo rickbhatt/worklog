@@ -9,11 +9,17 @@ export const fileLogs = sqliteTable(
 
     articleId: text("article_id").notNull(),
 
+    isSml: integer("is_sml").notNull().default(0), // 0 for false and 1 for true
+
+    isOT: integer("is_ot").notNull().default(0),
+
     timeTaken: integer("time_taken").notNull(), // time in minutes
 
     lepPages: integer("lep_pages").notNull(),
 
     workedAt: text("worked_at").notNull(), // when the work actually happened
+
+    remarks: text("remarks"),
 
     createdAt: text("created_at").notNull().default("CURRENT_TIMESTAMP"),
 
@@ -21,5 +27,5 @@ export const fileLogs = sqliteTable(
   },
   (t) => ({
     workedAtIdx: index("file_logs_worked_at_idx").on(t.workedAt),
-  })
+  }),
 );
