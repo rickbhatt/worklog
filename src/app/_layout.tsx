@@ -1,3 +1,4 @@
+import { ensureBackupDir } from "@/app/storage/backup";
 import LoadingScreen from "@/components/loading-screen";
 import { createDrizzleDb } from "@/db/client";
 import migrations from "@/drizzle/migrations";
@@ -13,7 +14,7 @@ import {
   useSQLiteContext,
 } from "expo-sqlite";
 import { StatusBar } from "expo-status-bar";
-import { Suspense } from "react";
+import { Suspense, useEffect } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { Toaster } from "sonner-native";
@@ -23,6 +24,11 @@ const DATABASE_NAME = "worklog.db";
 const Layout = () => {
   const db = useSQLiteContext();
   useDrizzleStudio(db);
+
+  useEffect(() => {
+    ensureBackupDir();
+  }, []);
+
   return (
     <>
       <StatusBar style="light" />
