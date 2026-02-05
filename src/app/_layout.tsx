@@ -1,8 +1,9 @@
-import { ensureBackupDir } from "@/app/storage/backup";
 import LoadingScreen from "@/components/loading-screen";
+import { DB_NAME } from "@/constants";
 import { createDrizzleDb } from "@/db/client";
 import migrations from "@/drizzle/migrations";
 import "@/global.css";
+import { ensureBackupDir } from "@/lib/storage/backup";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { PortalHost } from "@rn-primitives/portal";
 import { useMigrations } from "drizzle-orm/expo-sqlite/migrator";
@@ -19,8 +20,6 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { Toaster } from "sonner-native";
 
-const DATABASE_NAME = "worklog.db";
-
 const Layout = () => {
   const db = useSQLiteContext();
   useDrizzleStudio(db);
@@ -32,9 +31,14 @@ const Layout = () => {
   return (
     <>
       <StatusBar style="light" />
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="work-log" options={{ headerShown: false }} />
+      <Stack
+        screenOptions={{
+          headerShown: false,
+        }}
+      >
+        <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="work-log" />
+        <Stack.Screen name="settings" />
       </Stack>
     </>
   );
@@ -42,7 +46,7 @@ const Layout = () => {
 
 export default function RootLayout() {
   // Open SQLite DB
-  const sqliteDb = openDatabaseSync(DATABASE_NAME, { useNewConnection: true }); // remove useNewConnection in production
+  const sqliteDb = openDatabaseSync(DB_NAME, { useNewConnection: true }); // remove useNewConnection in production
 
   // Create Drizzle instance
   const db = createDrizzleDb(sqliteDb);
@@ -58,7 +62,7 @@ export default function RootLayout() {
             <Suspense fallback={<LoadingScreen />}>
               <SQLiteProvider
                 useSuspense
-                databaseName={DATABASE_NAME}
+                databaseName={DB_NAME}
                 options={{ enableChangeListener: true }}
               >
                 <Layout />

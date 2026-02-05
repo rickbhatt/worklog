@@ -76,6 +76,10 @@
     @apply px-4;
   }
 
+  .screen {
+    @apply screen-x-padding pt-2 flex-1 bg-bg-primary;
+  }
+
   .screen-header {
     @apply flex-between flex-row screen-x-padding pt-safe h-28;
   }

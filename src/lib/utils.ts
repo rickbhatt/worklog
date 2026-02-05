@@ -51,3 +51,10 @@ export const convertTimeTakenToHoursMins = (time: number | undefined) => {
     return `${hours}h ${minutes}m`;
   }
 };
+
+export function generateBackupId() {
+  const time = Date.now(); // milliseconds since epoch
+  const rand = Math.random().toString(36).slice(2, 8);
+
+  return `${time}_${rand}`;
+}

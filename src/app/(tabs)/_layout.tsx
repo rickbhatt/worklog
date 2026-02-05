@@ -18,7 +18,7 @@ const TabIconAndLabel = ({ focused, icon, title }: TabBarIconProps) => (
         "text-xs",
         focused
           ? "font-bold text-tab-acitve-tint"
-          : "font-normal text-text-primary"
+          : "font-normal text-text-primary",
       )}
     >
       {title}
@@ -73,7 +73,7 @@ const TabsLayout = () => {
         }}
       />
       <Tabs.Screen
-        name="create-work-log"
+        name="dummy-create-work-log"
         listeners={() => ({
           tabPress: (e) => {
             e.preventDefault();
@@ -82,14 +82,18 @@ const TabsLayout = () => {
         })}
         options={{
           tabBarIcon: ({ focused }) => (
-            <View className="h-16 w-16 flex-row items-center justify-center rounded-full mb-16 bg-accent">
-              <DynamicIcon
-                family="MaterialIcons"
-                name="add"
-                size={ICON_SIZE + 4}
-                color={focused ? ACTIVE_COLOR : ICON_COLOR}
-              />
-            </View>
+            <TabIconAndLabel
+              focused={focused}
+              title="Add"
+              icon={
+                <DynamicIcon
+                  family="MaterialIcons"
+                  name="add"
+                  size={ICON_SIZE}
+                  color={focused ? ACTIVE_COLOR : ICON_COLOR}
+                />
+              }
+            />
           ),
         }}
       />
@@ -104,6 +108,31 @@ const TabsLayout = () => {
                 <DynamicIcon
                   family="MaterialIcons"
                   name="insights"
+                  size={ICON_SIZE}
+                  color={focused ? ACTIVE_COLOR : ICON_COLOR}
+                />
+              }
+            />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="dummy-settings"
+        listeners={() => ({
+          tabPress: (e) => {
+            e.preventDefault();
+            router.push("/settings");
+          },
+        })}
+        options={{
+          tabBarIcon: ({ focused }) => (
+            <TabIconAndLabel
+              focused={focused}
+              title="Settings"
+              icon={
+                <DynamicIcon
+                  family="Feather"
+                  name="settings"
                   size={ICON_SIZE}
                   color={focused ? ACTIVE_COLOR : ICON_COLOR}
                 />
