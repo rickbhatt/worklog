@@ -59,7 +59,7 @@ const FilterLogsBottomSheetModal = ({
     ref.current?.close();
   };
 
-  const handleOnChangeFilters = (name: string, value: string) => {
+  const handleOnChangeFilters = (name: string, value: string | number) => {
     setFilters((prev) => ({ ...prev, [name]: value }));
   };
 

@@ -39,6 +39,19 @@ export const getCurrentDate = (): string => {
   return formatDateTime(new Date()).dateToISOString;
 };
 
+export const getMonthRange = (month: string, year: string) => {
+  const monthIndex = parseInt(month) - 1; // Convert to zero-based index
+  const yearNum = parseInt(year);
+
+  const start = new Date(yearNum, monthIndex, 1);
+  const end = new Date(yearNum, monthIndex + 1, 0);
+
+  return {
+    start: formatDateTime(start).dateToISOString,
+    end: formatDateTime(end).dateToISOString,
+  };
+};
+
 export const convertTimeTakenToHoursMins = (time: number | undefined) => {
   if (!time) return "";
 

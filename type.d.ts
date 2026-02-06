@@ -124,7 +124,11 @@ export interface AlertDialogBoxProps {
   onAction?: () => void;
 }
 
-export type FieldName = keyof FileLogsInsertType | "startDate" | "endDate";
+export type FieldName =
+  | keyof FileLogsInsertType
+  | "startDate"
+  | "endDate"
+  | "month";
 export type FileLogsInsertType = typeof fileLogs.$inferInsert;
 export type FileLogsUpdateType = typeof fileLogs.$inferUpdate;
 export type FileLogsSelectType = typeof fileLogs.$inferSelect;

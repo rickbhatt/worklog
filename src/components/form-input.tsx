@@ -1,17 +1,26 @@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { cn, formatDateTime } from "@/lib/utils";
 import DateTimePicker from "@react-native-community/datetimepicker";
+import type { TriggerRef } from "@rn-primitives/select";
 import React, { useState } from "react";
 import { Platform, Pressable, Text, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { FieldName, InputModeOptions } from "type";
 
 interface FormInputProps {
-  label: string;
+  label?: string;
   name: FieldName;
-  value: string | null | number | undefined;
+  value?: string | null | number | undefined;
   onChange: (field: FieldName, rawValue: string | number) => void;
   placeholder?: string;
   secureTextEntry?: boolean;
@@ -23,9 +32,10 @@ interface FormInputProps {
   minDate?: Date | undefined;
   inputMode?: InputModeOptions | undefined;
   maxLength?: number;
-  inputType?: "text" | "date" | "checkbox" | "textarea";
+  inputType?: "text" | "date" | "checkbox" | "textarea" | "select";
   inputClassname?: string;
   rowMode?: boolean;
+  selectOptions?: { label: string; value: string }[];
   editable?: boolean;
   onFocus?: () => void;
   onBlur?: () => void;
@@ -42,6 +52,7 @@ const FormInput = ({
   autoFocus = false,
   returnKeyType,
   inputMode,
+  selectOptions = [{ label: "Option 1", value: "option1" }],
   name,
   maxDate = undefined,
   minDate = undefined,
@@ -56,6 +67,23 @@ const FormInput = ({
   const [isDatePicketOpen, setIsDatePickerOpen] = useState(false);
   const numericFields: FieldName[] = ["articleId", "lepPages", "timeTaken"];
   const [isChecked, setIsChecked] = useState(false);
+
+  const insets = useSafeAreaInsets();
+  const contentInsets = {
+    top: insets.top,
+    bottom: Platform.select({
+      ios: insets.bottom,
+      android: insets.bottom + 24,
+    }),
+    left: 12,
+    right: 12,
+  };
+
+  const ref = React.useRef<TriggerRef>(null);
+
+  function onTouchStart() {
+    ref.current?.open();
+  }
 
   const handleOnChangeTextInput = (field: FieldName, rawValue: string) => {
     let sanitizedValue = rawValue;
@@ -174,6 +202,38 @@ const FormInput = ({
             className="bg-bg-primary"
             onChangeText={(text) => handleOnChangeTextInput(name, text)}
           />
+        </View>
+      );
+
+    case "select":
+      const valueStr = value?.toString() || "";
+      const selectedOption = React.useMemo(
+        () => selectOptions.find((opt) => opt.value.toString() === valueStr),
+        [valueStr, selectOptions],
+      );
+      return (
+        <View className={cn("form-group", rowMode && "flex-1")}>
+          <Select
+            onValueChange={(selectedValue) =>
+              onChange(name, selectedValue?.value ? selectedValue.value : "")
+            }
+            value={selectedOption}
+          >
+            <SelectTrigger onTouchStart={onTouchStart}>
+              <SelectValue placeholder={placeholder} />
+            </SelectTrigger>
+            <SelectContent insets={contentInsets}>
+              {selectOptions.map((opt) => (
+                <SelectItem
+                  key={opt.value}
+                  label={opt.label}
+                  value={opt.value.toString()}
+                >
+                  {opt.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </View>
       );
   }

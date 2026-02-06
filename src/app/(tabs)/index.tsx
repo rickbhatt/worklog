@@ -1,35 +1,67 @@
 import DynamicIcon from "@/components/dynamic-icon";
 import FilterLogsBottomSheetModal from "@/components/filter-logs-bottomsheet";
+import FormInput from "@/components/form-input";
+import LoadingScreen from "@/components/loading-screen";
 import LogCard from "@/components/log-card";
 import ScreenHeader from "@/components/screen-header";
+import { MONTHS } from "@/constants";
 import { getFileLogs } from "@/db/queries/fileworklog.queries";
 import { useDb } from "@/hooks/useDb";
-import { cn, formatDateTime, getCurrentDate } from "@/lib/utils";
+import { formatDateTime, getCurrentDate, getMonthRange } from "@/lib/utils";
 import { BottomSheetModal } from "@gorhom/bottom-sheet";
 
 import { useLiveQuery } from "drizzle-orm/expo-sqlite";
-import { Tabs, useLocalSearchParams } from "expo-router";
-import React, { useMemo, useRef } from "react";
+import { Tabs, useLocalSearchParams, useRouter } from "expo-router";
+
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { SectionList, Text, View } from "react-native";
-import { FileLogsSection, FileLogsSelectType, ScreenHeaderProps } from "type";
+import {
+  FieldName,
+  FileLogsSection,
+  FileLogsSelectType,
+  ScreenHeaderProps,
+} from "type";
 
 const ListHeader = ({
   isParams,
   dataLength,
+  currentMonth,
+  currentYear,
 }: {
   isParams: boolean;
   dataLength: number;
+  currentMonth: number;
+  currentYear: number;
 }) => {
+  const [selectedMonth, setSelectedMonth] = useState<string | undefined>(
+    currentMonth.toString(),
+  );
+
+  const router = useRouter();
+
+  const onSelectChange = (name: FieldName, value: string | number) => {
+    setSelectedMonth(value.toString());
+
+    const monthRange = getMonthRange(value.toString(), currentYear.toString());
+    router.replace({
+      pathname: "/(tabs)",
+      params: {
+        startDate: monthRange.start,
+        endDate: monthRange.end,
+      },
+    });
+  };
+
   return (
     <View>
-      {isParams ? (
-        <Text className={cn("base-paragraph", "text-text-secondary")}>
-          {dataLength} log{dataLength !== 1 ? "s" : ""} found with applied
-          filters
-        </Text>
-      ) : (
-        <></>
-      )}
+      <FormInput
+        onChange={onSelectChange}
+        name="month"
+        inputType="select"
+        placeholder="Select a month"
+        selectOptions={MONTHS}
+        value={selectedMonth}
+      />
     </View>
   );
 };
@@ -100,17 +132,31 @@ const History = () => {
     endDate?: string;
   }>();
 
+  // get current month and year for default filter values in ListHeader
+  const currentMonth = new Date().getMonth() + 1;
+
+  const currentYear = new Date().getFullYear();
+
+  const monthRange = getMonthRange(
+    currentMonth.toString(),
+    currentYear.toString(),
+  );
+
   // check if any filter param is present
   const isParams =
     (journalId || articleId || startDate || endDate) !== undefined;
+  console.log("🚀 ~ History ~ isParams:", isParams);
 
   const db = useDb();
+
+  const router = useRouter();
 
   const { data: logs, error } = useLiveQuery(
     getFileLogs({
       db,
       filters: { journalId, articleId, startDate, endDate },
     }),
+
     [journalId, articleId, startDate, endDate], //deps: re-run live query when filters change
   );
   // console.log("🚀 ~ History ~ logs:", logs);
@@ -154,6 +200,21 @@ const History = () => {
     );
   }, [logs]);
 
+  useEffect(() => {
+    if (!isParams) {
+      router.replace({
+        pathname: "/(tabs)",
+        params: {
+          startDate: monthRange.start,
+          endDate: monthRange.end,
+        },
+      });
+    }
+  }, [isParams, router]);
+
+  if (!isParams) {
+    return <LoadingScreen />;
+  }
   return (
     <>
       <Tabs.Screen
@@ -175,7 +236,12 @@ const History = () => {
           <SectionHeader section={section} />
         )}
         ListHeaderComponent={
-          <ListHeader isParams={isParams} dataLength={logs?.length ?? 0} />
+          <ListHeader
+            isParams={isParams}
+            dataLength={logs?.length ?? 0}
+            currentMonth={currentMonth}
+            currentYear={currentYear}
+          />
         }
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => <SectionItem item={item} />}

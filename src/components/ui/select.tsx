@@ -33,9 +33,9 @@ function SelectValue({
     <SelectPrimitive.Value
       ref={ref}
       className={cn(
-        "text-foreground line-clamp-1 flex flex-row items-center gap-2 text-sm",
+        "text-text-primary text-base line-clamp-1 flex flex-row items-center gap-2",
         !value && "text-muted-foreground",
-        className
+        className,
       )}
       {...props}
     />
@@ -57,13 +57,13 @@ function SelectTrigger({
     <SelectPrimitive.Trigger
       ref={ref}
       className={cn(
-        "border-input dark:bg-input/30 dark:active:bg-input/50 bg-background flex h-10 flex-row items-center justify-between gap-2 rounded-md border px-3 py-2 shadow-sm shadow-black/5 sm:h-9",
+        "border-input flex h-12 flex-row items-center justify-between gap-2 rounded-md border px-3 py-2 shadow-sm shadow-black/5 sm:h-9",
         Platform.select({
           web: "focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive dark:hover:bg-input/50 w-fit whitespace-nowrap text-sm outline-none transition-[color,box-shadow] focus-visible:ring-[3px] disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg]:shrink-0",
         }),
         props.disabled && "opacity-50",
         size === "sm" && "h-8 py-2 sm:py-1.5",
-        className
+        className,
       )}
       {...props}
     >
@@ -110,7 +110,7 @@ function SelectContent({
                     web: cn(
                       "animate-in fade-in-0 zoom-in-95 origin-(--radix-select-content-transform-origin) max-h-52 overflow-y-auto overflow-x-hidden",
                       props.side === "bottom" && "slide-in-from-top-2",
-                      props.side === "top" && "slide-in-from-bottom-2"
+                      props.side === "top" && "slide-in-from-bottom-2",
                     ),
                     native: "p-1",
                   }),
@@ -118,10 +118,10 @@ function SelectContent({
                     Platform.select({
                       web: cn(
                         props.side === "bottom" && "translate-y-1",
-                        props.side === "top" && "-translate-y-1"
+                        props.side === "top" && "-translate-y-1",
                       ),
                     }),
-                  className
+                  className,
                 )}
                 position={position}
                 {...props}
@@ -135,8 +135,8 @@ function SelectContent({
                         "w-full",
                         Platform.select({
                           web: "h-[var(--radix-select-trigger-height)] min-w-[var(--radix-select-trigger-width)]",
-                        })
-                      )
+                        }),
+                      ),
                   )}
                 >
                   {children}
@@ -159,7 +159,7 @@ function SelectLabel({
     <SelectPrimitive.Label
       className={cn(
         "text-muted-foreground px-2 py-2 text-xs sm:py-1.5",
-        className
+        className,
       )}
       {...props}
     />
@@ -179,7 +179,7 @@ function SelectItem({
           web: "focus:bg-accent focus:text-accent-foreground *:[span]:last:flex *:[span]:last:items-center *:[span]:last:gap-2 cursor-default outline-none data-[disabled]:pointer-events-none [&_svg]:pointer-events-none",
         }),
         props.disabled && "opacity-50",
-        className
+        className,
       )}
       {...props}
     >
@@ -203,7 +203,7 @@ function SelectSeparator({
       className={cn(
         "bg-border -mx-1 my-1 h-px",
         Platform.select({ web: "pointer-events-none" }),
-        className
+        className,
       )}
       {...props}
     />
@@ -225,7 +225,7 @@ function SelectScrollUpButton({
     <SelectPrimitive.ScrollUpButton
       className={cn(
         "flex cursor-default items-center justify-center py-1",
-        className
+        className,
       )}
       {...props}
     >
@@ -249,7 +249,7 @@ function SelectScrollDownButton({
     <SelectPrimitive.ScrollDownButton
       className={cn(
         "flex cursor-default items-center justify-center py-1",
-        className
+        className,
       )}
       {...props}
     >
