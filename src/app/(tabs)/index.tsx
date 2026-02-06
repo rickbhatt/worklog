@@ -125,6 +125,7 @@ const SectionItem = ({ item }: { item: FileLogsSelectType }) => {
 };
 
 const History = () => {
+  //! might revisit the logic of initial redirection with params
   const { journalId, articleId, startDate, endDate } = useLocalSearchParams<{
     journalId?: string;
     articleId?: string;
@@ -144,8 +145,10 @@ const History = () => {
 
   // check if any filter param is present
   const isParams =
-    (journalId || articleId || startDate || endDate) !== undefined;
-  console.log("🚀 ~ History ~ isParams:", isParams);
+    journalId !== undefined ||
+    articleId !== undefined ||
+    startDate !== undefined ||
+    endDate !== undefined;
 
   const db = useDb();
 
@@ -210,7 +213,7 @@ const History = () => {
         },
       });
     }
-  }, [isParams, router]);
+  }, [isParams, router, monthRange.start, monthRange.end]);
 
   if (!isParams) {
     return <LoadingScreen />;
