@@ -31,6 +31,7 @@ const Layout = () => {
   return (
     <>
       <StatusBar style="light" />
+
       <Stack
         screenOptions={{
           headerShown: false,
@@ -57,9 +58,9 @@ export default function RootLayout() {
 
   return (
     <>
-      <GestureHandlerRootView>
-        <BottomSheetModalProvider>
-          <KeyboardProvider>
+      <KeyboardProvider>
+        <GestureHandlerRootView>
+          <BottomSheetModalProvider>
             <Suspense fallback={<LoadingScreen />}>
               <SQLiteProvider
                 useSuspense
@@ -71,9 +72,9 @@ export default function RootLayout() {
             </Suspense>
             <PortalHost />
             <Toaster position="top-center" />
-          </KeyboardProvider>
-        </BottomSheetModalProvider>
-      </GestureHandlerRootView>
+          </BottomSheetModalProvider>
+        </GestureHandlerRootView>
+      </KeyboardProvider>
     </>
   );
 }

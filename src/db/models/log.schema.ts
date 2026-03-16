@@ -11,6 +11,8 @@ export const fileLogs = sqliteTable(
 
     isSml: integer("is_sml").notNull().default(0), // 0 for false and 1 for true
 
+    isND: integer("is_nd").notNull().default(0),
+
     isOT: integer("is_ot").notNull().default(0),
 
     timeTaken: integer("time_taken").notNull(), // time in minutes

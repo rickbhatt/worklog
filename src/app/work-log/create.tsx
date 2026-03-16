@@ -17,6 +17,7 @@ const CreateWorkLog = () => {
     workedAt: undefined,
     isSml: 0,
     isOT: 0,
+    isND: 0,
     remarks: undefined,
   });
 
@@ -42,6 +43,7 @@ const CreateWorkLog = () => {
       workedAt: formData.workedAt,
       isSml: formData.isSml,
       isOT: formData.isOT,
+      isND: formData.isND,
       remarks: formData.remarks,
     };
 
@@ -55,6 +57,7 @@ const CreateWorkLog = () => {
         workedAt: undefined,
         isSml: 0,
         isOT: 0,
+        isND: 0,
         remarks: undefined,
       });
       toast.success("Log saved successfully");
@@ -73,7 +76,7 @@ const CreateWorkLog = () => {
           headerShown: true,
         }}
       />
-      <View className="screen-x-padding pt-2 flex-1 bg-bg-primary">
+      <View className="pt-2 flex-1 bg-bg-primary">
         <FileWorklogForm
           value={formData}
           onChange={setFormData}

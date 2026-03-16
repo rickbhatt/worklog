@@ -1,0 +1,1 @@
+ALTER TABLE `file_logs` ADD `is_nd` integer DEFAULT 0 NOT NULL;
