@@ -65,26 +65,7 @@ const FileWorklogForm = ({
           value={value.journalId}
           onChange={handleInputChange}
         />
-        <FormInput
-          label="Journal ID"
-          autoCapitalize="words"
-          name="journalId"
-          maxLength={4}
-          // autoFocus={true}
-          placeholder="NPP2, MDR2,..."
-          value={value.journalId}
-          onChange={handleInputChange}
-        />
-        <FormInput
-          label="Journal ID"
-          autoCapitalize="words"
-          name="journalId"
-          maxLength={4}
-          // autoFocus={true}
-          placeholder="NPP2, MDR2,..."
-          value={value.journalId}
-          onChange={handleInputChange}
-        />
+
         <FormInput
           label="Article ID"
           name="articleId"

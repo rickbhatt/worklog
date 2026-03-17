@@ -29,6 +29,7 @@ const EditFileLog = () => {
         workedAt: row.workedAt,
         isSml: row.isSml,
         isOT: row.isOT,
+        isND: row.isND,
         remarks: row.remarks,
       };
 

@@ -97,8 +97,7 @@ const LogDetailBottomsheet = ({
         onDismiss={() => setIsModalOpen(false)}
         enableContentPanningGesture={true}
         enableDismissOnClose
-        enableDynamicSizing={false}
-        snapPoints={["32%"]}
+        enableDynamicSizing={true}
         handleIndicatorStyle={{
           backgroundColor: "#FFFFFF",
           width: 40,
@@ -140,7 +139,7 @@ const LogDetailBottomsheet = ({
           </View>
 
           {/* Content */}
-          <View className="mt-3.5 flex-col gap-3">
+          <View className="mt-3.5 flex-col gap-3 pb-safe-offset-3">
             <Text className="text-base text-text-primary">
               LEP Pages: {fileLog?.lepPages}
             </Text>
@@ -151,6 +150,22 @@ const LogDetailBottomsheet = ({
             <Text className="text-base text-text-primary">
               Worked At: {formatDateTime(fileLog?.workedAt).shortDateWithYear}
             </Text>
+            <Text className="text-base text-text-primary">
+              File type: {fileLog?.isSml === 1 ? "SML" : "Manual"}
+            </Text>
+            {fileLog?.isSml === 1 && (
+              <Text className="text-base text-text-primary">
+                ND File: {fileLog?.isND === 1 ? "Yes" : "No"}
+              </Text>
+            )}
+            {fileLog?.isOT === 1 && (
+              <Text className="text-base text-text-primary">OT File: Yes</Text>
+            )}
+            {fileLog?.remarks && (
+              <Text className="text-base text-text-primary">
+                Remarks: {fileLog.remarks}
+              </Text>
+            )}
           </View>
         </BottomSheetView>
       </BottomSheetModal>
