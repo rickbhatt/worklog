@@ -132,3 +132,8 @@ export type FieldName =
 export type FileLogsInsertType = typeof fileLogs.$inferInsert;
 export type FileLogsUpdateType = typeof fileLogs.$inferUpdate;
 export type FileLogsSelectType = typeof fileLogs.$inferSelect;
+
+type RequiredField<T> = {
+  key: keyof T;
+  message: string;
+};

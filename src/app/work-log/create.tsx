@@ -2,11 +2,12 @@ import FileWorklogForm from "@/components/file-worklog-form";
 import ScreenHeader from "@/components/screen-header";
 import { createFileLog } from "@/db/mutations/fileworklog.mutations";
 import { useDb } from "@/hooks/useDb";
+import { validateForm } from "@/lib/utils";
 import { Tabs } from "expo-router";
 import React, { useState } from "react";
 import { View } from "react-native";
 import { toast } from "sonner-native";
-import { FileLogsCreateInput, FileLogsInsertType } from "type";
+import { FileLogsCreateInput } from "type";
 
 const CreateWorkLog = () => {
   const [formData, setFormData] = useState<Partial<FileLogsCreateInput>>({
@@ -22,25 +23,28 @@ const CreateWorkLog = () => {
   });
 
   const db = useDb();
+  const handleSubmit = async () => {
+    const requiredFields = [
+      { key: "journalId", message: "Please select a journal" },
+      { key: "articleId", message: "Please select an article" },
+      { key: "lepPages", message: "Please enter LEP pages" },
+      { key: "timeTaken", message: "Please enter time taken" },
+      { key: "workedAt", message: "Please select worked at date" },
+    ] as const;
 
-  const handleSubmit = async (data: Partial<FileLogsInsertType>) => {
-    if (
-      !formData.journalId ||
-      !formData.articleId ||
-      !formData.lepPages ||
-      !formData.timeTaken ||
-      !formData.workedAt
-    ) {
-      toast.error("Please fill all the fields");
+    const missingField = validateForm(formData, requiredFields);
+
+    if (missingField) {
+      toast.error(missingField.message);
       return;
     }
 
     const payload: FileLogsCreateInput = {
-      journalId: formData.journalId,
-      articleId: formData.articleId,
-      lepPages: formData.lepPages,
-      timeTaken: formData.timeTaken,
-      workedAt: formData.workedAt,
+      journalId: formData.journalId!,
+      articleId: formData.articleId!,
+      lepPages: formData.lepPages!,
+      timeTaken: formData.timeTaken!,
+      workedAt: formData.workedAt!,
       isSml: formData.isSml,
       isOT: formData.isOT,
       isND: formData.isND,
@@ -48,7 +52,8 @@ const CreateWorkLog = () => {
     };
 
     try {
-      let row = await createFileLog(db, payload);
+      await createFileLog(db, payload);
+
       setFormData({
         journalId: undefined,
         articleId: undefined,
@@ -60,6 +65,7 @@ const CreateWorkLog = () => {
         isND: 0,
         remarks: undefined,
       });
+
       toast.success("Log saved successfully");
     } catch (error) {
       console.error("Failed to submit file log", error);

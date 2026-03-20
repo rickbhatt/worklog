@@ -51,6 +51,7 @@ const LogDetailBottomsheet = ({
   const getFileLog = async () => {
     try {
       const row = await getFileLogById(db, id);
+
       setFileLog(row);
     } catch (error) {
       toast.error("Failed to get log");

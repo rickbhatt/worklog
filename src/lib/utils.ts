@@ -1,6 +1,7 @@
 import { clsx, type ClassValue } from "clsx";
 import { format } from "date-fns";
 import { twMerge } from "tailwind-merge";
+import { RequiredField } from "type";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -53,7 +54,7 @@ export const getMonthRange = (month: string, year: string) => {
 };
 
 export const convertTimeTakenToHoursMins = (time: number | undefined) => {
-  if (!time) return "";
+  if (!time || time === 0) return "0m";
 
   const hours = Math.floor(time / 60);
   const minutes = time % 60;
@@ -71,3 +72,15 @@ export function generateBackupId() {
 
   return `${time}_${rand}`;
 }
+
+// Form fields validation
+
+const isEmpty = (value: unknown) =>
+  value === null || value === undefined || value === "";
+
+export const validateForm = <T extends Record<string, unknown>>(
+  formData: T,
+  requiredFields: readonly RequiredField<T>[],
+) => {
+  return requiredFields.find(({ key }) => isEmpty(formData[key]));
+};

@@ -36,6 +36,7 @@ const FileWorklogForm = ({
         ...value,
         isND: ndValue,
         lepPages: ndValue === 1 ? 0 : 15,
+        timeTaken: 0,
       });
     } else {
       onChange({
@@ -110,6 +111,7 @@ const FileWorklogForm = ({
           name="timeTaken"
           inputMode="numeric"
           maxLength={3}
+          editable={value.isND === 0}
           value={value.timeTaken}
           placeholder="60"
           onChange={handleInputChange}
