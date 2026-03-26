@@ -6,6 +6,7 @@ import m0001 from './0001_right_amphibian.sql';
 import m0002 from './0002_brown_madrox.sql';
 import m0003 from './0003_wet_lady_bullseye.sql';
 import m0004 from './0004_useful_fallen_one.sql';
+import m0005 from './0005_conscious_roulette.sql';
 
   export default {
     journal,
@@ -14,7 +15,8 @@ import m0004 from './0004_useful_fallen_one.sql';
 m0001,
 m0002,
 m0003,
-m0004
+m0004,
+m0005
     }
   }
   

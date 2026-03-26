@@ -36,22 +36,19 @@ const buttonVariants = cva(
           Platform.select({ web: "hover:bg-secondary/80" }),
         ),
         ghost: cn(
-          "bg-bg-primary",
+          "bg-transparent",
           Platform.select({ web: "hover:bg-accent dark:hover:bg-accent/50" }),
         ),
         iconOnly: cn("h-10 w-10"),
       },
       size: {
-        default: cn(" px-4 py-2 ", Platform.select({ web: "has-[>svg]:px-3" })),
+        default: cn("px-4 py-2 ", Platform.select({ web: "has-[>svg]:px-3" })),
         sm: cn(
-          " gap-1.5 rounded-md px-3 ",
+          "gap-1.5 rounded-md px-3 ",
           Platform.select({ web: "has-[>svg]:px-2.5" }),
         ),
-        lg: cn(
-          " rounded-md px-6 ",
-          Platform.select({ web: "has-[>svg]:px-4" }),
-        ),
-        icon: "h-10 w-10",
+        lg: cn("rounded-md px-6 ", Platform.select({ web: "has-[>svg]:px-4" })),
+        icon: "h-10 w-10 p-0",
       },
     },
     defaultVariants: {

@@ -11,6 +11,7 @@ const SettingsLayout = () => {
     >
       <Stack.Screen name="index" />
       <Stack.Screen name="backups" />
+      <Stack.Screen name="target-hour" />
     </Stack>
   );
 };

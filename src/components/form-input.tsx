@@ -9,7 +9,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { cn, formatDateTime } from "@/lib/utils";
+import { cn, convertTimeTakenToHoursMins, formatDateTime } from "@/lib/utils";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import type { TriggerRef } from "@rn-primitives/select";
 import React, { useState } from "react";
@@ -32,6 +32,7 @@ interface FormInputProps {
   minDate?: Date | undefined;
   inputMode?: InputModeOptions | undefined;
   maxLength?: number;
+  timePreview?: boolean;
   inputType?: "text" | "date" | "checkbox" | "textarea" | "select";
   inputClassname?: string;
   rowMode?: boolean;
@@ -56,6 +57,7 @@ const FormInput = ({
   name,
   maxDate = undefined,
   minDate = undefined,
+  timePreview = false,
   maxLength = undefined,
   inputType = "text",
   editable = true,
@@ -105,7 +107,11 @@ const FormInput = ({
     case "text":
       return (
         <View className={cn("form-group", rowMode && "flex-1")}>
-          <Text className="form-label">{label}</Text>
+          <Text className="form-label">
+            {label}{" "}
+            {timePreview &&
+              `${value ? "| " + convertTimeTakenToHoursMins(Number(value)) : ""}`}
+          </Text>
           <Input
             onChangeText={(text) => handleOnChangeTextInput(name, text)}
             inputMode={inputMode}

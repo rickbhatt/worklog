@@ -31,3 +31,15 @@ export const fileLogs = sqliteTable(
     workedAtIdx: index("file_logs_worked_at_idx").on(t.workedAt),
   }),
 );
+
+export const targetInfo = sqliteTable("target_info", {
+  id: text("id").primaryKey(),
+
+  targetLepPages: integer("target_lep_pages"),
+
+  pagesPerHour: integer("pages_per_hour"),
+
+  createdAt: text("created_at").notNull().default("CURRENT_TIMESTAMP"),
+
+  updatedAt: text("updated_at").notNull().default("CURRENT_TIMESTAMP"),
+});

@@ -106,7 +106,7 @@ const LogDetailBottomsheet = ({
         ref={ref}
         backgroundStyle={{ backgroundColor: "#242424" }}
       >
-        <BottomSheetView className="py-4 mt-2 screen-x-padding flex-1 flex-col">
+        <BottomSheetView className="pt-4 mt-2 screen-x-padding flex-1 flex-col pb-safe-offset-6">
           {/* Header */}
           <View className="flex-between flex-row">
             <Text className="text-2xl font-bold text-text-primary">
@@ -140,7 +140,7 @@ const LogDetailBottomsheet = ({
           </View>
 
           {/* Content */}
-          <View className="mt-3.5 flex-col gap-3 pb-safe-offset-3">
+          <View className="mt-3.5 flex-col gap-3">
             <Text className="text-base text-text-primary">
               LEP Pages: {fileLog?.lepPages}
             </Text>

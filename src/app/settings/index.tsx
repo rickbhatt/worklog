@@ -1,16 +1,33 @@
 import DynamicIcon from "@/components/dynamic-icon";
 import ScreenHeader from "@/components/screen-header";
 import { Button } from "@/components/ui/button";
+import { DynamicIconProps } from "type";
 import { Stack, useRouter } from "expo-router";
 import React from "react";
 import { Text, View } from "react-native";
 
-const SettingBtns = [
+const SettingBtns: ReadonlyArray<{
+  title: string;
+  path: "/settings/backups" | "/settings/target-hour";
+  icon: DynamicIconProps;
+}> = [
   {
     title: "Backups",
     path: "/settings/backups",
+    icon: {
+      family: "MaterialIcons",
+      name: "backup",
+    },
   },
-] as const;
+  {
+    title: "Target and Hour",
+    path: "/settings/target-hour",
+    icon: {
+      family: "Feather",
+      name: "target",
+    },
+  },
+];
 
 const Settings = () => {
   const router = useRouter();
@@ -34,8 +51,7 @@ const Settings = () => {
             <View className="flex-between flex-row flex-1">
               <View className="flex-row items-center gap-x-2.5">
                 <DynamicIcon
-                  family="MaterialIcons"
-                  name="backup"
+                  {...btn.icon}
                   size={24}
                   color="#FFFFFF"
                 />

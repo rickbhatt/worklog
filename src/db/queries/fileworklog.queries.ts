@@ -1,10 +1,11 @@
 import { getCurrentMonthRange } from "@/lib/utils";
 import { and, desc, eq, gte, lte } from "drizzle-orm";
-import type { ExpoSQLiteDatabase } from "drizzle-orm/expo-sqlite";
-import { fileLogs } from "../schema";
+import type { Db } from "type";
+
+import { fileLogs, targetInfo } from "../schema";
 
 interface FileLogsWithFilers {
-  db: ExpoSQLiteDatabase;
+  db: Db;
   filters: {
     journalId?: string | undefined;
     articleId?: string | undefined;
@@ -49,8 +50,17 @@ export const getFileLogs = ({ db, filters }: FileLogsWithFilers) => {
   return logs;
 };
 
-export const getFileLogById = async (db: ExpoSQLiteDatabase, id: string) => {
+export const getFileLogById = async (db: Db, id: string) => {
   let [row] = await db.select().from(fileLogs).where(eq(fileLogs.id, id));
 
   return row;
+};
+
+export const getLatestTargetHour = (db: Db) => {
+  const latestRow = db
+    .select()
+    .from(targetInfo)
+    .orderBy(desc(targetInfo.createdAt));
+
+  return latestRow;
 };

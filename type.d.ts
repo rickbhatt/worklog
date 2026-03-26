@@ -1,4 +1,4 @@
-import { fileLogs } from "@/db/models/log.schema";
+import { fileLogs, targetInfo } from "@/db/models/log.schema";
 
 import {
   AntDesign,
@@ -21,7 +21,7 @@ export type IconFamily =
   | "Feather"
   | "Foundation";
 
-type DynamicIconProps =
+export type DynamicIconProps =
   | {
       family: Extract<IconFamily, "MaterialCommunityIcons">;
       name: React.ComponentProps<typeof MaterialCommunityIcons>["name"];
@@ -124,16 +124,27 @@ export interface AlertDialogBoxProps {
   onAction?: () => void;
 }
 
+export type FileLogsInsertType = typeof fileLogs.$inferInsert;
+export type FileLogsUpdateType = typeof fileLogs.$inferUpdate;
+export type FileLogsSelectType = typeof fileLogs.$inferSelect;
+export type TargetInfoSelectType = typeof targetInfo.$inferSelect;
+export type TargetInfoInsertType = typeof targetInfo.$inferInsert;
+
+export type TargetInfoCreateType = Omit<
+  TargetInfoInsertType,
+  "id" | "createdAt" | "updatedAt"
+>;
+
 export type FieldName =
   | keyof FileLogsInsertType
   | "startDate"
   | "endDate"
-  | "month";
-export type FileLogsInsertType = typeof fileLogs.$inferInsert;
-export type FileLogsUpdateType = typeof fileLogs.$inferUpdate;
-export type FileLogsSelectType = typeof fileLogs.$inferSelect;
+  | "month"
+  | keyof TargetInfoInsertType;
 
-type RequiredField<T> = {
+export type RequiredField<T> = {
   key: keyof T;
   message: string;
 };
+
+export type Db = ReturnType<typeof createDrizzleDb>;

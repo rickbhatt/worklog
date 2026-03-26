@@ -61,7 +61,7 @@ const FileWorklogForm = ({
           autoCapitalize="words"
           name="journalId"
           maxLength={4}
-          // autoFocus={true}
+          autoFocus={true}
           placeholder="NPP2, MDR2,..."
           value={value.journalId}
           onChange={handleInputChange}
@@ -110,6 +110,7 @@ const FileWorklogForm = ({
           label="Time taken (minutes)"
           name="timeTaken"
           inputMode="numeric"
+          timePreview
           maxLength={3}
           editable={value.isND === 0}
           value={value.timeTaken}
@@ -146,7 +147,7 @@ const FileWorklogForm = ({
         offset={{ closed: -bottom, opened: 0 }}
       >
         <Button className="py-3 w-full" onPress={() => onSubmit(value)}>
-          <Text className="text-text-primary font-bold text-base">Save</Text>
+          <Text className="btn-label">Save</Text>
         </Button>
       </KeyboardStickyView>
     </View>

@@ -117,4 +117,8 @@
   .base-paragraph {
     @apply text-base text-text-primary;
   }
+
+  .btn-label {
+    @apply text-text-primary text-nowrap font-bold text-base;
+  }
 }

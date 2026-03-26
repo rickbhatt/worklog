@@ -1,13 +1,15 @@
-import { fileLogs } from "@/db/models/log.schema";
+import { fileLogs, targetInfo } from "@/db/models/log.schema";
 import { eq } from "drizzle-orm";
-import type { ExpoSQLiteDatabase } from "drizzle-orm/expo-sqlite";
-import * as Crypto from "expo-crypto";
-import { FileLogsCreateInput, FileLogsInsertType } from "type";
 
-export const createFileLog = async (
-  db: ExpoSQLiteDatabase,
-  logData: FileLogsCreateInput
-) => {
+import * as Crypto from "expo-crypto";
+import {
+  Db,
+  FileLogsCreateInput,
+  FileLogsInsertType,
+  TargetInfoCreateType,
+} from "type";
+
+export const createFileLog = async (db: Db, logData: FileLogsCreateInput) => {
   try {
     const id = Crypto.randomUUID();
 
@@ -34,7 +36,7 @@ export const createFileLog = async (
   }
 };
 
-export const deleteFileLogById = async (db: ExpoSQLiteDatabase, id: string) => {
+export const deleteFileLogById = async (db: Db, id: string) => {
   try {
     let [row] = await db.delete(fileLogs).where(eq(fileLogs.id, id)).returning({
       id: fileLogs.id,
@@ -53,7 +55,7 @@ export const updateFileLogById = async ({
   id,
   data,
 }: {
-  db: ExpoSQLiteDatabase;
+  db: Db;
   id: string;
   data: Partial<Omit<FileLogsInsertType, "id" | "createdAt">>;
 }) => {
@@ -74,6 +76,29 @@ export const updateFileLogById = async ({
     return row;
   } catch (error) {
     console.log("Could not update file log");
+    throw error;
+  }
+};
+
+export const createTargetInfo = async (db: Db, data: TargetInfoCreateType) => {
+  try {
+    const id = Crypto.randomUUID();
+
+    const [row] = await db
+      .insert(targetInfo)
+      .values({
+        ...data,
+        id,
+        createdAt: new Date().toISOString(),
+        updatedAt: undefined,
+      })
+      .returning({
+        id: targetInfo.id,
+      });
+
+    return row;
+  } catch (error) {
+    console.error("[createTargetInfo] failed", error);
     throw error;
   }
 };
