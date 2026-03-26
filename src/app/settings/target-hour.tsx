@@ -2,7 +2,7 @@ import DynamicIcon from "@/components/dynamic-icon";
 import ScreenHeader from "@/components/screen-header";
 import TargetAndHourForm from "@/components/target-and-hour-formsheet";
 import { Button } from "@/components/ui/button";
-import { getLatestTargetHour } from "@/db/queries/fileworklog.queries";
+import { getTargetHour } from "@/db/queries/fileworklog.queries";
 import { useDb } from "@/hooks/useDb";
 import { formatDateTime } from "@/lib/utils";
 import { BottomSheetModal } from "@gorhom/bottom-sheet";
@@ -62,7 +62,7 @@ const renderItem = ({ item }: { item: TargetInfoSelectType }) => (
 const TargetAndHour = () => {
   const db = useDb();
 
-  const { data, error } = useLiveQuery(getLatestTargetHour(db));
+  const { data, error } = useLiveQuery(getTargetHour(db));
 
   const targetAndHourFormRef = useRef<BottomSheetModal>(null);
 

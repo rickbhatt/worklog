@@ -5,9 +5,17 @@ import LoadingScreen from "@/components/loading-screen";
 import LogCard from "@/components/log-card";
 import ScreenHeader from "@/components/screen-header";
 import { MONTHS } from "@/constants";
-import { getFileLogs } from "@/db/queries/fileworklog.queries";
+import {
+  getFileLogs,
+  getLatestTargetHour,
+} from "@/db/queries/fileworklog.queries";
 import { useDb } from "@/hooks/useDb";
-import { formatDateTime, getCurrentDate, getMonthRange } from "@/lib/utils";
+import {
+  calcTargetPagePercent,
+  formatDateTime,
+  getCurrentDate,
+  getMonthRange,
+} from "@/lib/utils";
 import { BottomSheetModal } from "@gorhom/bottom-sheet";
 
 import { useLiveQuery } from "drizzle-orm/expo-sqlite";
@@ -66,7 +74,13 @@ const ListHeader = ({
   );
 };
 
-const SectionHeader = ({ section }: { section: FileLogsSection }) => {
+const SectionHeader = ({
+  section,
+  targetInfo,
+}: {
+  section: FileLogsSection;
+  targetInfo: any;
+}) => {
   const currentDateString = getCurrentDate();
 
   const isToday = section.title === currentDateString;
@@ -108,6 +122,14 @@ const SectionHeader = ({ section }: { section: FileLogsSection }) => {
         <Text className="h3-bold text-text-secondary">
           {section.totalLepPages}
         </Text>
+        <Text className="h3-bold text-text-secondary">
+          |{" "}
+          {calcTargetPagePercent({
+            targetLepPages: targetInfo.targetLepPages,
+            lepPages: section.totalLepPages,
+          })}
+          %
+        </Text>
       </View>
     </View>
   );
@@ -132,6 +154,8 @@ const History = () => {
     startDate?: string;
     endDate?: string;
   }>();
+
+  const [targetInfo, setTargetInfo] = useState(null);
 
   // get current month and year for default filter values in ListHeader
   const currentMonth = new Date().getMonth() + 1;
@@ -215,6 +239,16 @@ const History = () => {
     }
   }, [isParams, router, monthRange.start, monthRange.end]);
 
+  const latestTargetInfo = async () => {
+    const [row] = await getLatestTargetHour(db);
+
+    setTargetInfo(row);
+  };
+
+  useEffect(() => {
+    latestTargetInfo();
+  }, []);
+
   if (!isParams) {
     return <LoadingScreen />;
   }
@@ -236,7 +270,7 @@ const History = () => {
         sections={fileLogsGroupedByWorkedAt}
         showsVerticalScrollIndicator={false}
         renderSectionHeader={({ section }) => (
-          <SectionHeader section={section} />
+          <SectionHeader section={section} targetInfo={targetInfo} />
         )}
         ListHeaderComponent={
           <ListHeader

@@ -84,3 +84,11 @@ export const validateForm = <T extends Record<string, unknown>>(
 ) => {
   return requiredFields.find(({ key }) => isEmpty(formData[key]));
 };
+
+export const calcTargetPagePercent = ({
+  targetLepPages,
+  lepPages,
+}: {
+  targetLepPages: number;
+  lepPages: number;
+}) => ((lepPages / targetLepPages) * 100).toFixed(2);

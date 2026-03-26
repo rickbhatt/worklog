@@ -56,11 +56,21 @@ export const getFileLogById = async (db: Db, id: string) => {
   return row;
 };
 
-export const getLatestTargetHour = (db: Db) => {
+export const getTargetHour = (db: Db) => {
   const latestRow = db
     .select()
     .from(targetInfo)
     .orderBy(desc(targetInfo.createdAt));
 
   return latestRow;
+};
+
+export const getLatestTargetHour = (db: Db) => {
+  const row = db
+    .select()
+    .from(targetInfo)
+    .orderBy(desc(targetInfo.createdAt))
+    .limit(1);
+
+  return row;
 };
