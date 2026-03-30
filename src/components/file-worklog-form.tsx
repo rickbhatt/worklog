@@ -143,7 +143,7 @@ const FileWorklogForm = ({
         />
       </KeyboardAwareScrollView>
       <KeyboardStickyView
-        className="py-2.5 bg-bg-primary flex-row items-center"
+        className="py-2.5 bg-bg-primary flex-row items-center screen-x-padding"
         offset={{ closed: -bottom, opened: 0 }}
       >
         <Button className="py-3 w-full" onPress={() => onSubmit(value)}>
