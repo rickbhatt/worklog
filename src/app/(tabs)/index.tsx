@@ -4,6 +4,7 @@ import FormInput from "@/components/form-input";
 import LoadingScreen from "@/components/loading-screen";
 import LogCard from "@/components/log-card";
 import ScreenHeader from "@/components/screen-header";
+import { Button } from "@/components/ui/button";
 import { MONTHS } from "@/constants";
 import {
   getFileLogs,
@@ -23,19 +24,16 @@ import { Tabs, useLocalSearchParams, useRouter } from "expo-router";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { SectionList, Text, View } from "react-native";
-import {
-  FieldName,
-  FileLogsSection,
-  FileLogsSelectType,
-  ScreenHeaderProps,
-} from "type";
+import { FieldName, FileLogsSection, FileLogsSelectType } from "type";
 
 const ListHeader = ({
   currentMonth,
   currentYear,
+  bottomSheetRef,
 }: {
   currentMonth: number;
   currentYear: number;
+  bottomSheetRef: React.RefObject<BottomSheetModal | null>;
 }) => {
   const [selectedMonth, setSelectedMonth] = useState<string | undefined>(
     currentMonth.toString(),
@@ -57,7 +55,7 @@ const ListHeader = ({
   };
 
   return (
-    <View className="flex-row items-center justify-start">
+    <View className="flex-row items-center justify-between">
       <FormInput
         onChange={onSelectChange}
         name="month"
@@ -66,6 +64,18 @@ const ListHeader = ({
         selectOptions={MONTHS}
         value={selectedMonth}
       />
+      <Button
+        className="w-12 h-12 rounded-full border border-border"
+        variant={"iconOnly"}
+        onPress={() => bottomSheetRef.current?.present()}
+      >
+        <DynamicIcon
+          family="FontAwesome"
+          name="filter"
+          size={20}
+          color="#FFFFFF"
+        />
+      </Button>
     </View>
   );
 };
@@ -185,20 +195,6 @@ const History = () => {
   // console.log("🚀 ~ History ~ logs:", logs);
   const filterBottomSheetModalRef = useRef<BottomSheetModal>(null);
 
-  const SCREEN_HEADER_RIGHT_BUTTONS: ScreenHeaderProps["rightButtons"] = [
-    {
-      name: "filter",
-      icon: (
-        <DynamicIcon
-          family="FontAwesome"
-          name="filter"
-          size={20}
-          color="#FFFFFF"
-        />
-      ),
-      onPress: () => filterBottomSheetModalRef.current?.present(),
-    },
-  ];
   const fileLogsGroupedByWorkedAt = useMemo<FileLogsSection[]>(() => {
     if (!logs) return [];
 
@@ -255,12 +251,7 @@ const History = () => {
       <Tabs.Screen
         options={{
           headerShown: true,
-          header: () => (
-            <ScreenHeader
-              title="History"
-              rightButtons={SCREEN_HEADER_RIGHT_BUTTONS}
-            />
-          ),
+          header: () => <ScreenHeader title="History" />,
         }}
       />
 
@@ -271,7 +262,11 @@ const History = () => {
           <SectionHeader section={section} targetInfo={targetInfo} />
         )}
         ListHeaderComponent={
-          <ListHeader currentMonth={currentMonth} currentYear={currentYear} />
+          <ListHeader
+            currentMonth={currentMonth}
+            currentYear={currentYear}
+            bottomSheetRef={filterBottomSheetModalRef}
+          />
         }
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => <SectionItem item={item} />}
