@@ -31,13 +31,9 @@ import {
 } from "type";
 
 const ListHeader = ({
-  isParams,
-  dataLength,
   currentMonth,
   currentYear,
 }: {
-  isParams: boolean;
-  dataLength: number;
   currentMonth: number;
   currentYear: number;
 }) => {
@@ -203,26 +199,28 @@ const History = () => {
       onPress: () => filterBottomSheetModalRef.current?.present(),
     },
   ];
-
-  const fileLogsGroupedByWorkedAt = useMemo(() => {
+  const fileLogsGroupedByWorkedAt = useMemo<FileLogsSection[]>(() => {
     if (!logs) return [];
 
-    const groupedLogs = logs.reduce((map, log) => {
-      if (!map.has(log.workedAt)) {
-        map.set(log.workedAt, {
-          title: log.workedAt,
-          totalLepPages: 0,
-          data: [],
-        });
-      }
+    const groupedLogs = logs.reduce(
+      (map: Map<string, FileLogsSection>, log: FileLogsSelectType) => {
+        if (!map.has(log.workedAt)) {
+          map.set(log.workedAt, {
+            title: log.workedAt,
+            totalLepPages: 0,
+            data: [],
+          });
+        }
 
-      const section = map.get(log.workedAt);
-      section.data.push(log);
-      section.totalLepPages += log.lepPages;
-      return map;
-    }, new Map());
+        const section = map.get(log.workedAt)!;
+        section.data.push(log);
+        section.totalLepPages += log.lepPages;
+        return map;
+      },
+      new Map<string, FileLogsSection>(),
+    );
 
-    return Array.from(groupedLogs.values()).sort((a, b) =>
+    return Array.from<FileLogsSection>(groupedLogs.values()).sort((a, b) =>
       b.title.localeCompare(a.title),
     );
   }, [logs]);
@@ -273,12 +271,7 @@ const History = () => {
           <SectionHeader section={section} targetInfo={targetInfo} />
         )}
         ListHeaderComponent={
-          <ListHeader
-            isParams={isParams}
-            dataLength={logs?.length ?? 0}
-            currentMonth={currentMonth}
-            currentYear={currentYear}
-          />
+          <ListHeader currentMonth={currentMonth} currentYear={currentYear} />
         }
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => <SectionItem item={item} />}
