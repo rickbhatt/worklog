@@ -61,7 +61,7 @@ const ListHeader = ({
   };
 
   return (
-    <View>
+    <View className="flex-row items-center justify-start">
       <FormInput
         onChange={onSelectChange}
         name="month"
