@@ -1,9 +1,12 @@
 import { DB_NAME } from "@/constants";
 import { generateBackupId } from "@/lib/utils";
+import { getAccessToken } from "@/services/googleAuthService";
 import { Directory, File, Paths } from "expo-file-system";
 
 const BACKUP_DIR_PATH = `${Paths.document.uri}backup/databases`;
 const LIVE_DB_PATH = `${Paths.document.uri}SQLite/${DB_NAME}`;
+console.log("🚀 ~ LIVE_DB_PATH:", LIVE_DB_PATH);
+const BACKUP_FILE_NAME = "worklog_backup.db";
 
 export const ensureBackupDir = () => {
   const info = Paths.info(BACKUP_DIR_PATH);
@@ -36,3 +39,81 @@ export const backupDatabase = () => {
     throw error;
   }
 };
+export async function uploadBackupToDrive(): Promise<{
+  success: boolean;
+  error?: any;
+}> {
+  let snapshotPath: string | null = null;
+
+  try {
+    // 1. Create a safe snapshot copy of the live DB
+    snapshotPath = backupDatabase();
+
+    // 2. Read the snapshot as base64
+    const snapshotFile = new File(snapshotPath);
+    if (!snapshotFile.exists) {
+      throw new Error("Snapshot file not found at: " + snapshotPath);
+    }
+
+    const base64Data = snapshotFile.base64Sync();
+
+    // 3. Get a fresh access token
+    const accessToken = await getAccessToken();
+    if (!accessToken) {
+      throw new Error("Not signed in to Google");
+    }
+
+    // 4. Upload to Drive appDataFolder
+    const metadata = {
+      name: BACKUP_FILE_NAME,
+      parents: ["appDataFolder"],
+    };
+
+    const boundary = "worklog_backup_boundary";
+
+    const body =
+      `--${boundary}\r\n` +
+      `Content-Type: application/json; charset=UTF-8\r\n\r\n` +
+      `${JSON.stringify(metadata)}\r\n` +
+      `--${boundary}\r\n` +
+      `Content-Type: application/octet-stream\r\n` +
+      `Content-Transfer-Encoding: base64\r\n\r\n` +
+      `${base64Data}\r\n` +
+      `--${boundary}--`;
+
+    const response = await fetch(
+      "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name,modifiedTime",
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": `multipart/related; boundary=${boundary}`,
+        },
+        body,
+      },
+    );
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(`Drive API error: ${JSON.stringify(result)}`);
+    }
+
+    console.log("🚀 Backup uploaded successfully:", result);
+    return { success: true };
+  } catch (error) {
+    console.log("🚀 Backup failed:", error);
+    return { success: false, error };
+  } finally {
+    // 5. Always clean up the local snapshot regardless of success or failure
+    if (snapshotPath) {
+      try {
+        const snapshotFile = new File(snapshotPath);
+        snapshotFile.delete();
+        console.log("🚀 Snapshot cleaned up");
+      } catch (e) {
+        console.log("🚀 Failed to clean up snapshot:", e);
+      }
+    }
+  }
+}

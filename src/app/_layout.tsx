@@ -4,6 +4,7 @@ import { createDrizzleDb } from "@/db/client";
 import migrations from "@/drizzle/migrations";
 import "@/global.css";
 import { ensureBackupDir } from "@/lib/storage/backup";
+import { configureGoogleSignIn } from "@/services/googleAuthService";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { PortalHost } from "@rn-primitives/portal";
 import { useMigrations } from "drizzle-orm/expo-sqlite/migrator";
@@ -19,6 +20,8 @@ import { Suspense, useEffect } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { Toaster } from "sonner-native";
+
+configureGoogleSignIn();
 
 const Layout = () => {
   const db = useSQLiteContext();

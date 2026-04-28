@@ -131,8 +131,8 @@ const SectionHeader = ({
         <Text className="h3-bold text-text-secondary">
           |{" "}
           {calcTargetPagePercent({
-            targetLepPages: targetInfo.targetLepPages,
-            lepPages: section.totalLepPages,
+            targetLepPages: targetInfo?.targetLepPages ?? 63,
+            lepPages: section?.totalLepPages,
           })}
           %
         </Text>

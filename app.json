@@ -7,7 +7,6 @@
     "icon": "./assets/images/icon.png",
     "scheme": "worklog",
     "userInterfaceStyle": "automatic",
-
     "ios": {
       "supportsTablet": true
     },
@@ -19,7 +18,7 @@
       },
       "allowBackup": false,
       "predictiveBackGestureEnabled": false,
-      "package": "com.anonymous.worklog"
+      "package": "com.rick.worklog"
     },
     "web": {
       "output": "static",
@@ -42,7 +41,9 @@
         }
       ],
       "expo-sqlite",
-      "@react-native-community/datetimepicker"
+      "@react-native-community/datetimepicker",
+      "expo-secure-store",
+      "@react-native-google-signin/google-signin"
     ],
     "experiments": {
       "typedRoutes": true,
