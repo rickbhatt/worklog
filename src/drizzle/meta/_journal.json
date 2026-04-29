@@ -43,6 +43,13 @@
       "when": 1773999813115,
       "tag": "0005_conscious_roulette",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1777455516036,
+      "tag": "0006_needy_nomad",
+      "breakpoints": true
     }
   ]
 }

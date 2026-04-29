@@ -8,6 +8,8 @@ const LIVE_DB_PATH = `${Paths.document.uri}SQLite/${DB_NAME}`;
 console.log("🚀 ~ LIVE_DB_PATH:", LIVE_DB_PATH);
 const BACKUP_FILE_NAME = "worklog_backup.db";
 
+const DRIVE_BASE_URL = "https://www.googleapis.com";
+
 export const ensureBackupDir = () => {
   const info = Paths.info(BACKUP_DIR_PATH);
   console.log("🚀 ~ ensureBackupDir ~ folder exits:", info.exists);
@@ -81,8 +83,13 @@ export async function uploadBackupToDrive(): Promise<{
       `${base64Data}\r\n` +
       `--${boundary}--`;
 
+    const params = new URLSearchParams({
+      uploadType: "multipart",
+      fields: "id,name,size,createdTime,modifiedTime,md5Checksum",
+    });
+
     const response = await fetch(
-      "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name,modifiedTime",
+      `${DRIVE_BASE_URL}/upload/drive/v3/files?${params.toString()}`,
       {
         method: "POST",
         headers: {
@@ -116,4 +123,39 @@ export async function uploadBackupToDrive(): Promise<{
       }
     }
   }
+}
+
+export async function listAppDataFiles() {
+  const accessToken = await getAccessToken();
+
+  if (!accessToken) {
+    throw new Error("Not signed in to Google");
+  }
+
+  // pageSize 10 is enough — appDataFolder will only ever have 1 backup file
+  // pagination not implemented since we control what gets uploaded
+
+  const params = new URLSearchParams({
+    spaces: "appDataFolder",
+    fields: "files(id,name,size,createdTime,modifiedTime,md5Checksum)",
+    pageSize: "10",
+  });
+
+  const response = await fetch(
+    `${DRIVE_BASE_URL}/drive/v3/files?${params.toString()}`,
+    {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    },
+  );
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(`Drive list failed: ${JSON.stringify(data)}`);
+  }
+
+  return data.files ?? [];
 }

@@ -54,5 +54,6 @@ export async function getAccessToken(): Promise<string | null> {
 
 export async function isSignedIn(): Promise<boolean> {
   const currentUser = GoogleSignin.getCurrentUser();
+  console.log("🚀 ~ isSignedIn ~ currentUser:", currentUser);
   return currentUser !== null;
 }

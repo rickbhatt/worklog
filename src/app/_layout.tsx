@@ -1,6 +1,7 @@
 import LoadingScreen from "@/components/loading-screen";
 import { DB_NAME } from "@/constants";
-import { createDrizzleDb } from "@/db/client";
+import { AuthProvider } from "@/contexts/AuthContext";
+import { getDb } from "@/db/client";
 import migrations from "@/drizzle/migrations";
 import "@/global.css";
 import { ensureBackupDir } from "@/lib/storage/backup";
@@ -54,7 +55,7 @@ export default function RootLayout() {
   const sqliteDb = openDatabaseSync(DB_NAME, { useNewConnection: true }); // remove useNewConnection in production
 
   // Create Drizzle instance
-  const db = createDrizzleDb(sqliteDb);
+  const db = getDb();
 
   // Run migrations
   const { success, error } = useMigrations(db, migrations);
@@ -70,7 +71,9 @@ export default function RootLayout() {
                 databaseName={DB_NAME}
                 options={{ enableChangeListener: true }}
               >
-                <Layout />
+                <AuthProvider>
+                  <Layout />
+                </AuthProvider>
               </SQLiteProvider>
             </Suspense>
             <PortalHost />
