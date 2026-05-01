@@ -13,6 +13,7 @@ import {
 import { useDb } from "@/hooks/useDb";
 import {
   calcTargetPagePercent,
+  determineTodayOrYesterday,
   formatDateTime,
   getCurrentDate,
   getMonthRange,
@@ -110,11 +111,7 @@ const SectionHeader = ({
           size={20}
         />
         <Text className="text-text-secondary h3-bold">
-          {isToday
-            ? "Today"
-            : isYesterday
-              ? "Yesterday"
-              : formatDateTime(section.title).shortDateWithYear}
+          {determineTodayOrYesterday(section.title)}
         </Text>
       </View>
       {/* total lepPages */}

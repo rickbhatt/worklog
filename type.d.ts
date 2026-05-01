@@ -1,4 +1,5 @@
 import { fileLogs, targetInfo } from "@/db/models/log.schema";
+import { cloudAccount } from "@/db/schema";
 
 import {
   AntDesign,
@@ -10,6 +11,8 @@ import {
   MaterialCommunityIcons,
   MaterialIcons,
 } from "@expo/vector-icons";
+import { BaseSQLiteDatabase } from "drizzle-orm/sqlite-core";
+import { SQLiteRunResult } from "expo-sqlite";
 
 export type IconFamily =
   | "MaterialCommunityIcons"
@@ -129,6 +132,7 @@ export type FileLogsUpdateType = typeof fileLogs.$inferUpdate;
 export type FileLogsSelectType = typeof fileLogs.$inferSelect;
 export type TargetInfoSelectType = typeof targetInfo.$inferSelect;
 export type TargetInfoInsertType = typeof targetInfo.$inferInsert;
+export type CloudAccountInsertType = typeof cloudAccount.$inferInsert;
 
 export type TargetInfoCreateType = Omit<
   TargetInfoInsertType,
@@ -147,4 +151,12 @@ export type RequiredField<T> = {
   message: string;
 };
 
-export type Db = ReturnType<typeof createDrizzleDb>;
+export type Db = BaseSQLiteDatabase<"sync", SQLiteRunResult, typeof schema>;
+
+interface HorzLoaderProps {
+  loading?: boolean;
+  duration?: number;
+  className?: string;
+  trackClassName?: string;
+  indicatorClassName?: string;
+}

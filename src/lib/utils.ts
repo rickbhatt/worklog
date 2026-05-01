@@ -17,10 +17,16 @@ export const formatDateTime = (date: string | Date | undefined) => {
 
   const formatDateToISOString = format(new Date(date), "yyyy-MM-dd");
 
+  const formatDateTimeToISOString = format(
+    new Date(date),
+    "dd/MM/yyyy, hh:mm a",
+  );
+
   return {
     dateMonthOnly: formatDateMonth,
     shortDateWithYear: formatShortDateWithYear,
     dateToISOString: formatDateToISOString,
+    dateTimeToISOString: formatDateTimeToISOString,
   };
 };
 
@@ -97,4 +103,38 @@ export const calcTargetPagePercent = ({
   const [whole, decimal] = percent.split(".");
 
   return decimal === "00" ? whole : percent;
+};
+
+export function formatBackupSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+export const determineTodayOrYesterday = (date: string | Date) => {
+  if (!date) return "";
+  const inputDate = new Date(date);
+  const currentDateString = getCurrentDate();
+
+  if (formatDateTime(inputDate).dateToISOString === currentDateString) {
+    return "Today";
+  }
+  const yesterdayDateObj = new Date(currentDateString);
+  yesterdayDateObj.setDate(yesterdayDateObj.getDate() - 1);
+  const yesterdayDateString = formatDateTime(yesterdayDateObj).dateToISOString;
+
+  if (formatDateTime(inputDate).dateToISOString === yesterdayDateString) {
+    return "Yesterday";
+  }
+
+  return formatDateTime(inputDate).shortDateWithYear;
+};
+
+export const backupDateTimeDisplay = (date: string | Date) => {
+  if (!date) return "";
+  const dateLabel = determineTodayOrYesterday(date);
+
+  const timeLabel = formatDateTime(date)?.dateTimeToISOString?.split(", ")[1];
+
+  return `${dateLabel}, ${timeLabel}`;
 };

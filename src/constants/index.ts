@@ -1,5 +1,9 @@
 export const DB_NAME = "worklog.db";
 
+export const BACKUP_STATE_ID = "gdrive_backup";
+
+export const BACKUP_FILE_NAME = "worklog_backup.db";
+
 export const MONTHS = [
   { label: "January", value: "1" },
   { label: "February", value: "2" },

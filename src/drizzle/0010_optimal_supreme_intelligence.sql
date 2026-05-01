@@ -1,0 +1,1 @@
+ALTER TABLE `backup_state` ADD `backup_file_name` text;

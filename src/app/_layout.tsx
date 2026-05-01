@@ -1,22 +1,18 @@
 import LoadingScreen from "@/components/loading-screen";
 import { DB_NAME } from "@/constants";
-import { createDrizzleDb } from "@/db/client";
+import { AuthProvider } from "@/contexts/AuthContext";
+import { initDb } from "@/db/client";
 import migrations from "@/drizzle/migrations";
 import "@/global.css";
-import { ensureBackupDir } from "@/lib/storage/backup";
 import { configureGoogleSignIn } from "@/services/googleAuthService";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { PortalHost } from "@rn-primitives/portal";
 import { useMigrations } from "drizzle-orm/expo-sqlite/migrator";
 import { useDrizzleStudio } from "expo-drizzle-studio-plugin";
 import { Stack } from "expo-router";
-import {
-  SQLiteProvider,
-  openDatabaseSync,
-  useSQLiteContext,
-} from "expo-sqlite";
+import { SQLiteProvider, useSQLiteContext } from "expo-sqlite";
 import { StatusBar } from "expo-status-bar";
-import { Suspense, useEffect } from "react";
+import { Suspense } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { Toaster } from "sonner-native";
@@ -24,17 +20,21 @@ import { Toaster } from "sonner-native";
 configureGoogleSignIn();
 
 const Layout = () => {
-  const db = useSQLiteContext();
-  useDrizzleStudio(db);
+  const sqliteDb = useSQLiteContext();
 
-  useEffect(() => {
-    ensureBackupDir();
-  }, []);
+  // Initialize the singleton with SQLiteProvider's connection
+  const db = initDb(sqliteDb);
+
+  // Run migrations using the same connection
+  const { success, error } = useMigrations(db, migrations);
+
+  useDrizzleStudio(sqliteDb);
+
+  if (!success) return <LoadingScreen />;
 
   return (
     <>
       <StatusBar style="light" />
-
       <Stack
         screenOptions={{
           headerShown: false,
@@ -50,15 +50,6 @@ const Layout = () => {
 };
 
 export default function RootLayout() {
-  // Open SQLite DB
-  const sqliteDb = openDatabaseSync(DB_NAME, { useNewConnection: true }); // remove useNewConnection in production
-
-  // Create Drizzle instance
-  const db = createDrizzleDb(sqliteDb);
-
-  // Run migrations
-  const { success, error } = useMigrations(db, migrations);
-
   return (
     <>
       <KeyboardProvider>
@@ -70,11 +61,13 @@ export default function RootLayout() {
                 databaseName={DB_NAME}
                 options={{ enableChangeListener: true }}
               >
-                <Layout />
+                <AuthProvider>
+                  <Layout />
+                </AuthProvider>
               </SQLiteProvider>
             </Suspense>
             <PortalHost />
-            <Toaster position="top-center" />
+            <Toaster position="bottom-center" />
           </BottomSheetModalProvider>
         </GestureHandlerRootView>
       </KeyboardProvider>
