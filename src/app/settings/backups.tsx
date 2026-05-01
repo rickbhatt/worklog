@@ -1,4 +1,5 @@
 import DynamicIcon from "@/components/dynamic-icon";
+import HorzLoader from "@/components/horz-loader";
 import ScreenHeader from "@/components/screen-header";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
@@ -9,11 +10,12 @@ import { formatBackupSize, formatDateTime } from "@/lib/utils";
 import { eq } from "drizzle-orm";
 import { useLiveQuery } from "drizzle-orm/expo-sqlite";
 import { Stack } from "expo-router";
-import React from "react";
+import React, { useState } from "react";
 import { Text, View } from "react-native";
 
 const Backups = () => {
   const { isSignedIn, signIn, signOut } = useAuth();
+  const [isUploading, setIsUploading] = useState(false);
 
   const db = useDb();
 
@@ -27,6 +29,17 @@ const Backups = () => {
       .where(eq(backupState.id, "gdrive_backup"))
       .limit(1),
   );
+
+  const handleManualBackup = async () => {
+    setIsUploading(true);
+    try {
+      await uploadBackupToDrive(db);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
   return (
     <>
@@ -57,12 +70,24 @@ const Backups = () => {
                 Size: {formatBackupSize(backupStateInfo[0]?.backupSize || 0)}
               </Text>
             </View>
-            <Button
-              onPress={() => uploadBackupToDrive(db)}
-              className="w-40 p-3 rounded-full"
-            >
-              <Text className="btn-label">Back up</Text>
-            </Button>
+            {isUploading ? (
+              <HorzLoader
+                loading={isUploading}
+                duration={1000}
+                className="mt-2"
+                trackClassName="h-1 bg-dark-200"
+                indicatorClassName="bg-accent"
+              />
+            ) : (
+              <Button
+                onPress={handleManualBackup}
+                className="w-40 p-3 rounded-full"
+                disabled={isUploading}
+              >
+                <Text className="btn-label">Back up</Text>
+              </Button>
+            )}
+
             <Button
               variant={"ghost"}
               className="flex-col gap-1.5 items-start p-0"
