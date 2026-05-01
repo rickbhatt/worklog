@@ -12,7 +12,6 @@ import { toast } from "sonner-native";
 
 const BACKUP_DIR_PATH = `${Paths.document.uri}backup/databases`;
 const LIVE_DB_PATH = `${Paths.document.uri}SQLite/${DB_NAME}`;
-console.log("🚀 ~ LIVE_DB_PATH:", LIVE_DB_PATH);
 
 const DRIVE_BASE_URL = "https://www.googleapis.com";
 

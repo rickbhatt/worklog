@@ -112,6 +112,7 @@ export function formatBackupSize(bytes: number): string {
 }
 
 export const determineTodayOrYesterday = (date: string | Date) => {
+  if (!date) return "";
   const inputDate = new Date(date);
   const currentDateString = getCurrentDate();
 
@@ -130,6 +131,7 @@ export const determineTodayOrYesterday = (date: string | Date) => {
 };
 
 export const backupDateTimeDisplay = (date: string | Date) => {
+  if (!date) return "";
   const dateLabel = determineTodayOrYesterday(date);
 
   const timeLabel = formatDateTime(date)?.dateTimeToISOString?.split(", ")[1];
