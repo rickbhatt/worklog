@@ -57,3 +57,8 @@ export async function isSignedIn(): Promise<boolean> {
 
   return currentUser !== null;
 }
+
+export async function getCurrentUserEmail(): Promise<string | null> {
+  const currentUser = GoogleSignin.getCurrentUser();
+  return currentUser?.user.email || null;
+}

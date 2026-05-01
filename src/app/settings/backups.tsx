@@ -5,7 +5,10 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { backupState, cloudAccount } from "@/db/schema";
 import { useDb } from "@/hooks/useDb";
-import { uploadBackupToDrive } from "@/lib/storage/backup";
+import {
+  getBackupMetaFromSecureStore,
+  uploadBackupToDrive,
+} from "@/lib/storage/backup";
 import { backupDateTimeDisplay, formatBackupSize } from "@/lib/utils";
 import { eq } from "drizzle-orm";
 import { useLiveQuery } from "drizzle-orm/expo-sqlite";
@@ -99,6 +102,16 @@ const Backups = () => {
               <Text className="base-paragraph">Automatic Backups</Text>
               <Text className="text-text-secondary text-sm">Daily</Text>
             </View>
+            <Button
+              onPress={async () => {
+                let resp = await getBackupMetaFromSecureStore();
+                console.log("🚀 ~ Backups ~ resp:", resp);
+              }}
+              className="w-40 p-3 rounded-full"
+              disabled={isUploading}
+            >
+              <Text className="btn-label">get secure</Text>
+            </Button>
           </View>
         ) : (
           <View className="flex-col gap-4">

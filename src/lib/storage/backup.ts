@@ -5,15 +5,71 @@ import {
   deleteBackupState,
 } from "@/db/mutations/backup.mutations";
 import { getBackupState } from "@/db/queries/backup.queries";
-import { generateBackupId } from "@/lib/utils";
-import { getAccessToken } from "@/services/googleAuthService";
+import { formatDateTime, generateBackupId } from "@/lib/utils";
+import {
+  getAccessToken,
+  getCurrentUserEmail,
+} from "@/services/googleAuthService";
 import { Directory, File, Paths } from "expo-file-system";
+import * as SecureStore from "expo-secure-store";
 import { toast } from "sonner-native";
 
 const BACKUP_DIR_PATH = `${Paths.document.uri}backup/databases`;
 const LIVE_DB_PATH = `${Paths.document.uri}SQLite/${DB_NAME}`;
 
 const DRIVE_BASE_URL = "https://www.googleapis.com";
+
+const SECURE_KEYS = {
+  HAS_BACKUP: "gdrive_has_backup",
+  ACCOUNT_EMAIL: "gdrive_account_email",
+  DRIVE_FILE_ID: "gdrive_drive_file_id",
+  LAST_BACKUP_AT: "gdrive_last_backup_at",
+};
+
+const saveBackupMetaToSecureStore = async (
+  accountEmail: string,
+  driveFileId: string,
+  lastBackupAt: Date,
+) => {
+  await Promise.all([
+    SecureStore.setItemAsync(SECURE_KEYS.HAS_BACKUP, "true"),
+    SecureStore.setItemAsync(SECURE_KEYS.ACCOUNT_EMAIL, accountEmail),
+    SecureStore.setItemAsync(SECURE_KEYS.DRIVE_FILE_ID, driveFileId),
+    SecureStore.setItemAsync(
+      SECURE_KEYS.LAST_BACKUP_AT,
+      formatDateTime(lastBackupAt).dateToISOString,
+    ),
+  ]);
+};
+
+export const getBackupMetaFromSecureStore = async () => {
+  const [hasBackup, accountEmail, driveFileId, lastBackupAt] =
+    await Promise.all([
+      SecureStore.getItemAsync(SECURE_KEYS.HAS_BACKUP),
+      SecureStore.getItemAsync(SECURE_KEYS.ACCOUNT_EMAIL),
+      SecureStore.getItemAsync(SECURE_KEYS.DRIVE_FILE_ID),
+      SecureStore.getItemAsync(SECURE_KEYS.LAST_BACKUP_AT),
+    ]);
+
+  if (hasBackup !== "true" || !accountEmail || !driveFileId || !lastBackupAt) {
+    return null;
+  }
+
+  return {
+    accountEmail,
+    driveFileId,
+    lastBackupAt: new Date(lastBackupAt),
+  };
+};
+
+export const clearBackupMetaFromSecureStore = async () => {
+  await Promise.all([
+    SecureStore.deleteItemAsync(SECURE_KEYS.HAS_BACKUP),
+    SecureStore.deleteItemAsync(SECURE_KEYS.ACCOUNT_EMAIL),
+    SecureStore.deleteItemAsync(SECURE_KEYS.DRIVE_FILE_ID),
+    SecureStore.deleteItemAsync(SECURE_KEYS.LAST_BACKUP_AT),
+  ]);
+};
 
 export const ensureBackupDir = () => {
   const info = Paths.info(BACKUP_DIR_PATH);
@@ -142,6 +198,14 @@ export async function uploadBackupToDrive(): Promise<{
       },
     });
     toast.success("Backup uploaded to Google Drive");
+
+    const currentUserEmail = await getCurrentUserEmail();
+
+    await saveBackupMetaToSecureStore(
+      currentUserEmail || "unknown",
+      result.id,
+      new Date(result.modifiedTime),
+    );
     return { success: true };
   } catch (error) {
     console.log("🚀 Backup failed:", error);
@@ -235,6 +299,7 @@ export async function deleteAllDriveFiles(): Promise<{
     // 3. Clear local DB record
     const db = getDb();
     await deleteBackupState(db);
+    await clearBackupMetaFromSecureStore();
 
     console.log("🚀 All Drive files deleted and DB record cleared");
     return { success: true };
