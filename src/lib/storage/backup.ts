@@ -1,11 +1,15 @@
 import { BACKUP_FILE_NAME, DB_NAME } from "@/constants";
 import { getDb } from "@/db/client";
-import { createOrUpdateBackupState } from "@/db/mutations/backup.mutations";
+import {
+  createOrUpdateBackupState,
+  deleteBackupState,
+} from "@/db/mutations/backup.mutations";
 import { getBackupState } from "@/db/queries/backup.queries";
 import { generateBackupId } from "@/lib/utils";
 import { getAccessToken } from "@/services/googleAuthService";
 import { Directory, File, Paths } from "expo-file-system";
 import { toast } from "sonner-native";
+import { Db } from "type";
 
 const BACKUP_DIR_PATH = `${Paths.document.uri}backup/databases`;
 const LIVE_DB_PATH = `${Paths.document.uri}SQLite/${DB_NAME}`;
@@ -45,20 +49,20 @@ export const backupDatabase = () => {
   }
 };
 
-export async function uploadBackupToDrive(): Promise<{
+export async function uploadBackupToDrive(db?: Db): Promise<{
   success: boolean;
   error?: any;
 }> {
   let snapshotPath: string | null = null;
 
   try {
-    const db = getDb();
+    const database = db ?? getDb();
 
-    // 1. Check for existing Drive file ID to overwrite
-    const existing = await getBackupState(db);
-    const existingFileId = existing?.driveFileId;
+    // Get existing Drive file ID from DB (single read)
+    const existing = await getBackupState(database);
+    let existingFileId = existing?.driveFileId ?? null;
 
-    // 2. Create snapshot
+    // Create snapshot
     snapshotPath = backupDatabase();
     const snapshotFile = new File(snapshotPath);
     if (!snapshotFile.exists) {
@@ -66,53 +70,69 @@ export async function uploadBackupToDrive(): Promise<{
     }
     const base64Data = snapshotFile.base64Sync();
 
-    // 3. Fresh access token
+    // Fresh access token
     const accessToken = await getAccessToken();
     if (!accessToken) throw new Error("Not signed in to Google");
 
-    // 4. POST (new file) or PATCH (overwrite existing)
-    const metadata = existingFileId
-      ? { name: BACKUP_FILE_NAME }
-      : { name: BACKUP_FILE_NAME, parents: ["appDataFolder"] };
-
     const boundary = "worklog_backup_boundary";
-    const body =
-      `--${boundary}\r\n` +
-      `Content-Type: application/json; charset=UTF-8\r\n\r\n` +
-      `${JSON.stringify(metadata)}\r\n` +
-      `--${boundary}\r\n` +
-      `Content-Type: application/octet-stream\r\n` +
-      `Content-Transfer-Encoding: base64\r\n\r\n` +
-      `${base64Data}\r\n` +
-      `--${boundary}--`;
+
+    const buildBody = (includeParents: boolean) => {
+      const metadata = includeParents
+        ? { name: BACKUP_FILE_NAME, parents: ["appDataFolder"] }
+        : { name: BACKUP_FILE_NAME };
+
+      return (
+        `--${boundary}\r\n` +
+        `Content-Type: application/json; charset=UTF-8\r\n\r\n` +
+        `${JSON.stringify(metadata)}\r\n` +
+        `--${boundary}\r\n` +
+        `Content-Type: application/octet-stream\r\n` +
+        `Content-Transfer-Encoding: base64\r\n\r\n` +
+        `${base64Data}\r\n` +
+        `--${boundary}--`
+      );
+    };
 
     const params = new URLSearchParams({
       uploadType: "multipart",
       fields: "id,name,size,modifiedTime,md5Checksum",
     });
 
-    const url = existingFileId
-      ? `${DRIVE_BASE_URL}/upload/drive/v3/files/${existingFileId}?${params.toString()}`
-      : `${DRIVE_BASE_URL}/upload/drive/v3/files?${params.toString()}`;
+    const doUpload = async (fileId: string | null) => {
+      const url = fileId
+        ? `${DRIVE_BASE_URL}/upload/drive/v3/files/${fileId}?${params.toString()}`
+        : `${DRIVE_BASE_URL}/upload/drive/v3/files?${params.toString()}`;
 
-    const response = await fetch(url, {
-      method: existingFileId ? "PATCH" : "POST",
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        "Content-Type": `multipart/related; boundary=${boundary}`,
-      },
-      body,
-    });
+      return fetch(url, {
+        method: fileId ? "PATCH" : "POST",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": `multipart/related; boundary=${boundary}`,
+        },
+        body: buildBody(!fileId),
+      });
+    };
+
+    // Try PATCH if we have an existing file ID, otherwise POST
+    let response = await doUpload(existingFileId);
+
+    // If PATCH returned 404, Drive file was deleted — fall back to POST
+    if (response.status === 404 && existingFileId) {
+      console.log("🚀 Drive file not found, falling back to POST");
+      existingFileId = null;
+      response = await doUpload(null);
+    }
 
     const result = await response.json();
-    if (!response.ok)
+    if (!response.ok) {
       throw new Error(`Drive API error: ${JSON.stringify(result)}`);
+    }
 
     console.log("🚀 Backup uploaded successfully:", result);
 
-    // 5. Update backup state in DB
+    // Single upsert on success
     await createOrUpdateBackupState({
-      db,
+      db: database,
       data: {
         cloudAccountId: "gdrive",
         driveFileId: result.id,
@@ -123,7 +143,7 @@ export async function uploadBackupToDrive(): Promise<{
         md5Checksum: result.md5Checksum,
       },
     });
-    toast.success("Backup uploaded to Google Drive successfully!");
+    toast.success("Backup uploaded to Google Drive");
     return { success: true };
   } catch (error) {
     console.log("🚀 Backup failed:", error);
@@ -173,4 +193,55 @@ export async function listAppDataFiles() {
   }
 
   return data.files ?? [];
+}
+
+export async function deleteAllDriveFiles(): Promise<{
+  success: boolean;
+  error?: any;
+}> {
+  try {
+    const accessToken = await getAccessToken();
+    if (!accessToken) throw new Error("Not signed in to Google");
+
+    // 1. List all files in appDataFolder
+    const files = await listAppDataFiles();
+
+    if (files.length === 0) {
+      console.log("🚀 No files found in appDataFolder");
+      return { success: true };
+    }
+
+    console.log(`🚀 Deleting ${files.length} file(s) from Drive...`);
+
+    // 2. Delete each file
+    await Promise.all(
+      files.map(async (file: { id: string; name: string }) => {
+        const response = await fetch(
+          `${DRIVE_BASE_URL}/drive/v3/files/${file.id}`,
+          {
+            method: "DELETE",
+            headers: { Authorization: `Bearer ${accessToken}` },
+          },
+        );
+
+        if (!response.ok && response.status !== 404) {
+          throw new Error(
+            `Failed to delete file ${file.id}: ${response.status}`,
+          );
+        }
+
+        console.log(`🚀 Deleted: ${file.name} (${file.id})`);
+      }),
+    );
+
+    // 3. Clear local DB record
+    const db = getDb();
+    await deleteBackupState(db);
+
+    console.log("🚀 All Drive files deleted and DB record cleared");
+    return { success: true };
+  } catch (error) {
+    console.log("🚀 Delete all failed:", error);
+    return { success: false, error };
+  }
 }

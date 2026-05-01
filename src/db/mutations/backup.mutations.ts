@@ -1,5 +1,6 @@
 import { BACKUP_STATE_ID } from "@/constants";
 import { backupState, cloudAccount } from "@/db/schema";
+import { eq } from "drizzle-orm";
 import { CloudAccountInsertType, Db } from "type";
 
 interface CreateBackupHistory {
@@ -64,4 +65,8 @@ export const createOrUpdateBackupState = async ({
     });
 
   return row;
+};
+
+export const deleteBackupState = async (db: Db) => {
+  await db.delete(backupState).where(eq(backupState.id, BACKUP_STATE_ID));
 };

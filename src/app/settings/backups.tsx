@@ -58,7 +58,7 @@ const Backups = () => {
               </Text>
             </View>
             <Button
-              onPress={uploadBackupToDrive}
+              onPress={() => uploadBackupToDrive(db)}
               className="w-40 p-3 rounded-full"
             >
               <Text className="btn-label">Back up</Text>
