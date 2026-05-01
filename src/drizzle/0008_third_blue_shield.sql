@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX `backup_history_cloud_account_id_unique` ON `backup_history` (`cloud_account_id`);

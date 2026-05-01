@@ -1,3 +1,5 @@
+import { createCloudAccount } from "@/db/mutations/backup.mutations";
+import { useDb } from "@/hooks/useDb";
 import {
   isSignedIn as checkIsSignedIn,
   signInWithGoogle,
@@ -10,6 +12,7 @@ import React, {
   useEffect,
   useState,
 } from "react";
+import { toast } from "sonner-native";
 
 type AuthContextValue = {
   isSignedIn: boolean;
@@ -24,6 +27,8 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
   const [isSignedIn, setIsSignedIn] = useState(false);
   const [loading, setLoading] = useState(true);
 
+  const db = useDb();
+
   const refreshSignInState = async () => {
     const signedIn = await checkIsSignedIn();
     setIsSignedIn(signedIn);
@@ -34,9 +39,18 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
     try {
       const result = await signInWithGoogle();
 
-      if (result.success) {
-        console.log("Success", `Signed in as ${result.user?.email}`);
+      if (result.success && result.user?.email) {
+        await createCloudAccount({
+          db,
+          data: {
+            id: "gdrive",
+            provider: "google_drive",
+            accountEmail: result.user?.email!,
+            connectedAt: new Date(),
+          },
+        });
         setIsSignedIn(true);
+        toast.success(`Connected to Google Drive as ${result.user?.email}`);
       } else {
         console.log("Failed", result.reason);
         await refreshSignInState();

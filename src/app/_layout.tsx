@@ -11,11 +11,7 @@ import { PortalHost } from "@rn-primitives/portal";
 import { useMigrations } from "drizzle-orm/expo-sqlite/migrator";
 import { useDrizzleStudio } from "expo-drizzle-studio-plugin";
 import { Stack } from "expo-router";
-import {
-  SQLiteProvider,
-  openDatabaseSync,
-  useSQLiteContext,
-} from "expo-sqlite";
+import { SQLiteProvider, useSQLiteContext } from "expo-sqlite";
 import { StatusBar } from "expo-status-bar";
 import { Suspense, useEffect } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -51,9 +47,6 @@ const Layout = () => {
 };
 
 export default function RootLayout() {
-  // Open SQLite DB
-  const sqliteDb = openDatabaseSync(DB_NAME, { useNewConnection: true }); // remove useNewConnection in production
-
   // Create Drizzle instance
   const db = getDb();
 
