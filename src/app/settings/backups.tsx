@@ -6,7 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { backupState, cloudAccount } from "@/db/schema";
 import { useDb } from "@/hooks/useDb";
 import { uploadBackupToDrive } from "@/lib/storage/backup";
-import { formatBackupSize, formatDateTime } from "@/lib/utils";
+import { backupDateTimeDisplay, formatBackupSize } from "@/lib/utils";
 import { eq } from "drizzle-orm";
 import { useLiveQuery } from "drizzle-orm/expo-sqlite";
 import { Stack } from "expo-router";
@@ -33,7 +33,7 @@ const Backups = () => {
   const handleManualBackup = async () => {
     setIsUploading(true);
     try {
-      await uploadBackupToDrive(db);
+      await uploadBackupToDrive();
     } catch (error) {
       console.error(error);
     } finally {
@@ -61,10 +61,7 @@ const Backups = () => {
             <View className="flex-col gap-2">
               <Text className="base-paragraph">
                 Last backup:{" "}
-                {
-                  formatDateTime(backupStateInfo[0]?.lastBackupAt!)
-                    .dateTimeToISOString
-                }
+                {backupDateTimeDisplay(backupStateInfo[0]?.lastBackupAt!)}
               </Text>
               <Text className="base-paragraph">
                 Size: {formatBackupSize(backupStateInfo[0]?.backupSize || 0)}

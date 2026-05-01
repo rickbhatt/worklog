@@ -9,7 +9,6 @@ import { generateBackupId } from "@/lib/utils";
 import { getAccessToken } from "@/services/googleAuthService";
 import { Directory, File, Paths } from "expo-file-system";
 import { toast } from "sonner-native";
-import { Db } from "type";
 
 const BACKUP_DIR_PATH = `${Paths.document.uri}backup/databases`;
 const LIVE_DB_PATH = `${Paths.document.uri}SQLite/${DB_NAME}`;
@@ -49,14 +48,14 @@ export const backupDatabase = () => {
   }
 };
 
-export async function uploadBackupToDrive(db?: Db): Promise<{
+export async function uploadBackupToDrive(): Promise<{
   success: boolean;
   error?: any;
 }> {
   let snapshotPath: string | null = null;
 
   try {
-    const database = db ?? getDb();
+    const database = getDb();
 
     // Get existing Drive file ID from DB (single read)
     const existing = await getBackupState(database);
