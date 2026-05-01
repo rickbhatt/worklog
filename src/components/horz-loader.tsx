@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import React from "react";
+import { useEffect, useState } from "react";
 import { View } from "react-native";
 import Animated, {
   useAnimatedStyle,
@@ -7,14 +7,7 @@ import Animated, {
   withRepeat,
   withTiming,
 } from "react-native-reanimated";
-
-interface HorzLoaderProps {
-  loading?: boolean;
-  duration?: number;
-  className?: string;
-  trackClassName?: string;
-  indicatorClassName?: string;
-}
+import { HorzLoaderProps } from "type";
 
 const HorzLoader = ({
   loading = true,
@@ -23,10 +16,10 @@ const HorzLoader = ({
   trackClassName,
   indicatorClassName,
 }: HorzLoaderProps) => {
-  const [trackWidth, setTrackWidth] = React.useState(0);
+  const [trackWidth, setTrackWidth] = useState(0);
   const progress = useSharedValue(0);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (!loading) {
       progress.value = 0;
       return;
@@ -63,10 +56,7 @@ const HorzLoader = ({
       >
         {trackWidth > 0 ? (
           <Animated.View
-            className={cn(
-              "h-full rounded-full bg-accent",
-              indicatorClassName,
-            )}
+            className={cn("h-full rounded-full bg-accent", indicatorClassName)}
             style={[{ width: indicatorWidth }, indicatorStyle]}
           />
         ) : null}

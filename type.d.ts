@@ -152,3 +152,11 @@ export type RequiredField<T> = {
 };
 
 export type Db = BaseSQLiteDatabase<"sync", SQLiteRunResult, typeof schema>;
+
+interface HorzLoaderProps {
+  loading?: boolean;
+  duration?: number;
+  className?: string;
+  trackClassName?: string;
+  indicatorClassName?: string;
+}
