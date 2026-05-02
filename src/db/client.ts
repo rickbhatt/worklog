@@ -24,3 +24,13 @@ export function getDb(): DrizzleDb {
   if (!_db) throw new Error("DB not initialized — call initDb first");
   return _db;
 }
+
+export async function closeDb(): Promise<void> {
+  if (!_sqliteDb) return;
+  try {
+    await _sqliteDb.closeAsync();
+  } finally {
+    _sqliteDb = null;
+    _db = null;
+  }
+}

@@ -4,6 +4,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { initDb } from "@/db/client";
 import migrations from "@/drizzle/migrations";
 import "@/global.css";
+import { ensureBackupDir } from "@/lib/storage/backup";
 import { configureGoogleSignIn } from "@/services/googleAuthService";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { PortalHost } from "@rn-primitives/portal";
@@ -12,7 +13,7 @@ import { useDrizzleStudio } from "expo-drizzle-studio-plugin";
 import { Stack } from "expo-router";
 import { SQLiteProvider, useSQLiteContext } from "expo-sqlite";
 import { StatusBar } from "expo-status-bar";
-import { Suspense } from "react";
+import { Suspense, useEffect } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { Toaster } from "sonner-native";
@@ -26,9 +27,13 @@ const Layout = () => {
   const db = initDb(sqliteDb);
 
   // Run migrations using the same connection
-  const { success, error } = useMigrations(db, migrations);
+  const { success } = useMigrations(db, migrations);
 
   useDrizzleStudio(sqliteDb);
+
+  useEffect(() => {
+    ensureBackupDir();
+  }, []);
 
   if (!success) return <LoadingScreen />;
 

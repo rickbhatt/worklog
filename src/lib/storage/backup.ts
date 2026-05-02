@@ -1,5 +1,5 @@
 import { BACKUP_FILE_NAME, DB_NAME } from "@/constants";
-import { getDb } from "@/db/client";
+import { closeDb, getDb } from "@/db/client";
 import {
   createOrUpdateBackupState,
   deleteBackupState,
@@ -12,6 +12,7 @@ import {
 } from "@/services/googleAuthService";
 import { Directory, File, Paths } from "expo-file-system";
 import * as SecureStore from "expo-secure-store";
+import * as Updates from "expo-updates";
 import { toast } from "sonner-native";
 
 const BACKUP_DIR_PATH = `${Paths.document.uri}backup/databases`;
@@ -24,17 +25,20 @@ const SECURE_KEYS = {
   ACCOUNT_EMAIL: "gdrive_account_email",
   DRIVE_FILE_ID: "gdrive_drive_file_id",
   LAST_BACKUP_AT: "gdrive_last_backup_at",
+  MD5_CHECKSUM: "gdrive_md5_checksum",
 };
 
 const saveBackupMetaToSecureStore = async (
   accountEmail: string,
   driveFileId: string,
   lastBackupAt: Date,
+  md5Checksum: string,
 ) => {
   await Promise.all([
     SecureStore.setItemAsync(SECURE_KEYS.HAS_BACKUP, "true"),
     SecureStore.setItemAsync(SECURE_KEYS.ACCOUNT_EMAIL, accountEmail),
     SecureStore.setItemAsync(SECURE_KEYS.DRIVE_FILE_ID, driveFileId),
+    SecureStore.setItemAsync(SECURE_KEYS.MD5_CHECKSUM, md5Checksum),
     SecureStore.setItemAsync(
       SECURE_KEYS.LAST_BACKUP_AT,
       formatDateTime(lastBackupAt).dateToISOString,
@@ -43,15 +47,22 @@ const saveBackupMetaToSecureStore = async (
 };
 
 export const getBackupMetaFromSecureStore = async () => {
-  const [hasBackup, accountEmail, driveFileId, lastBackupAt] =
+  const [hasBackup, accountEmail, driveFileId, lastBackupAt, md5Checksum] =
     await Promise.all([
       SecureStore.getItemAsync(SECURE_KEYS.HAS_BACKUP),
       SecureStore.getItemAsync(SECURE_KEYS.ACCOUNT_EMAIL),
       SecureStore.getItemAsync(SECURE_KEYS.DRIVE_FILE_ID),
       SecureStore.getItemAsync(SECURE_KEYS.LAST_BACKUP_AT),
+      SecureStore.getItemAsync(SECURE_KEYS.MD5_CHECKSUM),
     ]);
 
-  if (hasBackup !== "true" || !accountEmail || !driveFileId || !lastBackupAt) {
+  if (
+    hasBackup !== "true" ||
+    !accountEmail ||
+    !driveFileId ||
+    !lastBackupAt ||
+    !md5Checksum
+  ) {
     return null;
   }
 
@@ -59,6 +70,7 @@ export const getBackupMetaFromSecureStore = async () => {
     accountEmail,
     driveFileId,
     lastBackupAt: new Date(lastBackupAt),
+    md5Checksum,
   };
 };
 
@@ -68,6 +80,7 @@ export const clearBackupMetaFromSecureStore = async () => {
     SecureStore.deleteItemAsync(SECURE_KEYS.ACCOUNT_EMAIL),
     SecureStore.deleteItemAsync(SECURE_KEYS.DRIVE_FILE_ID),
     SecureStore.deleteItemAsync(SECURE_KEYS.LAST_BACKUP_AT),
+    SecureStore.deleteItemAsync(SECURE_KEYS.MD5_CHECKSUM),
   ]);
 };
 
@@ -205,6 +218,7 @@ export async function uploadBackupToDrive(): Promise<{
       currentUserEmail || "unknown",
       result.id,
       new Date(result.modifiedTime),
+      result.md5Checksum,
     );
     return { success: true };
   } catch (error) {
@@ -308,3 +322,102 @@ export async function deleteAllDriveFiles(): Promise<{
     return { success: false, error };
   }
 }
+
+export const restartApp = async () => {
+  console.log("🚀 Reloading app");
+  if (__DEV__) {
+    // In dev builds, use RN's DevSettings
+    const { DevSettings } = require("react-native");
+    DevSettings.reload();
+  } else {
+    // In production builds, use expo-updates
+    await Updates.reloadAsync();
+  }
+};
+
+export const restoreBackupFromDrive = async (): Promise<{
+  success: boolean;
+  error?: any;
+}> => {
+  const restoredFilePath = new File(
+    Paths.document,
+    "backup",
+    "databases",
+    "worklog_restored.db",
+  );
+
+  try {
+    // 1. Get fresh access token
+    const accessToken = await getAccessToken();
+    if (!accessToken) throw new Error("Not signed in to Google");
+
+    // 2. Download the backup file from Drive
+
+    const files = await listAppDataFiles();
+    console.log(
+      "🚀 ~ restoreBackupFromDrive ~ files:",
+      JSON.stringify(files, null, 2),
+    );
+    if (files.length === 0) {
+      console.log("No backup found on Drive");
+      return { success: false };
+    }
+
+    const response = await fetch(
+      `${DRIVE_BASE_URL}/drive/v3/files/${files[0]?.id}?alt=media`,
+      {
+        method: "GET",
+        headers: { Authorization: `Bearer ${accessToken}` },
+      },
+    );
+
+    if (!response.ok) {
+      throw new Error(`Drive download failed: ${response.status}`);
+    }
+
+    // 3. Write downloaded file to a temp location first
+    const arrayBuffer = await response.arrayBuffer();
+    const uint8Array = new Uint8Array(arrayBuffer);
+
+    const restoredFile = new File(restoredFilePath);
+    restoredFile.create();
+
+    // Write binary directly using FileHandle
+    const handle = restoredFile.open();
+    handle.writeBytes(uint8Array);
+    handle.close();
+
+    // 4. Verify MD5 checksum if available
+
+    if (restoredFile.md5 !== files[0]?.md5Checksum) {
+      restoredFile.delete();
+      throw new Error(`Checksum mismatch — backup file may be corrupted`);
+    }
+
+    // 5. Replace the live DB with the downloaded file
+
+    await closeDb();
+
+    const liveDbFile = new File(Paths.document, "SQLite", DB_NAME);
+    if (liveDbFile.exists) {
+      liveDbFile.delete();
+    }
+    restoredFile.move(liveDbFile);
+
+    console.log("🚀 Backup restored successfully");
+
+    // 6. Restart the app to reinitialize DB with restored file
+
+    await restartApp();
+    return { success: true };
+  } catch (error) {
+    // Clean up temp file if it exists
+    try {
+      const restoredFile = new File(restoredFilePath);
+      if (restoredFile.exists) restoredFile.delete();
+    } catch (e) {}
+
+    console.log("🚀 Restore failed:", error);
+    return { success: false, error };
+  }
+};
