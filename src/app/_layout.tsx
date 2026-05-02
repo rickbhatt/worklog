@@ -4,7 +4,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { initDb } from "@/db/client";
 import migrations from "@/drizzle/migrations";
 import "@/global.css";
-import { ensureBackupDir } from "@/lib/storage/backup";
+import { ensureBackupDir, syncPendingRestoreState } from "@/lib/storage/backup";
 import { configureGoogleSignIn } from "@/services/googleAuthService";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { PortalHost } from "@rn-primitives/portal";
@@ -32,8 +32,15 @@ const Layout = () => {
   useDrizzleStudio(sqliteDb);
 
   useEffect(() => {
+    if (!success) return;
+
+    const sync = async () => {
+      await syncPendingRestoreState(db);
+    };
+
+    sync();
     ensureBackupDir();
-  }, []);
+  }, [success]);
 
   if (!success) return <LoadingScreen />;
 
