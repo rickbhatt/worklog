@@ -7,6 +7,7 @@ import { backupState, cloudAccount } from "@/db/schema";
 import { useDb } from "@/hooks/useDb";
 import {
   getBackupMetaFromSecureStore,
+  restoreBackupFromDrive,
   uploadBackupToDrive,
 } from "@/lib/storage/backup";
 import { backupDateTimeDisplay, formatBackupSize } from "@/lib/utils";
@@ -105,12 +106,21 @@ const Backups = () => {
             <Button
               onPress={async () => {
                 let resp = await getBackupMetaFromSecureStore();
-                console.log("🚀 ~ Backups ~ resp:", resp);
+                console.log("🚀 ~ Backups ~ secure store:", resp);
               }}
               className="w-40 p-3 rounded-full"
               disabled={isUploading}
             >
-              <Text className="btn-label">get secure</Text>
+              <Text className="btn-label">Check secure store</Text>
+            </Button>
+            <Button
+              onPress={async () => {
+                let resp = await restoreBackupFromDrive();
+                console.log("🚀 ~ Backups ~ restoreFromBackup:", resp);
+              }}
+              className="w-40 p-3 rounded-full"
+            >
+              <Text className="btn-label">Restore</Text>
             </Button>
           </View>
         ) : (
