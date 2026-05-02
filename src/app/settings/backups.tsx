@@ -6,7 +6,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { backupState, cloudAccount } from "@/db/schema";
 import { useDb } from "@/hooks/useDb";
 import {
-  getBackupMetaFromSecureStore,
+  deleteAllDriveFiles,
+  listAppDataFiles,
   restoreBackupFromDrive,
   uploadBackupToDrive,
 } from "@/lib/storage/backup";
@@ -103,19 +104,20 @@ const Backups = () => {
               <Text className="base-paragraph">Automatic Backups</Text>
               <Text className="text-text-secondary text-sm">Daily</Text>
             </View>
+
             <Button
               onPress={async () => {
-                let resp = await getBackupMetaFromSecureStore();
-                console.log("🚀 ~ Backups ~ secure store:", resp);
-              }}
-              className="w-40 p-3 rounded-full"
-              disabled={isUploading}
-            >
-              <Text className="btn-label">Check secure store</Text>
-            </Button>
-            <Button
-              onPress={async () => {
-                let resp = await restoreBackupFromDrive();
+                const files = await listAppDataFiles();
+                console.log(
+                  "🚀 ~ restoreBackupFromDrive ~ files:",
+                  JSON.stringify(files, null, 2),
+                );
+                if (files.length === 0) {
+                  console.log("No backup found on Drive");
+                  return { success: false };
+                }
+
+                let resp = await restoreBackupFromDrive(files[0]);
                 console.log("🚀 ~ Backups ~ restoreFromBackup:", resp);
               }}
               className="w-40 p-3 rounded-full"
@@ -138,6 +140,31 @@ const Backups = () => {
           </View>
         )}
       </View>
+      {__DEV__ && (
+        <View className="screen flex-1 flex-row gap-2.5 pb-safe">
+          <View className="flex-1 flex-col gap-2.5">
+            <Button
+              onPress={async () => {
+                const files = await listAppDataFiles();
+                console.log(
+                  "🚀 ~ listAppDataFiles ~ files:",
+                  JSON.stringify(files, null, 2),
+                );
+              }}
+            >
+              <Text className="btn-label">List Drive Files</Text>
+            </Button>
+            <Button
+              onPress={async () => {
+                const resp = await deleteAllDriveFiles();
+                console.log("🚀 ~ deleteAllDriveFiles ~ resp:", resp);
+              }}
+            >
+              <Text className="btn-label">Delete Drive Files</Text>
+            </Button>
+          </View>
+        </View>
+      )}
     </>
   );
 };
