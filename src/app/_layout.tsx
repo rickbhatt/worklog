@@ -6,6 +6,7 @@ import migrations from "@/drizzle/migrations";
 import "@/global.css";
 import { ensureBackupDir, syncPendingRestoreState } from "@/lib/storage/backup";
 import { configureGoogleSignIn } from "@/services/googleAuthService";
+import { setupNotifications } from "@/services/notificationService";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { PortalHost } from "@rn-primitives/portal";
 import { useMigrations } from "drizzle-orm/expo-sqlite/migrator";
@@ -40,6 +41,7 @@ const Layout = () => {
 
     sync();
     ensureBackupDir();
+    setupNotifications();
   }, [success]);
 
   if (!success) return <LoadingScreen />;

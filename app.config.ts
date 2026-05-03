@@ -74,6 +74,14 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     "expo-secure-store",
     "@react-native-google-signin/google-signin",
     "expo-background-task",
+    [
+      "expo-notifications",
+      {
+        icon: "./assets/images/adaptive-icon.png",
+        color: "#ffffff",
+        defaultChannel: "backup",
+      },
+    ],
   ],
   experiments: {
     typedRoutes: true,
