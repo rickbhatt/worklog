@@ -4,7 +4,10 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { initDb } from "@/db/client";
 import migrations from "@/drizzle/migrations";
 import "@/global.css";
-import { ensureBackupDir, syncPendingRestoreState } from "@/lib/storage/backup";
+import {
+  ensureBackupDir,
+  syncPendingRestoreState,
+} from "@/services/backupService";
 import { configureGoogleSignIn } from "@/services/googleAuthService";
 import { setupNotifications } from "@/services/notificationService";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";

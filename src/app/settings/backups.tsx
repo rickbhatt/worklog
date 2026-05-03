@@ -5,13 +5,13 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { backupState, cloudAccount } from "@/db/schema";
 import { useDb } from "@/hooks/useDb";
+import { backupDateTimeDisplay, formatBackupSize } from "@/lib/utils";
 import {
   deleteAllDriveFiles,
   listAppDataFiles,
   restoreBackupFromDrive,
   uploadBackupToDrive,
-} from "@/lib/storage/backup";
-import { backupDateTimeDisplay, formatBackupSize } from "@/lib/utils";
+} from "@/services/backupService";
 import { eq } from "drizzle-orm";
 import { useLiveQuery } from "drizzle-orm/expo-sqlite";
 import { Stack } from "expo-router";
