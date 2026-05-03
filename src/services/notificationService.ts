@@ -1,4 +1,5 @@
 import { BACKUP_CHANNEL_ID, BACKUP_NOTIFICATION_ID } from "@/constants";
+import { formatDateTime } from "@/lib/utils";
 import * as Notifications from "expo-notifications";
 
 // Must be called at app startup — outside any component
@@ -42,10 +43,7 @@ export async function showBackupSuccessNotification(
 ): Promise<void> {
   await Notifications.dismissNotificationAsync(BACKUP_NOTIFICATION_ID);
 
-  const timeString = lastBackupAt.toLocaleTimeString("en-IN", {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  const timeString = formatDateTime(lastBackupAt).onlyTime; // Show only time in the notification body
 
   await Notifications.scheduleNotificationAsync({
     content: {

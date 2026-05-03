@@ -22,11 +22,14 @@ export const formatDateTime = (date: string | Date | undefined) => {
     "dd/MM/yyyy, hh:mm a",
   );
 
+  const formatOnlyTime = format(new Date(date), "hh:mm a");
+
   return {
     dateMonthOnly: formatDateMonth,
     shortDateWithYear: formatShortDateWithYear,
     dateToISOString: formatDateToISOString,
     dateTimeToISOString: formatDateTimeToISOString,
+    onlyTime: formatOnlyTime,
   };
 };
 

@@ -1,4 +1,10 @@
-import { BACKUP_FILE_NAME, DB_NAME, DRIVE_BASE_URL } from "@/constants";
+import {
+  BACKUP_DIR_PATH,
+  BACKUP_FILE_NAME,
+  DB_NAME,
+  DRIVE_BASE_URL,
+  LIVE_DB_PATH,
+} from "@/constants";
 import { closeDb, getDb } from "@/db/client";
 import {
   createOrUpdateBackupState,
@@ -20,9 +26,6 @@ import * as SecureStore from "expo-secure-store";
 import * as Updates from "expo-updates";
 import { toast } from "sonner-native";
 import { Db } from "type";
-
-const BACKUP_DIR_PATH = `${Paths.document.uri}backup/databases`;
-const LIVE_DB_PATH = `${Paths.document.uri}SQLite/${DB_NAME}`;
 
 const saveBackupMetaToSecureStore = async ({
   accountEmail,
