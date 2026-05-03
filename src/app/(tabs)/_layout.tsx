@@ -100,6 +100,7 @@ const TabsLayout = () => {
       <Tabs.Screen
         name="insights"
         options={{
+          href: null,
           tabBarIcon: ({ focused }) => (
             <TabIconAndLabel
               focused={focused}
