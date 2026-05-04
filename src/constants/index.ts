@@ -1,8 +1,18 @@
+import { Paths } from "expo-file-system";
+
 export const DB_NAME = "worklog.db";
 
 export const BACKUP_STATE_ID = "gdrive_backup";
 
 export const BACKUP_FILE_NAME = "worklog_backup.db";
+
+export const BACKUP_CHANNEL_ID = "backup";
+export const BACKUP_NOTIFICATION_ID = "gdrive-backup-progress";
+
+export const DRIVE_BASE_URL = "https://www.googleapis.com";
+
+export const BACKUP_DIR_PATH = `${Paths.document.uri}backup/databases`;
+export const LIVE_DB_PATH = `${Paths.document.uri}SQLite/${DB_NAME}`;
 
 export const MONTHS = [
   { label: "January", value: "1" },

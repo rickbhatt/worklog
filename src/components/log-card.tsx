@@ -1,5 +1,5 @@
+import LogDetailBottomsheet from "@/components/bottomsheets/log-detail-bottomsheet";
 import DynamicIcon from "@/components/dynamic-icon";
-import LogDetailBottomsheet from "@/components/log-detail-bottomsheet";
 import { BottomSheetModal } from "@gorhom/bottom-sheet";
 import * as Haptics from "expo-haptics";
 import React, { useCallback, useRef } from "react";

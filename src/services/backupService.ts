@@ -1,4 +1,10 @@
-import { BACKUP_FILE_NAME, DB_NAME } from "@/constants";
+import {
+  BACKUP_DIR_PATH,
+  BACKUP_FILE_NAME,
+  DB_NAME,
+  DRIVE_BASE_URL,
+  LIVE_DB_PATH,
+} from "@/constants";
 import { closeDb, getDb } from "@/db/client";
 import {
   createOrUpdateBackupState,
@@ -10,24 +16,16 @@ import {
   getAccessToken,
   getCurrentUserEmail,
 } from "@/services/googleAuthService";
+import {
+  showBackupFailedNotification,
+  showBackupInProgressNotification,
+  showBackupSuccessNotification,
+} from "@/services/notificationService";
 import { Directory, File, Paths } from "expo-file-system";
 import * as SecureStore from "expo-secure-store";
 import * as Updates from "expo-updates";
 import { toast } from "sonner-native";
 import { Db } from "type";
-
-const BACKUP_DIR_PATH = `${Paths.document.uri}backup/databases`;
-const LIVE_DB_PATH = `${Paths.document.uri}SQLite/${DB_NAME}`;
-
-const DRIVE_BASE_URL = "https://www.googleapis.com";
-
-const SECURE_KEYS = {
-  HAS_BACKUP: "gdrive_has_backup",
-  ACCOUNT_EMAIL: "gdrive_account_email",
-  DRIVE_FILE_ID: "gdrive_drive_file_id",
-  LAST_BACKUP_AT: "gdrive_last_backup_at",
-  MD5_CHECKSUM: "gdrive_md5_checksum",
-};
 
 const saveBackupMetaToSecureStore = async ({
   accountEmail,
@@ -127,6 +125,8 @@ export async function uploadBackupToDrive(): Promise<{
   let snapshotPath: string | null = null;
 
   try {
+    await showBackupInProgressNotification();
+
     const database = getDb();
 
     // Get existing Drive file ID from DB (single read)
@@ -216,8 +216,10 @@ export async function uploadBackupToDrive(): Promise<{
     });
     toast.success("Backup uploaded to Google Drive");
 
+    await showBackupSuccessNotification(new Date(result.modifiedTime));
     return { success: true };
   } catch (error) {
+    await showBackupFailedNotification();
     console.log("🚀 Backup failed:", error);
     return { success: false, error };
   } finally {

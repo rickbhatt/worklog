@@ -52,6 +52,7 @@ const FileWorklogForm = ({
         bottomOffset={bottom}
         className="screen-x-padding"
         contentContainerClassName="flex-col gap-5"
+        showsVerticalScrollIndicator={false}
         contentContainerStyle={{
           paddingBottom: keyboard.isVisible ? 0 : bottom,
         }}

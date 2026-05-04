@@ -56,7 +56,7 @@ export const getFileLogById = async (db: Db, id: string) => {
   return row;
 };
 
-export const getTargetHour = (db: Db) => {
+export const getAllTargetHour = (db: Db) => {
   const latestRow = db
     .select()
     .from(targetInfo)
@@ -73,4 +73,14 @@ export const getLatestTargetHour = (db: Db) => {
     .limit(1);
 
   return row;
+};
+
+export const checkTargetInfoExists = async (db: Db) => {
+  const row = await db
+    .select()
+    .from(targetInfo)
+    .orderBy(desc(targetInfo.createdAt))
+    .limit(1);
+
+  return !!row[0];
 };
