@@ -83,10 +83,10 @@ const ListHeader = ({
 
 const SectionHeader = ({
   section,
-  targetInfo,
+  targetLepPages,
 }: {
   section: FileLogsSection;
-  targetInfo: any;
+  targetLepPages: number;
 }) => {
   const currentDateString = getCurrentDate();
 
@@ -128,8 +128,8 @@ const SectionHeader = ({
         <Text className="h3-bold text-text-secondary">
           |{" "}
           {calcTargetPagePercent({
-            targetLepPages: targetInfo?.targetLepPages ?? 63,
-            lepPages: section?.totalLepPages,
+            targetLepPages: targetLepPages ?? 0,
+            lepPages: section?.totalLepPages ?? 0,
           })}
           %
         </Text>
@@ -157,8 +157,6 @@ const History = () => {
     startDate?: string;
     endDate?: string;
   }>();
-
-  const [targetInfo, setTargetInfo] = useState(null);
 
   // get current month and year for default filter values in ListHeader
   const currentMonth = new Date().getMonth() + 1;
@@ -189,7 +187,9 @@ const History = () => {
 
     [journalId, articleId, startDate, endDate], //deps: re-run live query when filters change
   );
-  // console.log("🚀 ~ History ~ logs:", logs);
+
+  const { data: targetData } = useLiveQuery(getLatestTargetHour(db));
+
   const filterBottomSheetModalRef = useRef<BottomSheetModal>(null);
 
   const fileLogsGroupedByWorkedAt = useMemo<FileLogsSection[]>(() => {
@@ -230,16 +230,6 @@ const History = () => {
     }
   }, [isParams, router, monthRange.start, monthRange.end]);
 
-  const latestTargetInfo = async () => {
-    const [row] = await getLatestTargetHour(db);
-
-    setTargetInfo(row);
-  };
-
-  useEffect(() => {
-    latestTargetInfo();
-  }, []);
-
   if (!isParams) {
     return <LoadingScreen />;
   }
@@ -256,7 +246,10 @@ const History = () => {
         sections={fileLogsGroupedByWorkedAt}
         showsVerticalScrollIndicator={false}
         renderSectionHeader={({ section }) => (
-          <SectionHeader section={section} targetInfo={targetInfo} />
+          <SectionHeader
+            section={section}
+            targetLepPages={targetData[0]?.targetLepPages || 0}
+          />
         )}
         ListHeaderComponent={
           <ListHeader

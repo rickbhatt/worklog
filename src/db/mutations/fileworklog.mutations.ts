@@ -102,3 +102,19 @@ export const createTargetInfo = async (db: Db, data: TargetInfoCreateType) => {
     throw error;
   }
 };
+
+export const deleteTargetInfoById = async (db: Db, id: string) => {
+  try {
+    const [row] = await db
+      .delete(targetInfo)
+      .where(eq(targetInfo.id, id))
+      .returning({
+        id: targetInfo.id,
+      });
+
+    return row;
+  } catch (error) {
+    console.error("[deleteTargetInfoById] failed", error);
+    throw error;
+  }
+};
