@@ -4,8 +4,12 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { initDb } from "@/db/client";
 import migrations from "@/drizzle/migrations";
 import "@/global.css";
-import { ensureBackupDir, syncPendingRestoreState } from "@/lib/storage/backup";
+import {
+  ensureBackupDir,
+  syncPendingRestoreState,
+} from "@/services/backupService";
 import { configureGoogleSignIn } from "@/services/googleAuthService";
+import { setupNotifications } from "@/services/notificationService";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { PortalHost } from "@rn-primitives/portal";
 import { useMigrations } from "drizzle-orm/expo-sqlite/migrator";
@@ -40,6 +44,7 @@ const Layout = () => {
 
     sync();
     ensureBackupDir();
+    setupNotifications();
   }, [success]);
 
   if (!success) return <LoadingScreen />;
@@ -63,26 +68,24 @@ const Layout = () => {
 
 export default function RootLayout() {
   return (
-    <>
-      <KeyboardProvider>
-        <GestureHandlerRootView>
-          <BottomSheetModalProvider>
-            <Suspense fallback={<LoadingScreen />}>
-              <SQLiteProvider
-                useSuspense
-                databaseName={DB_NAME}
-                options={{ enableChangeListener: true }}
-              >
-                <AuthProvider>
-                  <Layout />
-                </AuthProvider>
-              </SQLiteProvider>
-            </Suspense>
-            <PortalHost />
-            <Toaster position="bottom-center" />
-          </BottomSheetModalProvider>
-        </GestureHandlerRootView>
-      </KeyboardProvider>
-    </>
+    <KeyboardProvider>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <BottomSheetModalProvider>
+          <Suspense fallback={<LoadingScreen />}>
+            <SQLiteProvider
+              useSuspense
+              databaseName={DB_NAME}
+              options={{ enableChangeListener: true }}
+            >
+              <AuthProvider>
+                <Layout />
+              </AuthProvider>
+            </SQLiteProvider>
+          </Suspense>
+          <PortalHost />
+          <Toaster position="bottom-center" />
+        </BottomSheetModalProvider>
+      </GestureHandlerRootView>
+    </KeyboardProvider>
   );
 }

@@ -1,3 +1,4 @@
+import RestoreBottomsheet from "@/components/bottomsheets/restore-bottomsheet";
 import DynamicIcon from "@/components/dynamic-icon";
 import HorzLoader from "@/components/horz-loader";
 import ScreenHeader from "@/components/screen-header";
@@ -5,22 +6,30 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { backupState, cloudAccount } from "@/db/schema";
 import { useDb } from "@/hooks/useDb";
+import { backupDateTimeDisplay, formatBackupSize } from "@/lib/utils";
 import {
   deleteAllDriveFiles,
   listAppDataFiles,
-  restoreBackupFromDrive,
   uploadBackupToDrive,
-} from "@/lib/storage/backup";
-import { backupDateTimeDisplay, formatBackupSize } from "@/lib/utils";
+} from "@/services/backupService";
+import { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { eq } from "drizzle-orm";
 import { useLiveQuery } from "drizzle-orm/expo-sqlite";
 import { Stack } from "expo-router";
-import React, { useState } from "react";
+import { useRef, useState } from "react";
 import { Text, View } from "react-native";
 
 const Backups = () => {
   const { isSignedIn, signIn, signOut } = useAuth();
   const [isUploading, setIsUploading] = useState(false);
+  const restoreBottomsheetRef = useRef<BottomSheetModal | null>(null);
+  const [restoreData, setRestoreData] = useState<{
+    lastBackedUpDate: string;
+    size: string;
+    checksum: string;
+    driveFileId: string;
+    name: string;
+  } | null>(null);
 
   const db = useDb();
 
@@ -46,6 +55,28 @@ const Backups = () => {
     }
   };
 
+  const checkAndTriggerRestore = async () => {
+    if (backupStateInfo.length < 1) {
+      const files = await listAppDataFiles();
+      if (files.length > 0) {
+        console.log("restore available");
+        setRestoreData({
+          lastBackedUpDate: files[0].modifiedTime,
+          size: files[0].size,
+          checksum: files[0].md5Checksum,
+          driveFileId: files[0].id,
+          name: files[0].name,
+        });
+        restoreBottomsheetRef.current?.present();
+      }
+    }
+  };
+
+  const handleSignIn = async () => {
+    await signIn();
+    await checkAndTriggerRestore();
+  };
+
   return (
     <>
       <Stack.Screen
@@ -63,15 +94,21 @@ const Backups = () => {
         </View>
         {isSignedIn ? (
           <View className="flex-col gap-4">
-            <View className="flex-col gap-2">
-              <Text className="base-paragraph">
-                Last backup:{" "}
-                {backupDateTimeDisplay(backupStateInfo[0]?.lastBackupAt!)}
-              </Text>
-              <Text className="base-paragraph">
-                Size: {formatBackupSize(backupStateInfo[0]?.backupSize || 0)}
-              </Text>
-            </View>
+            {backupStateInfo.length < 1 ? (
+              <View className="flex-row">
+                <Text className="base-paragraph">No backups yet</Text>
+              </View>
+            ) : (
+              <View className="flex-col gap-2">
+                <Text className="base-paragraph">
+                  Last backup:{" "}
+                  {backupDateTimeDisplay(backupStateInfo[0]?.lastBackupAt!)}
+                </Text>
+                <Text className="base-paragraph">
+                  Size: {formatBackupSize(backupStateInfo[0]?.backupSize || 0)}
+                </Text>
+              </View>
+            )}
             {isUploading ? (
               <HorzLoader
                 loading={isUploading}
@@ -90,40 +127,16 @@ const Backups = () => {
               </Button>
             )}
 
-            <Button
-              variant={"ghost"}
-              className="flex-col gap-1.5 items-start p-0"
-              onPress={signIn}
-            >
+            <View className="flex-col gap-1.5 items-start p-0">
               <Text className="base-paragraph">Google Account</Text>
               <Text className="text-text-secondary text-sm">
                 {cloudAccountInfo[0]?.accountEmail}
               </Text>
-            </Button>
+            </View>
             <View className="flex-col gap-1.5">
               <Text className="base-paragraph">Automatic Backups</Text>
               <Text className="text-text-secondary text-sm">Daily</Text>
             </View>
-
-            <Button
-              onPress={async () => {
-                const files = await listAppDataFiles();
-                console.log(
-                  "🚀 ~ restoreBackupFromDrive ~ files:",
-                  JSON.stringify(files, null, 2),
-                );
-                if (files.length === 0) {
-                  console.log("No backup found on Drive");
-                  return { success: false };
-                }
-
-                let resp = await restoreBackupFromDrive(files[0]);
-                console.log("🚀 ~ Backups ~ restoreFromBackup:", resp);
-              }}
-              className="w-40 p-3 rounded-full"
-            >
-              <Text className="btn-label">Restore</Text>
-            </Button>
           </View>
         ) : (
           <View className="flex-col gap-4">
@@ -132,7 +145,7 @@ const Backups = () => {
             </Text>
             <Button
               className="flex-row items-center py-3 px-4"
-              onPress={signIn}
+              onPress={handleSignIn}
             >
               <DynamicIcon name="google" family="AntDesign" color="#FFFFFF" />
               <Text className="btn-label">Sign in with Google</Text>
@@ -162,9 +175,22 @@ const Backups = () => {
             >
               <Text className="btn-label">Delete Drive Files</Text>
             </Button>
+            <Button onPress={signOut}>
+              <Text className="btn-label">Sign out</Text>
+            </Button>
           </View>
         </View>
       )}
+      <RestoreBottomsheet
+        data={{
+          lastBackedUpDate: restoreData?.lastBackedUpDate || "",
+          size: restoreData?.size || "",
+          checksum: restoreData?.checksum || "",
+          driveFileId: restoreData?.driveFileId || "",
+          name: restoreData?.name || "",
+        }}
+        ref={restoreBottomsheetRef}
+      />
     </>
   );
 };
