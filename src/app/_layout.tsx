@@ -68,26 +68,24 @@ const Layout = () => {
 
 export default function RootLayout() {
   return (
-    <>
-      <KeyboardProvider>
-        <GestureHandlerRootView style={{ flex: 1 }}>
-          <BottomSheetModalProvider>
-            <Suspense fallback={<LoadingScreen />}>
-              <SQLiteProvider
-                useSuspense
-                databaseName={DB_NAME}
-                options={{ enableChangeListener: true }}
-              >
-                <AuthProvider>
-                  <Layout />
-                </AuthProvider>
-              </SQLiteProvider>
-            </Suspense>
-            <PortalHost />
-            <Toaster position="bottom-center" />
-          </BottomSheetModalProvider>
-        </GestureHandlerRootView>
-      </KeyboardProvider>
-    </>
+    <KeyboardProvider>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <BottomSheetModalProvider>
+          <Suspense fallback={<LoadingScreen />}>
+            <SQLiteProvider
+              useSuspense
+              databaseName={DB_NAME}
+              options={{ enableChangeListener: true }}
+            >
+              <AuthProvider>
+                <Layout />
+              </AuthProvider>
+            </SQLiteProvider>
+          </Suspense>
+          <PortalHost />
+          <Toaster position="bottom-center" />
+        </BottomSheetModalProvider>
+      </GestureHandlerRootView>
+    </KeyboardProvider>
   );
 }

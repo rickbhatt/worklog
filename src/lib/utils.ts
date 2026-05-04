@@ -101,6 +101,7 @@ export const calcTargetPagePercent = ({
   targetLepPages: number;
   lepPages: number;
 }) => {
+  if (!targetLepPages || !lepPages) return 0;
   let percent = ((lepPages / targetLepPages) * 100).toFixed(2);
 
   const [whole, decimal] = percent.split(".");
