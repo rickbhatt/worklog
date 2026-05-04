@@ -74,3 +74,13 @@ export const getLatestTargetHour = (db: Db) => {
 
   return row;
 };
+
+export const checkTargetInfoExists = async (db: Db) => {
+  const row = await db
+    .select()
+    .from(targetInfo)
+    .orderBy(desc(targetInfo.createdAt))
+    .limit(1);
+
+  return !!row[0];
+};

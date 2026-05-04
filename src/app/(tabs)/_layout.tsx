@@ -1,6 +1,6 @@
 import AlertDialogBox from "@/components/alert-dialogbox";
 import DynamicIcon from "@/components/dynamic-icon";
-import { getLatestTargetHour } from "@/db/queries/fileworklog.queries";
+import { checkTargetInfoExists } from "@/db/queries/fileworklog.queries";
 import { useDb } from "@/hooks/useDb";
 import { cn } from "@/lib/utils";
 import * as Haptics from "expo-haptics";
@@ -86,8 +86,12 @@ const TabsLayout = () => {
           listeners={() => ({
             tabPress: async (e) => {
               e.preventDefault();
-              let latestTargetInfo = await getLatestTargetHour(db);
-              if (latestTargetInfo?.length < 1) {
+              let latestTargetInfo = await checkTargetInfoExists(db);
+              console.log(
+                "🚀 ~ TabsLayout ~ latestTargetInfo:",
+                latestTargetInfo,
+              );
+              if (!latestTargetInfo) {
                 setIsTargetAlertOpen(true);
               } else {
                 router.push("/work-log/create");
