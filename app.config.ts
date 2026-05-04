@@ -1,29 +1,26 @@
 import { ConfigContext, ExpoConfig } from "expo/config";
 
-const IS_DEV = process.env.APP_VARIANT === "dev";
-
-const IS_PREVIEW = process.env.APP_VARIANT === "preview";
+const variant = process.env.APP_VARIANT;
 
 const getUniqueIdentifier = () => {
-  if (IS_DEV) {
-    return "com.ritankar.worklog.dev";
+  switch (variant) {
+    case "development":
+      return "com.ritankar.worklog.dev";
+    case "preview":
+      return "com.ritankar.worklog.preview";
+    default:
+      return "com.ritankar.worklog";
   }
-  if (IS_PREVIEW) {
-    return "com.ritankar.worklog.preview";
-  }
-
-  return "com.ritankar.worklog";
 };
-
 const getAppName = () => {
-  if (IS_DEV) {
-    return "Worklog (Dev)";
+  switch (variant) {
+    case "development":
+      return "Worklog Dev";
+    case "preview":
+      return "Worklog Preview";
+    default:
+      return "Worklog";
   }
-  if (IS_PREVIEW) {
-    return "Worklog (Preview)";
-  }
-
-  return "Worklog";
 };
 
 export default ({ config }: ConfigContext): ExpoConfig => ({
