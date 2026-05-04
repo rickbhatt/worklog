@@ -70,7 +70,7 @@ export default function RootLayout() {
   return (
     <>
       <KeyboardProvider>
-        <GestureHandlerRootView>
+        <GestureHandlerRootView style={{ flex: 1 }}>
           <BottomSheetModalProvider>
             <Suspense fallback={<LoadingScreen />}>
               <SQLiteProvider
