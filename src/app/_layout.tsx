@@ -5,6 +5,7 @@ import { initDb } from "@/db/client";
 import migrations from "@/drizzle/migrations";
 import "@/global.css";
 import {
+  checkAndAutoBackup,
   ensureBackupDir,
   syncPendingRestoreState,
 } from "@/services/backupService";
@@ -18,6 +19,7 @@ import { Stack } from "expo-router";
 import { SQLiteProvider, useSQLiteContext } from "expo-sqlite";
 import { StatusBar } from "expo-status-bar";
 import { Suspense, useEffect } from "react";
+import { AppState } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { Toaster } from "sonner-native";
@@ -45,6 +47,19 @@ const Layout = () => {
     sync();
     ensureBackupDir();
     setupNotifications();
+    checkAndAutoBackup();
+  }, [success]);
+
+  // On foreground
+  useEffect(() => {
+    if (!success) return;
+
+    const subscription = AppState.addEventListener("change", async (state) => {
+      if (state !== "active") return;
+      checkAndAutoBackup();
+    });
+
+    return () => subscription.remove();
   }, [success]);
 
   if (!success) return <LoadingScreen />;

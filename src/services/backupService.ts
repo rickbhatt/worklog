@@ -15,6 +15,7 @@ import { generateBackupId } from "@/lib/utils";
 import {
   getAccessToken,
   getCurrentUserEmail,
+  isUserSignedIn,
 } from "@/services/googleAuthService";
 import {
   showBackupFailedNotification,
@@ -426,5 +427,27 @@ export const restoreBackupFromDrive = async (driveFile: {
 
     console.log("🚀 Restore failed:", error);
     return { success: false, error };
+  }
+};
+
+export const checkAndAutoBackup = async () => {
+  const db = getDb();
+
+  const isSignedIn = isUserSignedIn();
+  if (!isSignedIn) return;
+
+  const backupRecord = await getBackupState(db);
+
+  if (!backupRecord?.lastBackupAt) {
+    uploadBackupToDrive();
+    return;
+  }
+
+  const hoursSinceLast =
+    (Date.now() - backupRecord.lastBackupAt.getTime()) / (1000 * 60 * 60);
+
+  if (hoursSinceLast >= 12) {
+    console.log("🚀 Auto backup triggered");
+    uploadBackupToDrive();
   }
 };

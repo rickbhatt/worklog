@@ -1,7 +1,7 @@
 import { createCloudAccount } from "@/db/mutations/backup.mutations";
 import { useDb } from "@/hooks/useDb";
 import {
-  isSignedIn as checkIsSignedIn,
+  isUserSignedIn as checkIsSignedIn,
   signInWithGoogle,
   signOutFromGoogle,
 } from "@/services/googleAuthService";
@@ -30,7 +30,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
   const db = useDb();
 
   const refreshSignInState = async () => {
-    const signedIn = await checkIsSignedIn();
+    const signedIn = checkIsSignedIn();
     setIsSignedIn(signedIn);
   };
 
