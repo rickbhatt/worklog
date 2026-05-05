@@ -75,7 +75,7 @@ export const updateFileLogById = async ({
 
     return row;
   } catch (error) {
-    console.log("Could not update file log");
+    console.error("Could not update file log", error);
     throw error;
   }
 };
