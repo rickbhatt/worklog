@@ -80,21 +80,17 @@ export const syncPendingRestoreState = async (db: Db) => {
 
     // Clear the pending sync flag
     await SecureStore.deleteItemAsync("pending_backup_sync");
-
-    console.log("🚀 Backup state synced after restore");
   } catch (e) {
-    console.log("🚀 Failed to sync restore state:", e);
+    console.error("🚀 Failed to sync restore state:", e);
   }
 };
 
 export const ensureBackupDir = () => {
   const info = Paths.info(BACKUP_DIR_PATH);
-  console.log("🚀 ~ ensureBackupDir ~ folder exits:", info.exists);
 
   if (!info.exists) {
     const backupDir = new Directory(BACKUP_DIR_PATH);
     backupDir.create({ intermediates: true });
-    console.log("Backup directory created at:", BACKUP_DIR_PATH);
   }
 };
 
@@ -105,13 +101,10 @@ export const backupDatabase = () => {
 
   try {
     const source = new File(LIVE_DB_PATH);
-    console.log("🚀 ~ backupDatabase ~ source:", source);
     const destination = new File(backupPath);
-    console.log("🚀 ~ backupDatabase ~ destination:", destination);
 
     source.copy(destination);
 
-    console.log("✅ Database backed up to:", backupPath);
     return backupPath;
   } catch (error) {
     console.error("❌ Database backup failed:", error);
@@ -190,7 +183,6 @@ export async function uploadBackupToDrive(): Promise<{
 
     // If PATCH returned 404, Drive file was deleted — fall back to POST
     if (response.status === 404 && existingFileId) {
-      console.log("🚀 Drive file not found, falling back to POST");
       existingFileId = null;
       response = await doUpload(null);
     }
@@ -199,8 +191,6 @@ export async function uploadBackupToDrive(): Promise<{
     if (!response.ok) {
       throw new Error(`Drive API error: ${JSON.stringify(result)}`);
     }
-
-    console.log("🚀 Backup uploaded successfully:", result);
 
     // Single upsert on success
     await createOrUpdateBackupState({
@@ -221,15 +211,14 @@ export async function uploadBackupToDrive(): Promise<{
     return { success: true };
   } catch (error) {
     await showBackupFailedNotification();
-    console.log("🚀 Backup failed:", error);
+    console.error("🚀 Backup failed:", error);
     return { success: false, error };
   } finally {
     if (snapshotPath) {
       try {
         new File(snapshotPath).delete();
-        console.log("🚀 Snapshot cleaned up");
       } catch (e) {
-        console.log("🚀 Failed to clean up snapshot:", e);
+        console.error("🚀 Failed to clean up snapshot:", e);
       }
     }
   }
@@ -282,11 +271,8 @@ export async function deleteAllDriveFiles(): Promise<{
     const files = await listAppDataFiles();
 
     if (files.length === 0) {
-      console.log("🚀 No files found in appDataFolder");
       return { success: true };
     }
-
-    console.log(`🚀 Deleting ${files.length} file(s) from Drive...`);
 
     // 2. Delete each file
     await Promise.all(
@@ -304,8 +290,6 @@ export async function deleteAllDriveFiles(): Promise<{
             `Failed to delete file ${file.id}: ${response.status}`,
           );
         }
-
-        console.log(`🚀 Deleted: ${file.name} (${file.id})`);
       }),
     );
 
@@ -313,16 +297,14 @@ export async function deleteAllDriveFiles(): Promise<{
     const db = getDb();
     await deleteBackupState(db);
 
-    console.log("🚀 All Drive files deleted and DB record cleared");
     return { success: true };
   } catch (error) {
-    console.log("🚀 Delete all failed:", error);
+    console.error("🚀 Delete all failed:", error);
     return { success: false, error };
   }
 }
 
 export const restartApp = async () => {
-  console.log("🚀 Reloading app");
   if (__DEV__) {
     // In dev builds, use RN's DevSettings
     const { DevSettings } = require("react-native");
@@ -401,8 +383,6 @@ export const restoreBackupFromDrive = async (driveFile: {
     }
     restoredFile.move(liveDbFile);
 
-    console.log("🚀 Backup restored successfully");
-
     // Update the secure store with the backup metadata from Drive
     const currentUserEmail = await getCurrentUserEmail();
     await saveBackupMetaToSecureStore({
@@ -425,7 +405,7 @@ export const restoreBackupFromDrive = async (driveFile: {
       if (restoredFile.exists) restoredFile.delete();
     } catch (e) {}
 
-    console.log("🚀 Restore failed:", error);
+    console.error("🚀 Restore failed:", error);
     return { success: false, error };
   }
 };
@@ -447,7 +427,6 @@ export const checkAndAutoBackup = async () => {
     (Date.now() - backupRecord.lastBackupAt.getTime()) / (1000 * 60 * 60);
 
   if (hoursSinceLast >= 12) {
-    console.log("🚀 Auto backup triggered");
     uploadBackupToDrive();
   }
 };

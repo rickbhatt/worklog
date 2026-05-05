@@ -59,7 +59,6 @@ const Backups = () => {
     if (backupStateInfo.length < 1) {
       const files = await listAppDataFiles();
       if (files.length > 0) {
-        console.log("restore available");
         setRestoreData({
           lastBackedUpDate: files[0].modifiedTime,
           size: files[0].size,
@@ -154,19 +153,14 @@ const Backups = () => {
           <View className="flex-1 flex-col gap-2.5">
             <Button
               onPress={async () => {
-                const files = await listAppDataFiles();
-                console.log(
-                  "🚀 ~ listAppDataFiles ~ files:",
-                  JSON.stringify(files, null, 2),
-                );
+                await listAppDataFiles();
               }}
             >
               <Text className="btn-label">List Drive Files</Text>
             </Button>
             <Button
               onPress={async () => {
-                const resp = await deleteAllDriveFiles();
-                console.log("🚀 ~ deleteAllDriveFiles ~ resp:", resp);
+                await deleteAllDriveFiles();
               }}
             >
               <Text className="btn-label">Delete Drive Files</Text>

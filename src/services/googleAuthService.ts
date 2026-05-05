@@ -20,9 +20,9 @@ export async function signInWithGoogle() {
     const userInfo = await GoogleSignin.signIn();
     return { success: true, user: userInfo.data?.user };
   } catch (error: any) {
-    console.log("🚀 Google Sign-In Error:", JSON.stringify(error));
-    console.log("🚀 Error code:", error.code);
-    console.log("🚀 Error message:", error.message);
+    console.error("🚀 Google Sign-In Error:", JSON.stringify(error));
+    console.error("🚀 Error code:", error.code);
+    console.error("🚀 Error message:", error.message);
     if (error.code === statusCodes.SIGN_IN_CANCELLED) {
       return { success: false, reason: "cancelled" };
     } else if (error.code === statusCodes.IN_PROGRESS) {

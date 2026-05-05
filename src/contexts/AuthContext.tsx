@@ -52,7 +52,6 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
         setIsSignedIn(true);
         toast.success(`Connected to Google Drive as ${result.user?.email}`);
       } else {
-        console.log("Failed", result.reason);
         await refreshSignInState();
       }
     } finally {
@@ -66,7 +65,6 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
       const result = await signOutFromGoogle();
 
       if (result.success) {
-        console.log("Signed out");
         setIsSignedIn(false);
       } else {
         await refreshSignInState();

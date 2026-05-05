@@ -87,10 +87,6 @@ const TabsLayout = () => {
             tabPress: async (e) => {
               e.preventDefault();
               let latestTargetInfo = await checkTargetInfoExists(db);
-              console.log(
-                "🚀 ~ TabsLayout ~ latestTargetInfo:",
-                latestTargetInfo,
-              );
               if (!latestTargetInfo) {
                 setIsTargetAlertOpen(true);
               } else {
