@@ -133,10 +133,10 @@ const Backups = () => {
                 {cloudAccountInfo[0]?.accountEmail}
               </Text>
             </View>
-            <View className="flex-col gap-1.5">
+            {/* <View className="flex-col gap-1.5">
               <Text className="base-paragraph">Automatic Backups</Text>
               <Text className="text-text-secondary text-sm">Daily</Text>
-            </View>
+            </View> */}
           </View>
         ) : (
           <View className="flex-col gap-4">
