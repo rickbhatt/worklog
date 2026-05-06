@@ -5,7 +5,7 @@ import {
   DRIVE_BASE_URL,
   LIVE_DB_PATH,
 } from "@/constants";
-import { closeDb, getDb } from "@/db/client";
+
 import {
   createOrUpdateBackupState,
   deleteBackupState,

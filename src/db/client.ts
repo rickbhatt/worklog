@@ -1,36 +1,14 @@
+import migrations from "@/drizzle/migrations";
 import { drizzle } from "drizzle-orm/expo-sqlite";
+import { migrate } from "drizzle-orm/expo-sqlite/migrator";
 import { type SQLiteDatabase } from "expo-sqlite";
 import * as schema from "./schema";
 
-type DrizzleDb = ReturnType<typeof createDrizzleDb>;
+export const createDrizzleInstance = (sqliteDb: SQLiteDatabase) =>
+  drizzle(sqliteDb, { schema });
 
-let _sqliteDb: SQLiteDatabase | null = null;
-let _db: DrizzleDb | null = null;
-
-export function createDrizzleDb(sqliteDb: SQLiteDatabase) {
-  sqliteDb.execSync("PRAGMA foreign_keys = ON");
-  return drizzle(sqliteDb, { schema });
-}
-
-export function initDb(sqliteDb: SQLiteDatabase): DrizzleDb {
-  if (!_db || _sqliteDb !== sqliteDb) {
-    _sqliteDb = sqliteDb;
-    _db = createDrizzleDb(sqliteDb);
-  }
-  return _db;
-}
-
-export function getDb(): DrizzleDb {
-  if (!_db) throw new Error("DB not initialized — call initDb first");
-  return _db;
-}
-
-export async function closeDb(): Promise<void> {
-  if (!_sqliteDb) return;
-  try {
-    await _sqliteDb.closeAsync();
-  } finally {
-    _sqliteDb = null;
-    _db = null;
-  }
-}
+export const initialiseDb = async (sqliteDb: SQLiteDatabase) => {
+  await sqliteDb.execAsync("PRAGMA foreign_keys = ON;");
+  const db = createDrizzleInstance(sqliteDb);
+  await migrate(db, migrations);
+};

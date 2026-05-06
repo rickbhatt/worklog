@@ -1,25 +1,16 @@
 import LoadingScreen from "@/components/loading-screen";
 import { DB_NAME } from "@/constants";
 import { AuthProvider } from "@/contexts/AuthContext";
-import { initDb } from "@/db/client";
-import migrations from "@/drizzle/migrations";
+import { initialiseDb } from "@/db/client";
 import "@/global.css";
-import {
-  checkAndAutoBackup,
-  ensureBackupDir,
-  syncPendingRestoreState,
-} from "@/services/backupService";
+import { useDrizzleStudioDev } from "@/hooks/useDrizzleStudioDev";
 import { configureGoogleSignIn } from "@/services/googleAuthService";
-import { setupNotifications } from "@/services/notificationService";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { PortalHost } from "@rn-primitives/portal";
-import { useMigrations } from "drizzle-orm/expo-sqlite/migrator";
-import { useDrizzleStudio } from "expo-drizzle-studio-plugin";
 import { Stack } from "expo-router";
-import { SQLiteProvider, useSQLiteContext } from "expo-sqlite";
+import { SQLiteProvider } from "expo-sqlite";
 import { StatusBar } from "expo-status-bar";
-import { Suspense, useEffect } from "react";
-import { AppState } from "react-native";
+import { Suspense } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { Toaster } from "sonner-native";
@@ -27,43 +18,7 @@ import { Toaster } from "sonner-native";
 configureGoogleSignIn();
 
 const Layout = () => {
-  const sqliteDb = useSQLiteContext();
-
-  // Initialize the singleton with SQLiteProvider's connection
-  const db = initDb(sqliteDb);
-
-  // Run migrations using the same connection
-  const { success } = useMigrations(db, migrations);
-
-  useDrizzleStudio(sqliteDb);
-
-  useEffect(() => {
-    if (!success) return;
-
-    const sync = async () => {
-      await syncPendingRestoreState(db);
-    };
-
-    sync();
-    ensureBackupDir();
-    setupNotifications();
-    checkAndAutoBackup();
-  }, [success]);
-
-  // On foreground
-  useEffect(() => {
-    if (!success) return;
-
-    const subscription = AppState.addEventListener("change", async (state) => {
-      if (state !== "active") return;
-      checkAndAutoBackup();
-    });
-
-    return () => subscription.remove();
-  }, [success]);
-
-  if (!success) return <LoadingScreen />;
-
+  useDrizzleStudioDev();
   return (
     <>
       <StatusBar style="light" />
@@ -91,6 +46,9 @@ export default function RootLayout() {
               useSuspense
               databaseName={DB_NAME}
               options={{ enableChangeListener: true }}
+              onInit={async (sqlite) => {
+                await initialiseDb(sqlite);
+              }}
             >
               <AuthProvider>
                 <Layout />
