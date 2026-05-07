@@ -1,5 +1,6 @@
 import { BACKUP_STATE_ID } from "@/constants";
 import { backupState, cloudAccount } from "@/db/schema";
+import { getCurrentUserEmail } from "@/services/googleAuthService";
 import { eq } from "drizzle-orm";
 import { CloudAccountInsertType, Db } from "type";
 
@@ -46,6 +47,20 @@ export const createOrUpdateBackupState = async ({
   db: Db;
   data: CreateBackupHistory;
 }) => {
+  const cloudAccountExists = await db.select().from(cloudAccount).limit(1);
+  if (!cloudAccountExists) {
+    const accountEmail = await getCurrentUserEmail();
+    await createCloudAccount({
+      db,
+      data: {
+        id: "gdrive",
+        provider: "google_drive",
+        accountEmail: accountEmail!,
+        connectedAt: new Date(),
+      },
+    });
+  }
+
   const [row] = await db
     .insert(backupState)
     .values({ id: BACKUP_STATE_ID, ...data })
@@ -58,6 +73,7 @@ export const createOrUpdateBackupState = async ({
         lastBackupAt: data.lastBackupAt,
         md5Checksum: data.md5Checksum,
         lastError: data.lastError,
+        cloudAccountId: "gdrive",
       },
     })
     .returning({
