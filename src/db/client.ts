@@ -19,11 +19,11 @@ export const getDbInstance = () => {
 
 export const closeDb = async () => {
   if (!sqliteInstance) return;
-
+  console.log("closeDb: closing");
   try {
-    // Flush WAL safely before closing
     await sqliteInstance.execAsync("PRAGMA wal_checkpoint(FULL);");
     await sqliteInstance.closeAsync();
+    console.log("closeDb: closed");
   } finally {
     sqliteInstance = null;
   }
@@ -33,15 +33,20 @@ export const createDrizzleInstance = (sqliteDb: SQLiteDatabase) =>
   drizzle(sqliteDb, { schema });
 
 export const initialiseDb = async (sqliteDb: SQLiteDatabase) => {
+  console.log("initialiseDb: start");
   registerDbInstance(sqliteDb);
 
-  await sqliteDb.execAsync(`
-    PRAGMA foreign_keys = ON;
-    PRAGMA journal_mode = WAL;
-    PRAGMA synchronous = NORMAL;
-  `);
-
-  const db = createDrizzleInstance(sqliteDb);
-
-  await migrate(db, migrations);
+  try {
+    await sqliteDb.execAsync(`
+      PRAGMA foreign_keys = ON;
+      PRAGMA journal_mode = WAL;
+      PRAGMA synchronous = NORMAL;
+    `);
+    const db = createDrizzleInstance(sqliteDb);
+    await migrate(db, migrations);
+    console.log("initialiseDb: done");
+  } catch (e) {
+    console.error("initialiseDb: FAILED", e);
+    throw e;
+  }
 };
