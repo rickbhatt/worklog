@@ -3,14 +3,22 @@ import { DB_NAME } from "@/constants";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { initialiseDb } from "@/db/client";
 import "@/global.css";
+import { useDb } from "@/hooks/useDb";
 import { useDrizzleStudioDev } from "@/hooks/useDrizzleStudioDev";
+import {
+  checkAndAutoBackup,
+  ensureBackupDir,
+  syncPendingRestoreState,
+} from "@/services/backupService";
 import { configureGoogleSignIn } from "@/services/googleAuthService";
+import { setupNotifications } from "@/services/notificationService";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { PortalHost } from "@rn-primitives/portal";
 import { Stack } from "expo-router";
 import { SQLiteProvider } from "expo-sqlite";
 import { StatusBar } from "expo-status-bar";
-import { Suspense } from "react";
+import { Suspense, useEffect } from "react";
+import { AppState, InteractionManager } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { Toaster } from "sonner-native";
@@ -18,7 +26,34 @@ import { Toaster } from "sonner-native";
 configureGoogleSignIn();
 
 const Layout = () => {
+  const db = useDb();
   useDrizzleStudioDev();
+  useEffect(() => {
+    const task = InteractionManager.runAfterInteractions(async () => {
+      try {
+        ensureBackupDir();
+
+        setupNotifications();
+
+        await syncPendingRestoreState(db);
+
+        checkAndAutoBackup(db);
+      } catch (error) {
+        console.error("🚀 Startup tasks failed:", error);
+      }
+    });
+
+    return () => task.cancel();
+  }, []);
+  // On foreground
+  useEffect(() => {
+    const subscription = AppState.addEventListener("change", async (state) => {
+      if (state !== "active") return;
+      checkAndAutoBackup(db);
+    });
+
+    return () => subscription.remove();
+  }, []);
   return (
     <>
       <StatusBar style="light" />
@@ -46,9 +81,7 @@ export default function RootLayout() {
               useSuspense
               databaseName={DB_NAME}
               options={{ enableChangeListener: true }}
-              onInit={async (sqlite) => {
-                await initialiseDb(sqlite);
-              }}
+              onInit={initialiseDb}
             >
               <AuthProvider>
                 <Layout />

@@ -5,12 +5,14 @@ import {
   DRIVE_BASE_URL,
   LIVE_DB_PATH,
 } from "@/constants";
+import { closeDb } from "@/db/client";
 
 import {
   createOrUpdateBackupState,
   deleteBackupState,
 } from "@/db/mutations/backup.mutations";
 import { getBackupState } from "@/db/queries/backup.queries";
+import { checkHasUserData } from "@/db/queries/fileworklog.queries";
 import { generateBackupId } from "@/lib/utils";
 import {
   getAccessToken,
@@ -88,9 +90,18 @@ export const syncPendingRestoreState = async (db: Db) => {
 export const ensureBackupDir = () => {
   const info = Paths.info(BACKUP_DIR_PATH);
 
-  if (!info.exists) {
+  if (info.exists) return;
+
+  try {
     const backupDir = new Directory(BACKUP_DIR_PATH);
     backupDir.create({ intermediates: true });
+  } catch (error) {
+    // Ignore already-exists races
+    const latestInfo = Paths.info(BACKUP_DIR_PATH);
+
+    if (!latestInfo.exists) {
+      throw error;
+    }
   }
 };
 
@@ -112,7 +123,7 @@ export const backupDatabase = () => {
   }
 };
 
-export async function uploadBackupToDrive(): Promise<{
+export async function uploadBackupToDrive(database: Db): Promise<{
   success: boolean;
   error?: any;
 }> {
@@ -120,8 +131,6 @@ export async function uploadBackupToDrive(): Promise<{
 
   try {
     await showBackupInProgressNotification();
-
-    const database = getDb();
 
     // Get existing Drive file ID from DB (single read)
     const existing = await getBackupState(database);
@@ -259,7 +268,7 @@ export async function listAppDataFiles() {
   return data.files ?? [];
 }
 
-export async function deleteAllDriveFiles(): Promise<{
+export async function deleteAllDriveFiles(db: Db): Promise<{
   success: boolean;
   error?: any;
 }> {
@@ -294,7 +303,7 @@ export async function deleteAllDriveFiles(): Promise<{
     );
 
     // 3. Clear local DB record
-    const db = getDb();
+
     await deleteBackupState(db);
 
     return { success: true };
@@ -306,16 +315,23 @@ export async function deleteAllDriveFiles(): Promise<{
 
 export const restartApp = async () => {
   if (__DEV__) {
-    // In dev builds, use RN's DevSettings
+    console.warn(
+      "⚠️ Dev reload is not a true native restart. " +
+        "SQLite restore flows may require a manual cold restart.",
+    );
+
     const { DevSettings } = require("react-native");
+
     DevSettings.reload();
-  } else {
-    if (!Updates.isEnabled) {
-      throw new Error("expo-updates is not enabled in this build");
-    }
-    // In production builds, use expo-updates
-    await Updates.reloadAsync();
+
+    return;
   }
+
+  if (!Updates.isEnabled) {
+    throw new Error("expo-updates is not enabled in this build");
+  }
+
+  await Updates.reloadAsync();
 };
 
 export const restoreBackupFromDrive = async (driveFile: {
@@ -326,27 +342,47 @@ export const restoreBackupFromDrive = async (driveFile: {
   modifiedTime: string;
 }): Promise<{
   success: boolean;
-  error?: any;
+  error?: unknown;
 }> => {
-  const restoredFilePath = new File(
-    Paths.document,
-    "backup",
-    "databases",
-    "worklog_restored.db",
-  );
+  const restoreDir = new Directory(Paths.document, "backup", "databases");
 
+  const restoredFile = new File(restoreDir, "worklog_restored.db");
+
+  const liveDbFile = new File(Paths.document, "SQLite", DB_NAME);
+
+  const walFile = new File(Paths.document, "SQLite", `${DB_NAME}-wal`);
+
+  const shmFile = new File(Paths.document, "SQLite", `${DB_NAME}-shm`);
+
+  const oldDbBackup = new File(Paths.document, "SQLite", `${DB_NAME}.old`);
   try {
+    // Ensure restore directory exists before network work
+    if (!restoreDir.exists) {
+      restoreDir.create({ intermediates: true });
+    }
+
+    // Ensure temp restore file starts clean
+    if (restoredFile.exists) {
+      restoredFile.delete();
+    }
+
+    restoredFile.create();
+
     // Get fresh access token
     const accessToken = await getAccessToken();
-    if (!accessToken) throw new Error("Not signed in to Google");
 
-    // Download the backup file from Drive
+    if (!accessToken) {
+      throw new Error("Not signed in to Google");
+    }
 
+    // Download backup from Drive
     const response = await fetch(
       `${DRIVE_BASE_URL}/drive/v3/files/${driveFile.id}?alt=media`,
       {
         method: "GET",
-        headers: { Authorization: `Bearer ${accessToken}` },
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
       },
     );
 
@@ -354,37 +390,62 @@ export const restoreBackupFromDrive = async (driveFile: {
       throw new Error(`Drive download failed: ${response.status}`);
     }
 
-    // Write downloaded file to a temp location first
     const arrayBuffer = await response.arrayBuffer();
     const uint8Array = new Uint8Array(arrayBuffer);
 
-    const restoredFile = new File(restoredFilePath);
-    restoredFile.create();
-
-    // Write binary directly using FileHandle
     const handle = restoredFile.open();
-    handle.writeBytes(uint8Array);
-    handle.close();
 
-    // Verify MD5 checksum if available
-
-    if (restoredFile.md5 !== driveFile.md5Checksum) {
-      restoredFile.delete();
-      throw new Error(`Checksum mismatch — backup file may be corrupted`);
+    try {
+      handle.writeBytes(uint8Array);
+    } finally {
+      handle.close();
     }
 
-    // Replace the live DB with the downloaded file
+    // Verify integrity
+    if (
+      restoredFile.md5 !== driveFile.md5Checksum ||
+      restoredFile.size !== Number(driveFile.size)
+    ) {
+      restoredFile.delete();
 
+      throw new Error("Checksum or size mismatch — backup may be corrupted");
+    }
+
+    // Close active provider-managed SQLite connection
     await closeDb();
 
-    const liveDbFile = new File(Paths.document, "SQLite", DB_NAME);
+    // Clean WAL/SHM first while still associated with live DB
+    if (walFile.exists) {
+      walFile.delete();
+    }
+
+    if (shmFile.exists) {
+      shmFile.delete();
+    }
+
+    // Remove previous rollback backup if present
+    if (oldDbBackup.exists) {
+      oldDbBackup.delete();
+    }
+
+    // Move current live DB aside for rollback safety
     if (liveDbFile.exists) {
+      liveDbFile.copy(oldDbBackup);
       liveDbFile.delete();
     }
-    restoredFile.move(liveDbFile);
 
-    // Update the secure store with the backup metadata from Drive
+    // Place restored DB into live location
+    restoredFile.copy(liveDbFile);
+    restoredFile.delete();
+
+    // Cleanup rollback backup after successful replacement
+    if (oldDbBackup.exists) {
+      oldDbBackup.delete();
+    }
+
+    // Save backup metadata
     const currentUserEmail = await getCurrentUserEmail();
+
     await saveBackupMetaToSecureStore({
       accountEmail: currentUserEmail!,
       driveFileId: driveFile.id,
@@ -394,32 +455,46 @@ export const restoreBackupFromDrive = async (driveFile: {
       backupFileName: driveFile.name,
     });
 
-    // Restart the app to reinitialize DB with restored file
-
+    // Restart immediately after restore
     await restartApp();
+
     return { success: true };
   } catch (error) {
-    // Clean up temp file if it exists
+    // Cleanup temp restored file
     try {
-      const restoredFile = new File(restoredFilePath);
-      if (restoredFile.exists) restoredFile.delete();
-    } catch (e) {}
+      if (restoredFile.exists) {
+        restoredFile.delete();
+      }
+    } catch {}
+
+    // Rollback original DB if replacement failed
+    try {
+      if (oldDbBackup.exists && !liveDbFile.exists) {
+        oldDbBackup.copy(liveDbFile);
+        oldDbBackup.delete();
+      }
+    } catch {}
 
     console.error("🚀 Restore failed:", error);
-    return { success: false, error };
+
+    return {
+      success: false,
+      error,
+    };
   }
 };
-
-export const checkAndAutoBackup = async () => {
-  const db = getDb();
-
+export const checkAndAutoBackup = (db: Db) => {
   const isSignedIn = isUserSignedIn();
   if (!isSignedIn) return;
 
-  const backupRecord = await getBackupState(db);
+  const backupRecord = getBackupState(db); // no await
 
   if (!backupRecord?.lastBackupAt) {
-    uploadBackupToDrive();
+    const hasData = checkHasUserData(db);
+    if (hasData) {
+      console.log("🚀 First backup triggered — user has data");
+      uploadBackupToDrive(db);
+    }
     return;
   }
 
@@ -427,6 +502,7 @@ export const checkAndAutoBackup = async () => {
     (Date.now() - backupRecord.lastBackupAt.getTime()) / (1000 * 60 * 60);
 
   if (hoursSinceLast >= 12) {
-    uploadBackupToDrive();
+    console.log("🚀 Auto backup triggered");
+    uploadBackupToDrive(db);
   }
 };

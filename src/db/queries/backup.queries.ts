@@ -18,11 +18,12 @@ export const checkCloudAccountExists = async (db: Db, email: string) => {
   return !!row[0];
 };
 
-export const getBackupState = async (db: Db) => {
-  let [row] = await db
+export const getBackupState = (db: Db) => {
+  const [row] = db
     .select()
     .from(backupState)
     .where(eq(backupState.id, BACKUP_STATE_ID))
-    .limit(1);
+    .limit(1)
+    .all();
   return row;
 };
