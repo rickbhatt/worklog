@@ -18,7 +18,7 @@ import { Stack } from "expo-router";
 import { SQLiteProvider } from "expo-sqlite";
 import { StatusBar } from "expo-status-bar";
 import { Suspense, useEffect } from "react";
-import { AppState, InteractionManager } from "react-native";
+import { AppState } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { Toaster } from "sonner-native";
@@ -26,34 +26,39 @@ import { Toaster } from "sonner-native";
 configureGoogleSignIn();
 
 const Layout = () => {
-  const db = useDb();
+  const db = useDb(); // Drizzle Db
   useDrizzleStudioDev();
+
+  // Startup tasks
   useEffect(() => {
-    const task = InteractionManager.runAfterInteractions(async () => {
+    const sync = async () => {
       try {
         ensureBackupDir();
 
         setupNotifications();
 
+        // Sync any pending restore metadata into the DB
         await syncPendingRestoreState(db);
 
+        // Kick off auto-backup if needed (non-blocking)
         checkAndAutoBackup(db);
       } catch (error) {
         console.error("🚀 Startup tasks failed:", error);
       }
-    });
+    };
 
-    return () => task.cancel();
-  }, []);
-  // On foreground
+    sync();
+  }, [db]);
+
+  // On foreground: fire-and-forget auto-backup check
   useEffect(() => {
-    const subscription = AppState.addEventListener("change", async (state) => {
+    const subscription = AppState.addEventListener("change", (state) => {
       if (state !== "active") return;
       checkAndAutoBackup(db);
     });
 
     return () => subscription.remove();
-  }, []);
+  }, [db]);
   return (
     <>
       <StatusBar style="light" />

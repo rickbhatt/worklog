@@ -5,7 +5,7 @@ import {
   DRIVE_BASE_URL,
   LIVE_DB_PATH,
 } from "@/constants";
-import { closeDb } from "@/db/client";
+import { closeDb, getDbInstance } from "@/db/client";
 
 import {
   createOrUpdateBackupState,
@@ -105,12 +105,15 @@ export const ensureBackupDir = () => {
   }
 };
 
-export const backupDatabase = () => {
+export const backupDatabase = async (): Promise<string> => {
   const backupId = generateBackupId();
-
   const backupPath = `${BACKUP_DIR_PATH}/${DB_NAME}.${backupId}.backup`;
 
   try {
+    // Flush WAL so all writes are in the main .db file before snapshot
+    const sqlite = getDbInstance();
+    await sqlite.execAsync("PRAGMA wal_checkpoint(FULL);");
+
     const source = new File(LIVE_DB_PATH);
     const destination = new File(backupPath);
 
@@ -136,8 +139,8 @@ export async function uploadBackupToDrive(database: Db): Promise<{
     const existing = await getBackupState(database);
     let existingFileId = existing?.driveFileId ?? null;
 
-    // Create snapshot
-    snapshotPath = backupDatabase();
+    // Create snapshot (ASYNC now)
+    snapshotPath = await backupDatabase();
     const snapshotFile = new File(snapshotPath);
     if (!snapshotFile.exists) {
       throw new Error("Snapshot file not found at: " + snapshotPath);

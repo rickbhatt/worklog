@@ -14,7 +14,6 @@ export const getDbInstance = () => {
   if (!sqliteInstance) {
     throw new Error("SQLite instance has not been registered");
   }
-
   return sqliteInstance;
 };
 
@@ -24,7 +23,6 @@ export const closeDb = async () => {
   try {
     // Flush WAL safely before closing
     await sqliteInstance.execAsync("PRAGMA wal_checkpoint(FULL);");
-
     await sqliteInstance.closeAsync();
   } finally {
     sqliteInstance = null;
