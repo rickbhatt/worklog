@@ -47,7 +47,7 @@ const Backups = () => {
   const handleManualBackup = async () => {
     setIsUploading(true);
     try {
-      await uploadBackupToDrive();
+      await uploadBackupToDrive(db);
     } catch (error) {
       console.error(error);
     } finally {
@@ -160,7 +160,7 @@ const Backups = () => {
             </Button>
             <Button
               onPress={async () => {
-                await deleteAllDriveFiles();
+                await deleteAllDriveFiles(db);
               }}
             >
               <Text className="btn-label">Delete Drive Files</Text>
