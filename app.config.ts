@@ -79,6 +79,14 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         defaultChannel: "backup",
       },
     ],
+    [
+      "@sentry/react-native/expo",
+      {
+        url: "https://sentry.io/",
+        project: "worlog",
+        organization: "ritankar",
+      },
+    ],
   ],
   experiments: {
     typedRoutes: true,

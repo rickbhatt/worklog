@@ -14,6 +14,7 @@ import { configureGoogleSignIn } from "@/services/googleAuthService";
 import { setupNotifications } from "@/services/notificationService";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { PortalHost } from "@rn-primitives/portal";
+import * as Sentry from "@sentry/react-native";
 import { Stack } from "expo-router";
 import { SQLiteProvider } from "expo-sqlite";
 import { StatusBar } from "expo-status-bar";
@@ -22,6 +23,20 @@ import { AppState, InteractionManager } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { Toaster } from "sonner-native";
+
+Sentry.init({
+  dsn: "https://7334a78670d0235b3427d1e4c7e0e344@o4509792171393024.ingest.us.sentry.io/4511359683067904",
+
+  // Adds more context data to events (IP address, cookies, user, etc.)
+  // For more information, visit: https://docs.sentry.io/platforms/react-native/data-management/data-collected/
+  sendDefaultPii: true,
+
+  // Enable Logs
+  enableLogs: true,
+
+  // uncomment the line below to enable Spotlight (https://spotlightjs.com)
+  // spotlight: __DEV__,
+});
 
 configureGoogleSignIn();
 
@@ -179,7 +194,7 @@ const Layout = () => {
   );
 };
 
-export default function RootLayout() {
+const RootLayout = () => {
   return (
     <KeyboardProvider>
       <GestureHandlerRootView style={{ flex: 1 }}>
@@ -202,4 +217,6 @@ export default function RootLayout() {
       </GestureHandlerRootView>
     </KeyboardProvider>
   );
-}
+};
+
+export default Sentry.wrap(RootLayout);
