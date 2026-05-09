@@ -1,9 +1,10 @@
 import LoadingScreen from "@/components/loading-screen";
 import { DB_NAME } from "@/constants";
 import { AuthProvider } from "@/contexts/AuthContext";
-import { initDb } from "@/db/client";
-import migrations from "@/drizzle/migrations";
+import { getDbInstance, initialiseDb, validateDb } from "@/db/client";
 import "@/global.css";
+import { useDb } from "@/hooks/useDb";
+import { useDrizzleStudioDev } from "@/hooks/useDrizzleStudioDev";
 import {
   checkAndAutoBackup,
   ensureBackupDir,
@@ -13,56 +14,153 @@ import { configureGoogleSignIn } from "@/services/googleAuthService";
 import { setupNotifications } from "@/services/notificationService";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { PortalHost } from "@rn-primitives/portal";
-import { useMigrations } from "drizzle-orm/expo-sqlite/migrator";
-import { useDrizzleStudio } from "expo-drizzle-studio-plugin";
 import { Stack } from "expo-router";
-import { SQLiteProvider, useSQLiteContext } from "expo-sqlite";
+import { SQLiteProvider } from "expo-sqlite";
 import { StatusBar } from "expo-status-bar";
-import { Suspense, useEffect } from "react";
-import { AppState } from "react-native";
+import { Suspense, useEffect, useState } from "react";
+import { AppState, InteractionManager } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { Toaster } from "sonner-native";
 
 configureGoogleSignIn();
 
+let hasInitializedStartupTasks = false;
+
 const Layout = () => {
-  const sqliteDb = useSQLiteContext();
+  const db = useDb();
 
-  // Initialize the singleton with SQLiteProvider's connection
-  const db = initDb(sqliteDb);
+  useDrizzleStudioDev();
 
-  // Run migrations using the same connection
-  const { success } = useMigrations(db, migrations);
+  const [dbReady, setDbReady] = useState(false);
 
-  useDrizzleStudio(sqliteDb);
-
+  /*
+   * Validate database connection
+   */
   useEffect(() => {
-    if (!success) return;
+    let mounted = true;
 
-    const sync = async () => {
-      await syncPendingRestoreState(db);
+    try {
+      const sqlite = getDbInstance();
+
+      if (!sqlite) {
+        setDbReady(false);
+        return;
+      }
+
+      const healthy = validateDb(db);
+
+      if (!mounted) return;
+
+      console.log("🚀 DB validation result:", healthy);
+
+      setDbReady(healthy);
+    } catch (error) {
+      console.error("🚀 DB validation failed:", error);
+
+      if (!mounted) return;
+
+      setDbReady(false);
+    }
+
+    return () => {
+      mounted = false;
     };
+  }, [db]);
 
-    sync();
-    ensureBackupDir();
-    setupNotifications();
-    checkAndAutoBackup();
-  }, [success]);
-
-  // On foreground
+  /*
+   * One-time startup tasks
+   */
   useEffect(() => {
-    if (!success) return;
+    if (!dbReady) return;
+
+    if (hasInitializedStartupTasks) return;
+
+    let mounted = true;
+
+    /*
+     * Defer non-critical startup work until after the initial
+     * React Native render, navigation mount, animations, and
+     * interaction lifecycle settle.
+     *
+     * This helps avoid SQLite/Drizzle lifecycle races during:
+     * - React StrictMode remounts (dev)
+     * - Expo dev reload cycles
+     * - SQLiteProvider reinitialization
+     * - database restore/restart flows
+     *
+     * We intentionally run backup/sync startup tasks here because
+     * they are not required for first paint or initial navigation.
+     */
+
+    const task = InteractionManager.runAfterInteractions(() => {
+      const startup = async () => {
+        try {
+          if (!mounted) return;
+
+          console.log("🚀 Startup tasks: begin");
+
+          ensureBackupDir();
+
+          setupNotifications();
+
+          if (!mounted) return;
+
+          /*
+           * Sync pending restore metadata
+           */
+          await syncPendingRestoreState(db);
+
+          if (!mounted) return;
+
+          /*
+           * Auto backup check
+           */
+          checkAndAutoBackup(db);
+
+          if (!mounted) return;
+
+          hasInitializedStartupTasks = true;
+
+          console.log("🚀 Startup tasks: complete");
+        } catch (error) {
+          console.error("🚀 Startup tasks failed:", error);
+        }
+      };
+
+      startup();
+    });
+
+    return () => {
+      mounted = false;
+
+      task.cancel();
+    };
+  }, [db, dbReady]);
+
+  /*
+   * Foreground auto-backup checks
+   */
+  useEffect(() => {
+    if (!dbReady) return;
 
     const subscription = AppState.addEventListener("change", async (state) => {
       if (state !== "active") return;
-      checkAndAutoBackup();
+
+      await checkAndAutoBackup(db);
     });
 
-    return () => subscription.remove();
-  }, [success]);
+    return () => {
+      subscription.remove();
+    };
+  }, [db, dbReady]);
 
-  if (!success) return <LoadingScreen />;
+  /*
+   * Optional loading guard
+   */
+  if (!dbReady) {
+    return <LoadingScreen />;
+  }
 
   return (
     <>
@@ -91,6 +189,7 @@ export default function RootLayout() {
               useSuspense
               databaseName={DB_NAME}
               options={{ enableChangeListener: true }}
+              onInit={initialiseDb}
             >
               <AuthProvider>
                 <Layout />
