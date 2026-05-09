@@ -47,7 +47,7 @@ const Backups = () => {
   const handleManualBackup = async () => {
     setIsUploading(true);
     try {
-      await uploadBackupToDrive();
+      await uploadBackupToDrive(db);
     } catch (error) {
       console.error(error);
     } finally {
@@ -153,14 +153,18 @@ const Backups = () => {
           <View className="flex-1 flex-col gap-2.5">
             <Button
               onPress={async () => {
-                await listAppDataFiles();
+                let resop = await listAppDataFiles();
+                console.log(
+                  "🚀 ~ Backups ~ resop:",
+                  JSON.stringify(resop[0], null, 2),
+                );
               }}
             >
               <Text className="btn-label">List Drive Files</Text>
             </Button>
             <Button
               onPress={async () => {
-                await deleteAllDriveFiles();
+                await deleteAllDriveFiles(db);
               }}
             >
               <Text className="btn-label">Delete Drive Files</Text>
