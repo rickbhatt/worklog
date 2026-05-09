@@ -78,6 +78,21 @@ const Layout = () => {
 
     let mounted = true;
 
+    /*
+     * Defer non-critical startup work until after the initial
+     * React Native render, navigation mount, animations, and
+     * interaction lifecycle settle.
+     *
+     * This helps avoid SQLite/Drizzle lifecycle races during:
+     * - React StrictMode remounts (dev)
+     * - Expo dev reload cycles
+     * - SQLiteProvider reinitialization
+     * - database restore/restart flows
+     *
+     * We intentionally run backup/sync startup tasks here because
+     * they are not required for first paint or initial navigation.
+     */
+
     const task = InteractionManager.runAfterInteractions(() => {
       const startup = async () => {
         try {
@@ -88,12 +103,6 @@ const Layout = () => {
           ensureBackupDir();
 
           setupNotifications();
-
-          /*
-           * Allow SQLiteProvider + React lifecycle
-           * to fully settle before DB work.
-           */
-          await new Promise((resolve) => setTimeout(resolve, 0));
 
           if (!mounted) return;
 
@@ -107,7 +116,7 @@ const Layout = () => {
           /*
            * Auto backup check
            */
-          await checkAndAutoBackup(db);
+          checkAndAutoBackup(db);
 
           if (!mounted) return;
 
