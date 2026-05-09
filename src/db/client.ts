@@ -1,7 +1,9 @@
 import migrations from "@/drizzle/migrations";
+import { sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/expo-sqlite";
 import { migrate } from "drizzle-orm/expo-sqlite/migrator";
 import { type SQLiteDatabase } from "expo-sqlite";
+import { Db } from "type";
 import * as schema from "./schema";
 
 let sqliteInstance: SQLiteDatabase | null = null;
@@ -48,5 +50,19 @@ export const initialiseDb = async (sqliteDb: SQLiteDatabase) => {
   } catch (e) {
     console.error("initialiseDb: FAILED", e);
     throw e;
+  }
+};
+
+export const validateDb = (db: Db) => {
+  try {
+    const result = db.run(sql`SELECT 1`);
+
+    console.log("DB healthy:", result);
+
+    return true;
+  } catch (error) {
+    console.error("DB unhealthy:", error);
+
+    return false;
   }
 };

@@ -1,7 +1,7 @@
 import LoadingScreen from "@/components/loading-screen";
 import { DB_NAME } from "@/constants";
 import { AuthProvider } from "@/contexts/AuthContext";
-import { initialiseDb } from "@/db/client";
+import { getDbInstance, initialiseDb, validateDb } from "@/db/client";
 import "@/global.css";
 import { useDb } from "@/hooks/useDb";
 import { useDrizzleStudioDev } from "@/hooks/useDrizzleStudioDev";
@@ -17,48 +17,142 @@ import { PortalHost } from "@rn-primitives/portal";
 import { Stack } from "expo-router";
 import { SQLiteProvider } from "expo-sqlite";
 import { StatusBar } from "expo-status-bar";
-import { Suspense, useEffect } from "react";
-import { AppState } from "react-native";
+import { Suspense, useEffect, useState } from "react";
+import { AppState, InteractionManager } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { Toaster } from "sonner-native";
 
 configureGoogleSignIn();
 
+let hasInitializedStartupTasks = false;
+
 const Layout = () => {
-  const db = useDb(); // Drizzle Db
+  const db = useDb();
+
   useDrizzleStudioDev();
 
-  // Startup tasks
+  const [dbReady, setDbReady] = useState(false);
+
+  /*
+   * Validate database connection
+   */
   useEffect(() => {
-    const sync = async () => {
-      try {
-        ensureBackupDir();
+    let mounted = true;
 
-        setupNotifications();
+    try {
+      const sqlite = getDbInstance();
 
-        // Sync any pending restore metadata into the DB
-        await syncPendingRestoreState(db);
-
-        // Kick off auto-backup if needed (non-blocking)
-        checkAndAutoBackup(db);
-      } catch (error) {
-        console.error("🚀 Startup tasks failed:", error);
+      if (!sqlite) {
+        setDbReady(false);
+        return;
       }
-    };
 
-    sync();
+      const healthy = validateDb(db);
+
+      if (!mounted) return;
+
+      console.log("🚀 DB validation result:", healthy);
+
+      setDbReady(healthy);
+    } catch (error) {
+      console.error("🚀 DB validation failed:", error);
+
+      if (!mounted) return;
+
+      setDbReady(false);
+    }
+
+    return () => {
+      mounted = false;
+    };
   }, [db]);
 
-  // On foreground: fire-and-forget auto-backup check
+  /*
+   * One-time startup tasks
+   */
   useEffect(() => {
-    const subscription = AppState.addEventListener("change", (state) => {
-      if (state !== "active") return;
-      checkAndAutoBackup(db);
+    if (!dbReady) return;
+
+    if (hasInitializedStartupTasks) return;
+
+    let mounted = true;
+
+    const task = InteractionManager.runAfterInteractions(() => {
+      const startup = async () => {
+        try {
+          if (!mounted) return;
+
+          console.log("🚀 Startup tasks: begin");
+
+          ensureBackupDir();
+
+          setupNotifications();
+
+          /*
+           * Allow SQLiteProvider + React lifecycle
+           * to fully settle before DB work.
+           */
+          await new Promise((resolve) => setTimeout(resolve, 0));
+
+          if (!mounted) return;
+
+          /*
+           * Sync pending restore metadata
+           */
+          await syncPendingRestoreState(db);
+
+          if (!mounted) return;
+
+          /*
+           * Auto backup check
+           */
+          await checkAndAutoBackup(db);
+
+          if (!mounted) return;
+
+          hasInitializedStartupTasks = true;
+
+          console.log("🚀 Startup tasks: complete");
+        } catch (error) {
+          console.error("🚀 Startup tasks failed:", error);
+        }
+      };
+
+      startup();
     });
 
-    return () => subscription.remove();
-  }, [db]);
+    return () => {
+      mounted = false;
+
+      task.cancel();
+    };
+  }, [db, dbReady]);
+
+  /*
+   * Foreground auto-backup checks
+   */
+  useEffect(() => {
+    if (!dbReady) return;
+
+    const subscription = AppState.addEventListener("change", async (state) => {
+      if (state !== "active") return;
+
+      await checkAndAutoBackup(db);
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, [db, dbReady]);
+
+  /*
+   * Optional loading guard
+   */
+  if (!dbReady) {
+    return <LoadingScreen />;
+  }
+
   return (
     <>
       <StatusBar style="light" />

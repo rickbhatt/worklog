@@ -438,8 +438,9 @@ export const restoreBackupFromDrive = async (driveFile: {
     }
 
     // Place restored DB into live location
-    restoredFile.copy(liveDbFile);
-    restoredFile.delete();
+    // restoredFile.copy(liveDbFile);
+    // restoredFile.delete();
+    restoredFile.move(liveDbFile);
 
     // Cleanup rollback backup after successful replacement
     if (oldDbBackup.exists) {
@@ -473,8 +474,9 @@ export const restoreBackupFromDrive = async (driveFile: {
     // Rollback original DB if replacement failed
     try {
       if (oldDbBackup.exists && !liveDbFile.exists) {
-        oldDbBackup.copy(liveDbFile);
-        oldDbBackup.delete();
+        // oldDbBackup.copy(liveDbFile);
+        // oldDbBackup.delete();
+        oldDbBackup.move(liveDbFile);
       }
     } catch {}
 
