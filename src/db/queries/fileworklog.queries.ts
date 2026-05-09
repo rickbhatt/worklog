@@ -84,3 +84,8 @@ export const checkTargetInfoExists = async (db: Db) => {
 
   return !!row[0];
 };
+
+export const checkHasUserData = (db: Db): boolean => {
+  const row = db.select().from(fileLogs).limit(1).get();
+  return row !== undefined;
+};

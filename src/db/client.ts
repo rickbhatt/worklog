@@ -1,36 +1,68 @@
+import migrations from "@/drizzle/migrations";
+import { sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/expo-sqlite";
+import { migrate } from "drizzle-orm/expo-sqlite/migrator";
 import { type SQLiteDatabase } from "expo-sqlite";
+import { Db } from "type";
 import * as schema from "./schema";
 
-type DrizzleDb = ReturnType<typeof createDrizzleDb>;
+let sqliteInstance: SQLiteDatabase | null = null;
 
-let _sqliteDb: SQLiteDatabase | null = null;
-let _db: DrizzleDb | null = null;
+export const registerDbInstance = (sqliteDb: SQLiteDatabase) => {
+  sqliteInstance = sqliteDb;
+};
 
-export function createDrizzleDb(sqliteDb: SQLiteDatabase) {
-  sqliteDb.execSync("PRAGMA foreign_keys = ON");
-  return drizzle(sqliteDb, { schema });
-}
-
-export function initDb(sqliteDb: SQLiteDatabase): DrizzleDb {
-  if (!_db || _sqliteDb !== sqliteDb) {
-    _sqliteDb = sqliteDb;
-    _db = createDrizzleDb(sqliteDb);
+export const getDbInstance = () => {
+  if (!sqliteInstance) {
+    throw new Error("SQLite instance has not been registered");
   }
-  return _db;
-}
+  return sqliteInstance;
+};
 
-export function getDb(): DrizzleDb {
-  if (!_db) throw new Error("DB not initialized — call initDb first");
-  return _db;
-}
-
-export async function closeDb(): Promise<void> {
-  if (!_sqliteDb) return;
+export const closeDb = async () => {
+  if (!sqliteInstance) return;
+  console.log("closeDb: closing");
   try {
-    await _sqliteDb.closeAsync();
+    await sqliteInstance.execAsync("PRAGMA wal_checkpoint(FULL);");
+    await sqliteInstance.closeAsync();
+    console.log("closeDb: closed");
   } finally {
-    _sqliteDb = null;
-    _db = null;
+    sqliteInstance = null;
   }
-}
+};
+
+export const createDrizzleInstance = (sqliteDb: SQLiteDatabase) =>
+  drizzle(sqliteDb, { schema });
+
+export const initialiseDb = async (sqliteDb: SQLiteDatabase) => {
+  console.log("initialiseDb: start");
+  registerDbInstance(sqliteDb);
+
+  try {
+    await sqliteDb.execAsync(`
+      PRAGMA foreign_keys = ON;
+      PRAGMA journal_mode = WAL;
+      PRAGMA synchronous = NORMAL;
+    `);
+    const db = createDrizzleInstance(sqliteDb);
+    await migrate(db, migrations);
+    console.log("initialiseDb: done");
+  } catch (e) {
+    console.error("initialiseDb: FAILED", e);
+    throw e;
+  }
+};
+
+export const validateDb = (db: Db) => {
+  try {
+    const result = db.run(sql`SELECT 1`);
+
+    console.log("DB healthy:", result);
+
+    return true;
+  } catch (error) {
+    console.error("DB unhealthy:", error);
+
+    return false;
+  }
+};

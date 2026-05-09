@@ -9,6 +9,7 @@
     "android:dev": "cross-env APP_VARIANT=development bunx expo run:android --device",
     "config:dev": "cross-env APP_VARIANT=development bunx expo config --type public",
     "prebuild:dev": "cross-env APP_VARIANT=development bunx expo prebuild --clean",
+    "prebuild": "bunx expo prebuild --clean",
     "generate:db": "drizzle-kit generate",
     "ios": "expo run:ios"
   },
