@@ -27,7 +27,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
   name: getAppName(),
   slug: "worklog",
-  version: "1.0.0",
+  version: "1.0.1",
   orientation: "portrait",
   icon: "./assets/images/icon.png",
   scheme: "worklog",
@@ -77,6 +77,14 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         icon: "./assets/images/notification-icon.png",
         color: "#ffffff",
         defaultChannel: "backup",
+      },
+    ],
+    [
+      "@sentry/react-native/expo",
+      {
+        url: "https://sentry.io/",
+        project: "worlog",
+        organization: "ritankar",
       },
     ],
   ],

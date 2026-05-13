@@ -1,10 +1,11 @@
 import LoadingScreen from "@/components/loading-screen";
 import { DB_NAME } from "@/constants";
 import { AuthProvider } from "@/contexts/AuthContext";
-import { getDbInstance, initialiseDb, validateDb } from "@/db/client";
+import { initialiseDb, validateDb } from "@/db/client";
 import "@/global.css";
 import { useDb } from "@/hooks/useDb";
 import { useDrizzleStudioDev } from "@/hooks/useDrizzleStudioDev";
+import { captureException } from "@/lib/sentry";
 import {
   checkAndAutoBackup,
   ensureBackupDir,
@@ -14,23 +15,34 @@ import { configureGoogleSignIn } from "@/services/googleAuthService";
 import { setupNotifications } from "@/services/notificationService";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { PortalHost } from "@rn-primitives/portal";
+import * as Sentry from "@sentry/react-native";
 import { Stack } from "expo-router";
 import { SQLiteProvider } from "expo-sqlite";
 import { StatusBar } from "expo-status-bar";
-import { Suspense, useEffect, useState } from "react";
-import { AppState, InteractionManager } from "react-native";
+import { useEffect, useRef, useState } from "react";
+import { InteractionManager } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { Toaster } from "sonner-native";
 
-configureGoogleSignIn();
+Sentry.init({
+  dsn: "https://7334a78670d0235b3427d1e4c7e0e344@o4509792171393024.ingest.us.sentry.io/4511359683067904",
 
-let hasInitializedStartupTasks = false;
+  sendDefaultPii: true,
+
+  enableLogs: true,
+
+  // spotlight: __DEV__,
+});
+
+configureGoogleSignIn();
 
 const Layout = () => {
   const db = useDb();
 
   useDrizzleStudioDev();
+
+  const startupRanRef = useRef(false);
 
   const [dbReady, setDbReady] = useState(false);
 
@@ -40,33 +52,30 @@ const Layout = () => {
   useEffect(() => {
     let mounted = true;
 
-    try {
-      const sqlite = getDbInstance();
+    const validate = async () => {
+      try {
+        const healthy = await validateDb();
 
-      if (!sqlite) {
+        if (!mounted) return;
+
+        console.log("🚀 DB validation result:", healthy);
+
+        setDbReady(healthy);
+      } catch (error) {
+        console.error("🚀 DB validation failed:", error);
+
+        if (!mounted) return;
+
         setDbReady(false);
-        return;
       }
+    };
 
-      const healthy = validateDb(db);
-
-      if (!mounted) return;
-
-      console.log("🚀 DB validation result:", healthy);
-
-      setDbReady(healthy);
-    } catch (error) {
-      console.error("🚀 DB validation failed:", error);
-
-      if (!mounted) return;
-
-      setDbReady(false);
-    }
+    validate();
 
     return () => {
       mounted = false;
     };
-  }, [db]);
+  }, []);
 
   /*
    * One-time startup tasks
@@ -74,24 +83,11 @@ const Layout = () => {
   useEffect(() => {
     if (!dbReady) return;
 
-    if (hasInitializedStartupTasks) return;
+    if (startupRanRef.current) return;
+
+    startupRanRef.current = true;
 
     let mounted = true;
-
-    /*
-     * Defer non-critical startup work until after the initial
-     * React Native render, navigation mount, animations, and
-     * interaction lifecycle settle.
-     *
-     * This helps avoid SQLite/Drizzle lifecycle races during:
-     * - React StrictMode remounts (dev)
-     * - Expo dev reload cycles
-     * - SQLiteProvider reinitialization
-     * - database restore/restart flows
-     *
-     * We intentionally run backup/sync startup tasks here because
-     * they are not required for first paint or initial navigation.
-     */
 
     const task = InteractionManager.runAfterInteractions(() => {
       const startup = async () => {
@@ -100,9 +96,9 @@ const Layout = () => {
 
           console.log("🚀 Startup tasks: begin");
 
-          ensureBackupDir();
+          await ensureBackupDir();
 
-          setupNotifications();
+          await setupNotifications();
 
           if (!mounted) return;
 
@@ -116,11 +112,9 @@ const Layout = () => {
           /*
            * Auto backup check
            */
-          checkAndAutoBackup(db);
+          await checkAndAutoBackup(db);
 
           if (!mounted) return;
-
-          hasInitializedStartupTasks = true;
 
           console.log("🚀 Startup tasks: complete");
         } catch (error) {
@@ -138,26 +132,6 @@ const Layout = () => {
     };
   }, [db, dbReady]);
 
-  /*
-   * Foreground auto-backup checks
-   */
-  useEffect(() => {
-    if (!dbReady) return;
-
-    const subscription = AppState.addEventListener("change", async (state) => {
-      if (state !== "active") return;
-
-      await checkAndAutoBackup(db);
-    });
-
-    return () => {
-      subscription.remove();
-    };
-  }, [db, dbReady]);
-
-  /*
-   * Optional loading guard
-   */
   if (!dbReady) {
     return <LoadingScreen />;
   }
@@ -165,6 +139,7 @@ const Layout = () => {
   return (
     <>
       <StatusBar style="light" />
+
       <Stack
         screenOptions={{
           headerShown: false,
@@ -179,27 +154,51 @@ const Layout = () => {
   );
 };
 
-export default function RootLayout() {
+const RootLayout = () => {
   return (
     <KeyboardProvider>
       <GestureHandlerRootView style={{ flex: 1 }}>
         <BottomSheetModalProvider>
-          <Suspense fallback={<LoadingScreen />}>
-            <SQLiteProvider
-              useSuspense
-              databaseName={DB_NAME}
-              options={{ enableChangeListener: true }}
-              onInit={initialiseDb}
-            >
-              <AuthProvider>
-                <Layout />
-              </AuthProvider>
-            </SQLiteProvider>
-          </Suspense>
+          <SQLiteProvider
+            databaseName={DB_NAME}
+            options={{ enableChangeListener: true }}
+            onInit={async (expoDb) => {
+              try {
+                await initialiseDb(expoDb);
+              } catch (error) {
+                captureException(error, {
+                  tags: {
+                    "db.operation": "SQLiteProvider.onInit",
+                  },
+                });
+
+                console.error("Db initialisation failed", error);
+
+                throw error;
+              }
+            }}
+            onError={(error) => {
+              captureException(error, {
+                tags: {
+                  "db.operation": "SQLiteProvider.onError",
+                },
+              });
+
+              console.error("SQLiteProvider error", error);
+            }}
+          >
+            <AuthProvider>
+              <Layout />
+            </AuthProvider>
+          </SQLiteProvider>
+
           <PortalHost />
+
           <Toaster position="bottom-center" />
         </BottomSheetModalProvider>
       </GestureHandlerRootView>
     </KeyboardProvider>
   );
-}
+};
+
+export default Sentry.wrap(RootLayout);
