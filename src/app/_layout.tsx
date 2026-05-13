@@ -5,6 +5,7 @@ import { getDbInstance, initialiseDb, validateDb } from "@/db/client";
 import "@/global.css";
 import { useDb } from "@/hooks/useDb";
 import { useDrizzleStudioDev } from "@/hooks/useDrizzleStudioDev";
+import { captureException } from "@/lib/sentry";
 import {
   checkAndAutoBackup,
   ensureBackupDir,
@@ -19,7 +20,7 @@ import { Stack } from "expo-router";
 import { SQLiteProvider } from "expo-sqlite";
 import { StatusBar } from "expo-status-bar";
 import { Suspense, useEffect, useState } from "react";
-import { AppState, InteractionManager } from "react-native";
+import { InteractionManager } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { Toaster } from "sonner-native";
@@ -151,31 +152,7 @@ const Layout = () => {
 
       task.cancel();
     };
-  }, [db, dbReady]);
-
-  /*
-   * Foreground auto-backup checks
-   */
-  useEffect(() => {
-    if (!dbReady) return;
-
-    const subscription = AppState.addEventListener("change", async (state) => {
-      if (state !== "active") return;
-
-      await checkAndAutoBackup(db);
-    });
-
-    return () => {
-      subscription.remove();
-    };
-  }, [db, dbReady]);
-
-  /*
-   * Optional loading guard
-   */
-  if (!dbReady) {
-    return <LoadingScreen />;
-  }
+  }, [dbReady]);
 
   return (
     <>
@@ -205,6 +182,14 @@ const RootLayout = () => {
               databaseName={DB_NAME}
               options={{ enableChangeListener: true }}
               onInit={initialiseDb}
+              onError={(error) => {
+                captureException(error, {
+                  tags: {
+                    "db.operation": "SQLiteProvider.onError",
+                  },
+                });
+                console.error("Db initialisation failed", error);
+              }}
             >
               <AuthProvider>
                 <Layout />
