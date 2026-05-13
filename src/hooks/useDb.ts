@@ -1,7 +1,5 @@
-import { createDrizzleInstance } from "@/db/client";
-import { useSQLiteContext } from "expo-sqlite";
+import { getDrizzleInstance } from "@/db/client";
 
 export const useDb = () => {
-  const sqliteDb = useSQLiteContext();
-  return createDrizzleInstance(sqliteDb);
+  return getDrizzleInstance();
 };
