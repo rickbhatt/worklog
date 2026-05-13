@@ -13,6 +13,7 @@ import {
 } from "@/db/mutations/backup.mutations";
 import { getBackupState } from "@/db/queries/backup.queries";
 import { checkHasUserData } from "@/db/queries/fileworklog.queries";
+import { captureException } from "@/lib/sentry";
 import { generateBackupId } from "@/lib/utils";
 import {
   getAccessToken,
@@ -29,6 +30,14 @@ import * as SecureStore from "expo-secure-store";
 import * as Updates from "expo-updates";
 import { toast } from "sonner-native";
 import { Db } from "type";
+
+const captureBackupException = (error: unknown, operation: string) => {
+  captureException(error, {
+    tags: {
+      "backup.operation": operation,
+    },
+  });
+};
 
 const saveBackupMetaToSecureStore = async ({
   accountEmail,
@@ -83,6 +92,7 @@ export const syncPendingRestoreState = async (db: Db) => {
     // Clear the pending sync flag
     await SecureStore.deleteItemAsync("pending_backup_sync");
   } catch (e) {
+    captureBackupException(e, "syncPendingRestoreState");
     console.error("🚀 Failed to sync restore state:", e);
   }
 };
@@ -100,6 +110,7 @@ export const ensureBackupDir = () => {
     const latestInfo = Paths.info(BACKUP_DIR_PATH);
 
     if (!latestInfo.exists) {
+      captureBackupException(error, "ensureBackupDir");
       throw error;
     }
   }
@@ -121,6 +132,7 @@ export const backupDatabase = async (): Promise<string> => {
 
     return backupPath;
   } catch (error) {
+    captureBackupException(error, "backupDatabase");
     console.error("❌ Database backup failed:", error);
     throw error;
   }
@@ -222,6 +234,7 @@ export async function uploadBackupToDrive(database: Db): Promise<{
     await showBackupSuccessNotification(new Date(result.modifiedTime));
     return { success: true };
   } catch (error) {
+    captureBackupException(error, "uploadBackupToDrive");
     await showBackupFailedNotification();
     console.error("🚀 Backup failed:", error);
     return { success: false, error };
@@ -230,6 +243,7 @@ export async function uploadBackupToDrive(database: Db): Promise<{
       try {
         new File(snapshotPath).delete();
       } catch (e) {
+        captureBackupException(e, "uploadBackupToDrive.cleanupSnapshot");
         console.error("🚀 Failed to clean up snapshot:", e);
       }
     }
@@ -311,6 +325,7 @@ export async function deleteAllDriveFiles(db: Db): Promise<{
 
     return { success: true };
   } catch (error) {
+    captureBackupException(error, "deleteAllDriveFiles");
     console.error("🚀 Delete all failed:", error);
     return { success: false, error };
   }
@@ -469,7 +484,9 @@ export const restoreBackupFromDrive = async (driveFile: {
       if (restoredFile.exists) {
         restoredFile.delete();
       }
-    } catch {}
+    } catch (cleanupError) {
+      captureBackupException(cleanupError, "restoreBackupFromDrive.cleanupTemp");
+    }
 
     // Rollback original DB if replacement failed
     try {
@@ -478,8 +495,11 @@ export const restoreBackupFromDrive = async (driveFile: {
         // oldDbBackup.delete();
         oldDbBackup.move(liveDbFile);
       }
-    } catch {}
+    } catch (rollbackError) {
+      captureBackupException(rollbackError, "restoreBackupFromDrive.rollback");
+    }
 
+    captureBackupException(error, "restoreBackupFromDrive");
     console.error("🚀 Restore failed:", error);
 
     return {
