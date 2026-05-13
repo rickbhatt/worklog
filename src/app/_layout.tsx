@@ -5,7 +5,6 @@ import { getDbInstance, initialiseDb, validateDb } from "@/db/client";
 import "@/global.css";
 import { useDb } from "@/hooks/useDb";
 import { useDrizzleStudioDev } from "@/hooks/useDrizzleStudioDev";
-import { captureException } from "@/lib/sentry";
 import {
   checkAndAutoBackup,
   ensureBackupDir,
@@ -182,14 +181,6 @@ const RootLayout = () => {
               databaseName={DB_NAME}
               options={{ enableChangeListener: true }}
               onInit={initialiseDb}
-              onError={(error) => {
-                captureException(error, {
-                  tags: {
-                    "db.operation": "SQLiteProvider.onError",
-                  },
-                });
-                console.error("Db initialisation failed", error);
-              }}
             >
               <AuthProvider>
                 <Layout />
