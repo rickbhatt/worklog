@@ -2,11 +2,12 @@ import AlertDialogBox from "@/components/alert-dialogbox";
 import DynamicIcon from "@/components/dynamic-icon";
 import { checkTargetInfoExists } from "@/db/queries/fileworklog.queries";
 import { useDb } from "@/hooks/useDb";
-import { cn } from "@/lib/utils";
+import { clsx } from "clsx";
 import * as Haptics from "expo-haptics";
 import { Tabs, useRouter } from "expo-router";
 import { useState } from "react";
-import { GestureResponderEvent, Pressable, Text, View } from "react-native";
+import { GestureResponderEvent, Pressable, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { TabBarIconProps } from "type";
 
 const ICON_SIZE = 24;
@@ -15,18 +16,8 @@ const ICON_COLOR = "#FFFFFF";
 const ACTIVE_COLOR = "#F36040";
 
 const TabIconAndLabel = ({ focused, icon, title }: TabBarIconProps) => (
-  <View className="tab-btn">
-    {icon}
-    <Text
-      className={cn(
-        "text-xs",
-        focused
-          ? "font-bold text-tab-acitve-tint"
-          : "font-normal text-text-primary",
-      )}
-    >
-      {title}
-    </Text>
+  <View className="tab-icon">
+    <View className={clsx("tabs-pill", focused && "tabs-active")}>{icon}</View>
   </View>
 );
 
@@ -37,6 +28,8 @@ const TabsLayout = () => {
 
   const db = useDb();
 
+  const insets = useSafeAreaInsets();
+
   return (
     <>
       <Tabs
@@ -44,9 +37,22 @@ const TabsLayout = () => {
           tabBarShowLabel: false,
           headerShown: false,
           tabBarStyle: {
-            height: 110,
+            position: "absolute",
+            bottom: Math.max(insets.bottom, 20),
+            height: 62,
+            marginHorizontal: 20,
+            borderRadius: 32,
+            borderTopWidth: 0,
+            elevation: 0,
             backgroundColor: "#242424",
-            borderColor: "#242424",
+          },
+          tabBarItemStyle: {
+            paddingVertical: 62 / 2 - 58 / 1.6,
+          },
+          tabBarIconStyle: {
+            width: 58,
+            height: 58,
+            alignItems: "center",
           },
 
           tabBarButton: ({ children, onPress }) => (
@@ -55,7 +61,7 @@ const TabsLayout = () => {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                 onPress?.(event);
               }}
-              className="flex-1 items-center justify-center"
+              className="flex-row items-center justify-center"
             >
               {children}
             </Pressable>
