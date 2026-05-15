@@ -260,7 +260,8 @@ const History = () => {
         }
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => <SectionItem item={item} />}
-        className="bg-bg-primary flex-1 screen-x-padding"
+        className="bg-bg-primary"
+        contentContainerClassName="pb-32 screen-x-padding"
       />
       <FilterLogsBottomSheetModal
         journalId={journalId}
