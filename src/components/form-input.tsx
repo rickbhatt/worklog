@@ -17,11 +17,11 @@ import { Platform, Pressable, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { FieldName, InputModeOptions } from "type";
 
-interface FormInputProps {
+interface FormInputProps<TExtraFields extends Record<string, unknown> = {}> {
   label?: string;
-  name: FieldName;
+  name: FieldName<TExtraFields>;
   value?: string | null | number | undefined;
-  onChange: (field: FieldName, rawValue: string | number) => void;
+  onChange: (field: FieldName<TExtraFields>, rawValue: string | number) => void;
   placeholder?: string;
   secureTextEntry?: boolean;
   autoCapitalize?: "none" | "sentences" | "words" | "characters";
@@ -42,7 +42,7 @@ interface FormInputProps {
   onBlur?: () => void;
 }
 
-const FormInput = ({
+const FormInput = <TExtraFields extends Record<string, unknown> = {},>({
   label,
   value,
   onChange,
@@ -65,9 +65,9 @@ const FormInput = ({
   rowMode = false,
   onBlur,
   onFocus,
-}: FormInputProps) => {
+}: FormInputProps<TExtraFields>) => {
   const [isDatePicketOpen, setIsDatePickerOpen] = useState(false);
-  const numericFields: FieldName[] = ["articleId", "lepPages", "timeTaken"];
+  const numericFields = ["articleId", "lepPages", "timeTaken"];
   const [isChecked, setIsChecked] = useState(false);
 
   const insets = useSafeAreaInsets();
@@ -87,7 +87,10 @@ const FormInput = ({
     ref.current?.open();
   }
 
-  const handleOnChangeTextInput = (field: FieldName, rawValue: string) => {
+  const handleOnChangeTextInput = (
+    field: FieldName<TExtraFields>,
+    rawValue: string,
+  ) => {
     let sanitizedValue = rawValue;
 
     if (numericFields.includes(field)) {
@@ -203,7 +206,7 @@ const FormInput = ({
         <View className={cn("form-group", rowMode && "flex-1")}>
           <Text className="form-label">{label}</Text>
           <Textarea
-            value={value}
+            value={value?.toString()}
             placeholder={placeholder}
             className="bg-bg-primary"
             onChangeText={(text) => handleOnChangeTextInput(name, text)}

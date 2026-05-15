@@ -143,12 +143,12 @@ export type TargetInfoCreateType = Omit<
   "id" | "createdAt" | "updatedAt"
 >;
 
-export type FieldName =
-  | keyof FileLogsInsertType
-  | "startDate"
-  | "endDate"
-  | "month"
-  | keyof TargetInfoInsertType;
+type FieldNameFrom<T> = Extract<keyof T, string>;
+
+export type FieldName<TExtraFields extends Record<string, unknown> = {}> =
+  | FieldNameFrom<FileLogsInsertType>
+  | FieldNameFrom<TargetInfoInsertType>
+  | FieldNameFrom<TExtraFields>;
 
 export type RequiredField<T> = {
   key: keyof T;
