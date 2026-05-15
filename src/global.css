@@ -87,8 +87,11 @@
   .screen-title {
     @apply text-xl font-bold;
   }
-  .tab-btn {
-    @apply flex flex-col items-center justify-center min-h-full min-w-20 gap-1;
+  .tabs-icon {
+    @apply size-12 items-center justify-center;
+  }
+  .tabs-pill {
+    @apply size-12  items-center justify-center rounded-full bg-transparent;
   }
 
   .btn-touch-scale {
