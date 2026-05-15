@@ -114,7 +114,7 @@ export type FileLogsCreateInput = Omit<
 export interface FileLogsSection {
   title: string;
   totalLepPages: number;
-  data: FileLogsSelectType[];
+  data: FileLogsListItemType[];
 }
 
 export interface AlertDialogBoxProps {
@@ -130,6 +130,10 @@ export interface AlertDialogBoxProps {
 export type FileLogsInsertType = typeof fileLogs.$inferInsert;
 export type FileLogsUpdateType = typeof fileLogs.$inferUpdate;
 export type FileLogsSelectType = typeof fileLogs.$inferSelect;
+export type FileLogsListItemType = Pick<
+  FileLogsSelectType,
+  "id" | "journalId" | "articleId" | "timeTaken" | "lepPages" | "workedAt"
+>;
 export type TargetInfoSelectType = typeof targetInfo.$inferSelect;
 export type TargetInfoInsertType = typeof targetInfo.$inferInsert;
 export type CloudAccountInsertType = typeof cloudAccount.$inferInsert;
