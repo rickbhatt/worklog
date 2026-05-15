@@ -42,7 +42,14 @@ const ListHeader = ({
 
   const router = useRouter();
 
-  const onSelectChange = (name: FieldName, value: string | number) => {
+  type ListHeaderFields = {
+    month: string;
+  };
+
+  const onSelectChange = (
+    name: FieldName<ListHeaderFields>,
+    value: string | number,
+  ) => {
     setSelectedMonth(value.toString());
 
     const monthRange = getMonthRange(value.toString(), currentYear.toString());
@@ -57,7 +64,7 @@ const ListHeader = ({
 
   return (
     <View className="flex-row items-center justify-between">
-      <FormInput
+      <FormInput<ListHeaderFields>
         onChange={onSelectChange}
         name="month"
         inputType="select"
