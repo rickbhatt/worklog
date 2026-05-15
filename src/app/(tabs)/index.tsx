@@ -25,7 +25,7 @@ import { Tabs, useLocalSearchParams, useRouter } from "expo-router";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { SectionList, Text, View } from "react-native";
-import { FieldName, FileLogsSection, FileLogsSelectType } from "type";
+import { FieldName, FileLogsListItemType, FileLogsSection } from "type";
 
 const ListHeader = ({
   currentMonth,
@@ -138,7 +138,7 @@ const SectionHeader = ({
   );
 };
 
-const SectionItem = ({ item }: { item: FileLogsSelectType }) => {
+const SectionItem = ({ item }: { item: FileLogsListItemType }) => {
   return (
     <LogCard
       id={item.id}
@@ -196,7 +196,7 @@ const History = () => {
     if (!logs) return [];
 
     const groupedLogs = logs.reduce(
-      (map: Map<string, FileLogsSection>, log: FileLogsSelectType) => {
+      (map: Map<string, FileLogsSection>, log: FileLogsListItemType) => {
         if (!map.has(log.workedAt)) {
           map.set(log.workedAt, {
             title: log.workedAt,
