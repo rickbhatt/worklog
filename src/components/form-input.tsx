@@ -42,7 +42,7 @@ interface FormInputProps<TExtraFields extends Record<string, unknown> = {}> {
   onBlur?: () => void;
 }
 
-const FormInput = <TExtraFields extends Record<string, unknown> = {},>({
+const FormInput = <TExtraFields extends Record<string, unknown> = {}>({
   label,
   value,
   onChange,
@@ -166,6 +166,7 @@ const FormInput = <TExtraFields extends Record<string, unknown> = {},>({
               maximumDate={maxDate}
               minimumDate={minDate}
               onChange={(_, selectedDate) => {
+                console.log("🚀 ~ FormInput ~ selectedDate:", selectedDate);
                 if (selectedDate) {
                   let timestamp = formatDateTime(selectedDate).dateToISOString;
 

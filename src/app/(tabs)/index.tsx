@@ -194,6 +194,7 @@ const History = () => {
 
     [journalId, articleId, startDate, endDate], //deps: re-run live query when filters change
   );
+  console.log("🚀 ~ History ~ logs:", logs.length);
 
   const { data: targetData } = useLiveQuery(getLatestTargetHour(db));
 

@@ -1,10 +1,13 @@
 import FormInput from "@/components/form-input";
 import ScreenHeader from "@/components/screen-header";
 import { Button } from "@/components/ui/button";
+import { createBulkFileLogs } from "@/db/mutations/fileworklog.mutations";
+import { useDb } from "@/hooks/useDb";
 import { Stack } from "expo-router";
 
 import React, { useState } from "react";
 import { Text, View } from "react-native";
+import { toast } from "sonner-native";
 
 //docs.google.com/spreadsheets/d/1EntsPS8Y0_5Wij-tEQ5tNLAphJcD9jtyVnytSNta-U0/edit?usp=sharing
 
@@ -17,6 +20,8 @@ if (!api_key) {
 const LoadData = () => {
   const [gSheetUrl, setGSheetUrl] = useState<string | null>(null);
   const [sheetName, setSheetName] = useState<string | null>(null);
+
+  const db = useDb();
 
   const handleOnChangeText = (fieldName: string, rawValue: string | number) => {
     if (typeof rawValue !== "string") return;
@@ -31,14 +36,40 @@ const LoadData = () => {
   };
 
   const handleSubmit = async () => {
-    const sheetID = gSheetUrl?.split("/")[5];
+    try {
+      const sheetID = gSheetUrl?.split("/")[5];
 
-    const res = await fetch(
-      `https://sheets.googleapis.com/v4/spreadsheets/${sheetID}/values/${sheetName}?key=${api_key}`,
-    );
+      const res = await fetch(
+        `https://sheets.googleapis.com/v4/spreadsheets/${sheetID}/values/${sheetName}?key=${api_key}`,
+      );
 
-    const data = await res.json();
-    console.log(JSON.stringify(data, null, 2));
+      const data = await res.json();
+      if (!data?.values)
+        throw new Error("No data found. Error in link or the sheet name");
+
+      const gSheetLogData = data?.values?.slice(1);
+
+      const insertValues = gSheetLogData?.map((item: any) => {
+        const fileType = item[4];
+        return {
+          workedAt: item[0],
+          journalId: item[1],
+          articleId: item[2],
+          lepPages: Number(item[3]),
+          isSml: fileType === "manual" ? 0 : 1,
+          isND: fileType === "nd-sml" ? 1 : 0,
+          timeTaken: Number(item[5]),
+        };
+      });
+
+      await createBulkFileLogs(db, insertValues);
+      toast.success("Data from Google sheet load successfuly");
+    } catch (error) {
+      console.error("🚀 ~ Load data handleSubmit ~ error:", error);
+      toast.error(
+        "Failed to load data from Google sheet. Please check the link or the sheet name.",
+      );
+    }
   };
   return (
     <>
@@ -61,7 +92,6 @@ const LoadData = () => {
             label="Sheet Name"
             name="sheet_name"
             onChange={handleOnChangeText}
-            autoFocus
             value={sheetName}
           />
           <Button onPress={handleSubmit}>
