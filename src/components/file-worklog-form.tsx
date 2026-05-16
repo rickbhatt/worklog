@@ -21,6 +21,7 @@ const FileWorklogForm = ({
   const keyboard = useKeyboardState();
 
   const handleInputChange = (field: FieldName, rawValue: string | number) => {
+    console.log("🚀 ~ handleInputChange ~ rawValue:", rawValue);
     if (field === "isSml") {
       let smlValue = Number(rawValue);
 
