@@ -9,7 +9,7 @@ import { DynamicIconProps } from "type";
 
 const SettingBtns: ReadonlyArray<{
   title: string;
-  path: "/settings/backups" | "/settings/target-hour";
+  path: "/settings/backups" | "/settings/target-hour" | "/settings/load-data";
   icon: DynamicIconProps;
 }> = [
   {
@@ -26,6 +26,14 @@ const SettingBtns: ReadonlyArray<{
     icon: {
       family: "Feather",
       name: "target",
+    },
+  },
+  {
+    title: "Load Data",
+    path: "/settings/load-data",
+    icon: {
+      family: "MaterialCommunityIcons",
+      name: "database-import",
     },
   },
 ];

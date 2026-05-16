@@ -118,3 +118,33 @@ export const deleteTargetInfoById = async (db: Db, id: string) => {
     throw error;
   }
 };
+
+const CHUNK_SIZE = 100;
+
+export const createBulkFileLogs = async (
+  db: Db,
+  data: (typeof fileLogs.$inferInsert)[],
+) => {
+  try {
+    const rows = data.map((item) => ({
+      ...item,
+      id: Crypto.randomUUID(),
+      createdAt: new Date().toISOString(),
+      updatedAt: undefined,
+    }));
+
+    if (rows.length <= CHUNK_SIZE) {
+      await db.insert(fileLogs).values(rows);
+      return;
+    }
+
+    await db.transaction(async (tx) => {
+      for (let i = 0; i < rows.length; i += CHUNK_SIZE) {
+        await tx.insert(fileLogs).values(rows.slice(i, i + CHUNK_SIZE));
+      }
+    });
+  } catch (error) {
+    console.error("createBulkFileLogs error:", error);
+    throw error;
+  }
+};

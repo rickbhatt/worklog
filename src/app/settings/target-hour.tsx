@@ -1,6 +1,6 @@
+import TargetAndHourForm from "@/components/bottomsheets/target-and-hour-formsheet";
 import DynamicIcon from "@/components/dynamic-icon";
 import ScreenHeader from "@/components/screen-header";
-import TargetAndHourForm from "@/components/target-and-hour-formsheet";
 import { Button } from "@/components/ui/button";
 import { deleteTargetInfoById } from "@/db/mutations/fileworklog.mutations";
 import { getAllTargetHour } from "@/db/queries/fileworklog.queries";
@@ -92,9 +92,11 @@ const TargetAndHour = () => {
       />
 
       <FlatList
+        keyExtractor={(item) => item.id}
         data={data}
         className="bg-bg-primary flex-1 screen-x-padding"
-        contentContainerClassName="flex-1 pb-safe"
+        contentContainerClassName="pb-safe gap-4"
+        showsVerticalScrollIndicator={false}
         ListHeaderComponent={<ListHeader onPress={handleFormSheetTrigger} />}
         renderItem={renderItem}
         ListEmptyComponent={() => (
@@ -105,7 +107,6 @@ const TargetAndHour = () => {
             <Text className="text-text-secondary base-bold">Add a new one</Text>
           </View>
         )}
-        keyExtractor={(item) => item.id}
       />
 
       <TargetAndHourForm ref={targetAndHourFormRef} />

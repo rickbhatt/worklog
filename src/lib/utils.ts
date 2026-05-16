@@ -7,6 +7,11 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+export const parseSheetDate = (dateStr: string): Date => {
+  const [month, day, year] = dateStr.split("/");
+  return new Date(Number(year), Number(month) - 1, Number(day));
+};
+
 export const formatDateTime = (date: string | Date | undefined) => {
   if (!date)
     return { dateMonthOnly: "", shortDateWithYear: "", dateToISOString: "" };
