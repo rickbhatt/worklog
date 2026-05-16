@@ -111,8 +111,10 @@ const Layout = () => {
 
           /*
            * Auto backup check
+          
            */
-          await checkAndAutoBackup(db);
+
+          if (!__DEV__) await checkAndAutoBackup(db);
 
           if (!mounted) return;
 
