@@ -3,6 +3,7 @@ import ScreenHeader from "@/components/screen-header";
 import { Button } from "@/components/ui/button";
 import { createBulkFileLogs } from "@/db/mutations/fileworklog.mutations";
 import { useDb } from "@/hooks/useDb";
+import { captureException } from "@/lib/sentry";
 import { Stack } from "expo-router";
 import LottieView from "lottie-react-native";
 
@@ -11,12 +12,18 @@ import React, { useState } from "react";
 import { Text, View } from "react-native";
 import { toast } from "sonner-native";
 
-//docs.google.com/spreadsheets/d/1EntsPS8Y0_5Wij-tEQ5tNLAphJcD9jtyVnytSNta-U0/edit?usp=sharing
-
 const api_key = process.env.EXPO_PUBLIC_GOOGLE_API_KEY;
 
 if (!api_key) {
-  throw new Error("GOOGLE_API_KEY is not defined");
+  const error = new Error("GOOGLE_API_KEY is not defined");
+
+  captureException(error, {
+    tags: {
+      "settings.operation": "loadData.googleApiKey",
+    },
+  });
+
+  throw error;
 }
 
 const LoadData = () => {
