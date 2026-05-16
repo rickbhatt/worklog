@@ -4,7 +4,9 @@ import { Button } from "@/components/ui/button";
 import { createBulkFileLogs } from "@/db/mutations/fileworklog.mutations";
 import { useDb } from "@/hooks/useDb";
 import { Stack } from "expo-router";
+import LottieView from "lottie-react-native";
 
+import dataTable from "@assets/images/data-table.json";
 import React, { useState } from "react";
 import { Text, View } from "react-native";
 import { toast } from "sonner-native";
@@ -20,6 +22,7 @@ if (!api_key) {
 const LoadData = () => {
   const [gSheetUrl, setGSheetUrl] = useState<string | null>(null);
   const [sheetName, setSheetName] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const db = useDb();
 
@@ -36,6 +39,12 @@ const LoadData = () => {
   };
 
   const handleSubmit = async () => {
+    if (!gSheetUrl || !sheetName) {
+      toast.info("Both sheet url and sheet name are required");
+      return;
+    }
+
+    setIsLoading(true);
     try {
       const sheetID = gSheetUrl?.split("/")[5];
 
@@ -69,8 +78,13 @@ const LoadData = () => {
       toast.error(
         "Failed to load data from Google sheet. Please check the link or the sheet name.",
       );
+    } finally {
+      setIsLoading(false);
+      setGSheetUrl(null);
+      setSheetName(null);
     }
   };
+
   return (
     <>
       <Stack.Screen
@@ -79,25 +93,63 @@ const LoadData = () => {
           header: () => <ScreenHeader title="Load Data" backButtonVisible />,
         }}
       />
-      <View className="bg-bg-primary flex-1 screen-x-padding">
-        <View className="flex-col gap-4">
-          <FormInput
-            label="Public Google Sheet URL"
-            name="gsheet_url"
-            onChange={handleOnChangeText}
-            autoFocus
-            value={gSheetUrl}
-          />
-          <FormInput
-            label="Sheet Name"
-            name="sheet_name"
-            onChange={handleOnChangeText}
-            value={sheetName}
-          />
-          <Button onPress={handleSubmit}>
-            <Text className="btn-label">Load Data</Text>
-          </Button>
-        </View>
+      <View className="bg-bg-primary flex-1 screen-x-padding pb-safe">
+        {!isLoading ? (
+          <View className="flex-col gap-4">
+            <FormInput
+              label="Public Google Sheet URL"
+              name="gsheet_url"
+              onChange={handleOnChangeText}
+              autoFocus
+              value={gSheetUrl}
+            />
+            <FormInput
+              label="Sheet Name"
+              name="sheet_name"
+              onChange={handleOnChangeText}
+              value={sheetName}
+            />
+            <Button onPress={handleSubmit}>
+              <Text className="btn-label">Load Data</Text>
+            </Button>
+          </View>
+        ) : (
+          <View className="flex-1 flex-col justify-center items-center">
+            <LottieView
+              autoPlay
+              loop
+              source={dataTable}
+              style={{ width: 150, height: 150 }}
+              colorFilters={[
+                {
+                  keypath: "Layer 5 Outlines.Group 1.Stroke 1",
+                  color: "#FFFFFF",
+                },
+                {
+                  keypath: "Layer 11 Outlines.Group 1.Stroke 1",
+                  color: "#FFFFFF",
+                },
+                {
+                  keypath: "Layer 9 Outlines.Group 1.Stroke 1",
+                  color: "#FFFFFF",
+                },
+                {
+                  keypath: "Layer 6 Outlines.Group 1.Stroke 1",
+                  color: "#FFFFFF",
+                },
+                {
+                  keypath: "Layer 12 Outlines.Group 1.Stroke 1",
+                  color: "#FFFFFF",
+                },
+                {
+                  keypath: "Layer 10 Outlines.Group 1.Stroke 1",
+                  color: "#FFFFFF",
+                },
+              ]}
+            />
+            <Text className="base-paragraph">Loading data...</Text>
+          </View>
+        )}
       </View>
     </>
   );
