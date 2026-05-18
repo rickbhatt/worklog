@@ -3,13 +3,17 @@ import FormInput from "@/components/form-input";
 import ScreenHeader from "@/components/screen-header";
 import { MONTHS } from "@/constants";
 import { getPreviousMonthTotalLogs } from "@/db/queries/fileworklog.queries";
-import { getInsightsQuery } from "@/db/queries/insights.queries";
+import {
+  getInsightsQuery,
+  getMonthlyTotalLogsQuery,
+} from "@/db/queries/insights.queries";
 import { useDb } from "@/hooks/useDb";
 import { calcMomGrowthPercent } from "@/lib/utils";
 import { useLiveQuery } from "drizzle-orm/expo-sqlite";
 import { Tabs } from "expo-router";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { ScrollView, Text, View } from "react-native";
+import { BarChart } from "react-native-gifted-charts";
 import { FieldName } from "type";
 
 type InsightTypes = {
@@ -33,11 +37,37 @@ const Insights = () => {
     [selectedMonth],
   );
 
+  const { data: monthlyTotalLogs } = useLiveQuery(
+    getMonthlyTotalLogsQuery({ db }),
+    [],
+  );
+
   const momGrowthPercent = calcMomGrowthPercent({
     currentTotal: summary[0]?.totalLogs,
     previousTotal: previousMonthSummary[0]?.totalLogs,
   });
   const isMomGrowthNegative = momGrowthPercent.startsWith("-");
+  const chartBarWidth = 32;
+  const chartSpacing = 22;
+
+  const monthlyTotalLogsChartData = useMemo(() => {
+    const monthlyTotals = new Map(
+      monthlyTotalLogs.map((item) => [item.month.toString(), item.totalLogs]),
+    );
+
+    return MONTHS.map((month) => {
+      const isCurrentCalendarMonth = month.value === selectedMonth;
+
+      return {
+        value: monthlyTotals.get(month.value) ?? 0,
+        label: month.label.slice(0, 3),
+        labelWidth: chartBarWidth,
+        frontColor: isCurrentCalendarMonth ? "#FFFFFF" : "transparent",
+        barBorderColor: "#FFFFFF",
+        barBorderWidth: isCurrentCalendarMonth ? 0 : 1,
+      };
+    });
+  }, [chartBarWidth, selectedMonth, monthlyTotalLogs]);
 
   const onSelect = (name: FieldName<InsightTypes>, value: string | number) => {
     setSelectedMonth(value.toString());
@@ -54,7 +84,8 @@ const Insights = () => {
       <View className="flex-1 bg-bg-primary screen-x-padding pb-safe">
         <ScrollView
           className="flex-1"
-          contentContainerClassName="flex-col gap-4"
+          contentContainerClassName="flex-col gap-4 pb-32"
+          showsVerticalScrollIndicator={false}
         >
           <FormInput<InsightTypes>
             onChange={onSelect}
@@ -96,6 +127,48 @@ const Insights = () => {
               <Text className="text-text-secondary text-7xl">
                 {summary[0]?.manualCount}
               </Text>
+            </View>
+          </View>
+
+          {/* monthly total logs chart */}
+          <View className="bg-dark-200 p-4 rounded-md flex-col gap-y-4">
+            <View className="flex-row items-center justify-between gap-x-3">
+              <Text className="text-text-secondary base-bold uppercase">
+                Performance Trends
+              </Text>
+              <Text className="text-text-primary text-sm font-bold">
+                Annual Flow
+              </Text>
+            </View>
+
+            <View className="overflow-hidden">
+              <BarChart
+                data={monthlyTotalLogsChartData}
+                minHeight={1}
+                barWidth={chartBarWidth}
+                spacing={chartSpacing}
+                initialSpacing={4}
+                endSpacing={0}
+                nestedScrollEnabled
+                showScrollIndicator={false}
+                hideRules
+                hideYAxisText
+                yAxisLabelWidth={0}
+                yAxisThickness={0}
+                xAxisThickness={0}
+                backgroundColor="transparent"
+                noOfSections={3}
+                barBorderRadius={2}
+                labelWidth={chartBarWidth}
+                xAxisTextNumberOfLines={1}
+                xAxisLabelsHeight={32}
+                xAxisLabelTextStyle={{
+                  color: "#c3c3c3",
+                  fontSize: 14,
+                  textAlign: "center",
+                }}
+                labelsDistanceFromXaxis={8}
+              />
             </View>
           </View>
 
