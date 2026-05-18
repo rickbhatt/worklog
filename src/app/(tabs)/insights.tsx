@@ -106,7 +106,7 @@ const Insights = () => {
           />
 
           {/* total files */}
-          <View className="bg-dark-200 p-4 rounded-md flex-col gap-y-4">
+          <View className="border border-white p-4 rounded-md flex-col gap-y-4">
             <Text className="text-text-secondary base-bold">Total Files</Text>
             <Text className="text-text-secondary text-7xl">
               {summary[0]?.totalLogs}
@@ -115,14 +115,14 @@ const Insights = () => {
 
           {/* manual and sml */}
           <View className="flex-row gap-x-4">
-            <View className="bg-dark-200 p-4 rounded-md basis-0 flex-1 flex-col gap-y-4">
+            <View className="border border-white p-4 rounded-md basis-0 flex-1 flex-col gap-y-4">
               <Text className="text-text-secondary base-bold">SMLs</Text>
               <Text className="text-text-secondary text-7xl">
                 {summary[0]?.smlCount}
               </Text>
             </View>
 
-            <View className="bg-dark-200 p-4 rounded-md basis-0 flex-1 flex-col gap-y-4">
+            <View className="border border-white p-4 rounded-md basis-0 flex-1 flex-col gap-y-4">
               <Text className="text-text-secondary base-bold">Manuals</Text>
               <Text className="text-text-secondary text-7xl">
                 {summary[0]?.manualCount}
@@ -131,7 +131,7 @@ const Insights = () => {
           </View>
 
           {/* monthly total logs chart */}
-          <View className="bg-dark-200 p-4 rounded-md flex-col gap-y-4">
+          <View className="rounded-md flex-col gap-y-4">
             <View className="flex-row items-center justify-between gap-x-3">
               <Text className="text-text-secondary base-bold uppercase">
                 Performance Trends
@@ -173,7 +173,7 @@ const Insights = () => {
           </View>
 
           {/* mom growth */}
-          <View className="bg-dark-200 p-4 rounded-md flex-row items-end justify-between gap-x-4">
+          <View className="border border-white p-4 rounded-md flex-row items-end justify-between gap-x-4">
             <View className="flex-col gap-y-3">
               <Text className="text-text-secondary base-bold uppercase">
                 MOM Growth
