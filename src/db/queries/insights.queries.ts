@@ -23,3 +23,16 @@ export const getInsightsQuery = ({ db, month }: { db: Db; month: string }) => {
     .from(fileLogs)
     .where(and(gte(fileLogs.workedAt, start), lte(fileLogs.workedAt, end)));
 };
+
+export const getMonthlyTotalLogsQuery = ({ db }: { db: Db }) => {
+  const currentYear = new Date().getFullYear().toString();
+
+  return db
+    .select({
+      month: sql<string>`cast(strftime('%m', ${fileLogs.workedAt}) as integer)`,
+      totalLogs: count(),
+    })
+    .from(fileLogs)
+    .where(sql`strftime('%Y', ${fileLogs.workedAt}) = ${currentYear}`)
+    .groupBy(sql`strftime('%m', ${fileLogs.workedAt})`);
+};
