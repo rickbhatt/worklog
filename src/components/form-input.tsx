@@ -34,12 +34,13 @@ interface FormInputProps<TExtraFields extends Record<string, unknown> = {}> {
   maxLength?: number;
   timePreview?: boolean;
   inputType?: "text" | "date" | "checkbox" | "textarea" | "select";
-  inputClassname?: string;
+  className?: string;
   rowMode?: boolean;
   selectOptions?: { label: string; value: string }[];
   editable?: boolean;
   onFocus?: () => void;
   onBlur?: () => void;
+  icon?: React.ReactNode;
 }
 
 const FormInput = <TExtraFields extends Record<string, unknown> = {}>({
@@ -61,14 +62,14 @@ const FormInput = <TExtraFields extends Record<string, unknown> = {}>({
   maxLength = undefined,
   inputType = "text",
   editable = true,
-  inputClassname,
+  className,
   rowMode = false,
+  icon,
   onBlur,
   onFocus,
 }: FormInputProps<TExtraFields>) => {
   const [isDatePicketOpen, setIsDatePickerOpen] = useState(false);
   const numericFields = ["articleId", "lepPages", "timeTaken"];
-  const [isChecked, setIsChecked] = useState(false);
 
   const insets = useSafeAreaInsets();
   const contentInsets = {
@@ -129,7 +130,7 @@ const FormInput = <TExtraFields extends Record<string, unknown> = {}>({
             className={cn(
               "h-12 text-base py-0 bg-bg-primary",
               rowMode ? "flex-1 w-full" : "w-full",
-              inputClassname, // Override if passed
+              className, // Override if passed
             )}
           />
         </View>
@@ -229,8 +230,20 @@ const FormInput = <TExtraFields extends Record<string, unknown> = {}>({
             }
             value={selectedOption}
           >
-            <SelectTrigger onTouchStart={onTouchStart}>
-              <SelectValue placeholder={placeholder} />
+            <SelectTrigger
+              className={cn(className)}
+              onTouchStart={onTouchStart}
+            >
+              <View
+                className={cn(
+                  "flex-row items-center",
+                  className,
+                  icon && "gap-3",
+                )}
+              >
+                {icon}
+                <SelectValue placeholder={placeholder} />
+              </View>
             </SelectTrigger>
             <SelectContent insets={contentInsets}>
               {selectOptions.map((opt) => (

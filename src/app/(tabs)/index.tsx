@@ -14,7 +14,6 @@ import { useDb } from "@/hooks/useDb";
 import {
   calcTargetPagePercent,
   determineTodayOrYesterday,
-  formatDateTime,
   getCurrentDate,
   getMonthRange,
 } from "@/lib/utils";
@@ -71,6 +70,14 @@ const ListHeader = ({
         placeholder="Select a month"
         selectOptions={MONTHS}
         value={selectedMonth}
+        icon={
+          <DynamicIcon
+            family="Ionicons"
+            name={"calendar"}
+            size={20}
+            color="#c3c3c3"
+          />
+        }
       />
       <Button
         className="w-12 h-12 rounded-full border border-border"
@@ -97,15 +104,9 @@ const SectionHeader = ({
 }) => {
   const currentDateString = getCurrentDate();
 
-  const isToday = section.title === currentDateString;
-
   const currentDateObj = new Date(currentDateString);
 
   currentDateObj.setDate(currentDateObj.getDate() - 1);
-
-  const yesterdayDateString = formatDateTime(currentDateObj).dateToISOString;
-
-  const isYesterday = section.title === yesterdayDateString;
 
   return (
     <View className="mt-3 flex-row justify-between items-center">
