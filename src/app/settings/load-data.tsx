@@ -14,18 +14,6 @@ import { toast } from "sonner-native";
 
 const api_key = process.env.EXPO_PUBLIC_GOOGLE_API_KEY;
 
-if (!api_key) {
-  const error = new Error("GOOGLE_API_KEY is not defined");
-
-  captureException(error, {
-    tags: {
-      "settings.operation": "loadData.googleApiKey",
-    },
-  });
-
-  throw error;
-}
-
 const LoadData = () => {
   const [gSheetUrl, setGSheetUrl] = useState<string | null>(null);
   const [sheetName, setSheetName] = useState<string | null>(null);
@@ -48,6 +36,19 @@ const LoadData = () => {
   const handleSubmit = async () => {
     if (!gSheetUrl || !sheetName) {
       toast.info("Both sheet url and sheet name are required");
+      return;
+    }
+
+    if (!api_key) {
+      const error = new Error("EXPO_PUBLIC_GOOGLE_API_KEY is not defined");
+
+      captureException(error, {
+        tags: {
+          "settings.operation": "loadData.googleApiKey",
+        },
+      });
+
+      toast.error("Google Sheets import is not configured.");
       return;
     }
 
