@@ -67,6 +67,19 @@ export const getMonthRange = (month: string, year: string) => {
   };
 };
 
+export const getPreviousMonthRange = (month: string, year: string) => {
+  const monthIndex = parseInt(month) - 1;
+  const yearNum = parseInt(year);
+
+  const start = new Date(yearNum, monthIndex - 1, 1);
+  const end = new Date(yearNum, monthIndex, 0);
+
+  return {
+    start: formatDateTime(start).dateToISOString,
+    end: formatDateTime(end).dateToISOString,
+  };
+};
+
 export const convertTimeTakenToHoursMins = (time: number | undefined) => {
   if (!time || time === 0) return "0m";
 
@@ -112,6 +125,28 @@ export const calcTargetPagePercent = ({
   const [whole, decimal] = percent.split(".");
 
   return decimal === "00" ? whole : percent;
+};
+
+export const calcMomGrowthPercent = ({
+  currentTotal,
+  previousTotal,
+}: {
+  currentTotal: number | null | undefined;
+  previousTotal: number | null | undefined;
+}): string => {
+  const current = currentTotal ?? 0;
+  const previous = previousTotal ?? 0;
+
+  if (current === 0 && previous === 0) return "0%";
+  if (previous === 0 && current > 0) return "+100%";
+  if (current === 0 && previous > 0) return "-100%";
+
+  const percent = ((current - previous) / previous) * 100;
+  const formattedPercent = Number(percent.toFixed(1)).toString();
+
+  if (formattedPercent === "0") return "0%";
+
+  return percent > 0 ? `+${formattedPercent}%` : `${formattedPercent}%`;
 };
 
 export function formatBackupSize(bytes: number): string {
