@@ -1,5 +1,5 @@
-import { getCurrentMonthRange } from "@/lib/utils";
-import { and, desc, eq, gte, lte } from "drizzle-orm";
+import { getCurrentMonthRange, getPreviousMonthRange } from "@/lib/utils";
+import { and, count, desc, eq, gte, lte } from "drizzle-orm";
 import type { Db } from "type";
 
 import { fileLogs, targetInfo } from "../schema";
@@ -48,6 +48,27 @@ export const getFileLogs = ({ db, filters }: FileLogsWithFilers) => {
     .orderBy(desc(fileLogs.workedAt));
 
   return logs;
+};
+
+export const getPreviousMonthTotalLogs = ({
+  db,
+  month,
+}: {
+  db: Db;
+  month: string;
+}) => {
+  const currentYear = new Date().getFullYear();
+  const { start, end } = getPreviousMonthRange(
+    month,
+    currentYear.toString(),
+  );
+
+  return db
+    .select({
+      totalLogs: count(),
+    })
+    .from(fileLogs)
+    .where(and(gte(fileLogs.workedAt, start), lte(fileLogs.workedAt, end)));
 };
 
 export const getFileLogById = async (db: Db, id: string) => {
