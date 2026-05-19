@@ -28,13 +28,15 @@ export const getInsightsQuery = ({ db, month }: { db: Db; month: string }) => {
     .where(and(gte(fileLogs.workedAt, start), lte(fileLogs.workedAt, end)));
 };
 
-export const getMonthlyTotalLogsQuery = ({ db }: { db: Db }) => {
+export const getMonthlyTotalLepPagesQuery = ({ db }: { db: Db }) => {
   const currentYear = new Date().getFullYear().toString();
 
   return db
     .select({
       month: sql<string>`cast(strftime('%m', ${fileLogs.workedAt}) as integer)`,
-      totalLogs: count(),
+      totalLepPages: sql<number>`
+        sum(${fileLogs.lepPages})
+      `,
     })
     .from(fileLogs)
     .where(sql`strftime('%Y', ${fileLogs.workedAt}) = ${currentYear}`)
