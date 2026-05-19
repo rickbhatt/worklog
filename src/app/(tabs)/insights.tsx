@@ -112,7 +112,7 @@ const Insights = () => {
           >
             <View className="border border-white p-4 rounded-md flex-col gap-y-4">
               <Text className="text-text-secondary base-bold">Total Files</Text>
-              <Text className="text-text-secondary text-7xl">
+              <Text className="text-text-primary text-7xl">
                 {summary?.totalLogs}
               </Text>
             </View>
@@ -120,14 +120,14 @@ const Insights = () => {
             <View className="flex-row gap-x-4">
               <View className="border border-white p-4 rounded-md basis-0 flex-1 flex-col gap-y-4">
                 <Text className="text-text-secondary base-bold">SMLs</Text>
-                <Text className="text-text-secondary text-7xl">
+                <Text className="text-text-primary text-7xl">
                   {summary?.smlCount}
                 </Text>
               </View>
 
               <View className="border border-white p-4 rounded-md basis-0 flex-1 flex-col gap-y-4">
                 <Text className="text-text-secondary base-bold">Manuals</Text>
-                <Text className="text-text-secondary text-7xl">
+                <Text className="text-text-primary text-7xl">
                   {summary?.manualCount}
                 </Text>
               </View>

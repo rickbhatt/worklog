@@ -12,6 +12,10 @@ export const getInsightsQuery = ({ db, month }: { db: Db; month: string }) => {
     .select({
       totalLogs: count(),
 
+      totalLepPages: sql<number>`
+        sum(${fileLogs.lepPages})
+      `,
+
       smlCount: sql<number>`
         sum(case when ${fileLogs.isSml} = 1 then 1 else 0 end)
       `,
