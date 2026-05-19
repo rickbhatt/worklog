@@ -2,10 +2,10 @@ import DynamicIcon from "@/components/dynamic-icon";
 import FormInput from "@/components/form-input";
 import ScreenHeader from "@/components/screen-header";
 import { MONTH_NAMES, MONTHS } from "@/constants";
-import { getPreviousMonthTotalLogs } from "@/db/queries/fileworklog.queries";
+import { getPreviousMonthSummary } from "@/db/queries/fileworklog.queries";
 import {
   getInsightsQuery,
-  getMonthlyTotalLogsQuery,
+  getMonthlyTotalLepPagesQuery,
 } from "@/db/queries/insights.queries";
 import { useDb } from "@/hooks/useDb";
 import { calcMomGrowthPercent } from "@/lib/utils";
@@ -34,29 +34,33 @@ const Insights = () => {
   ]);
 
   const { data: previousMonthSummary } = useLiveQuery(
-    getPreviousMonthTotalLogs({ db, month: selectedMonth! }),
+    getPreviousMonthSummary({ db, month: selectedMonth! }),
     [selectedMonth],
   );
 
-  const { data: monthlyTotalLogs } = useLiveQuery(
-    getMonthlyTotalLogsQuery({ db }),
+  const { data: monthlyTotalLepPages } = useLiveQuery(
+    getMonthlyTotalLepPagesQuery({ db }),
     [],
   );
 
-  const momGrowthPercent = calcMomGrowthPercent({
+  const lepMomGrowth = calcMomGrowthPercent({
+    currentTotal: summary?.totalLepPages,
+    previousTotal: previousMonthSummary[0]?.totalLepPages,
+  });
+  const filesMomGrowth = calcMomGrowthPercent({
     currentTotal: summary?.totalLogs,
     previousTotal: previousMonthSummary[0]?.totalLogs,
   });
-  const isMomGrowthNegative = momGrowthPercent.startsWith("-");
-  const selectedMonthLabel =
-    MONTHS.find((month) => month.value === selectedMonth)?.label ??
-    "selected month";
+
   const chartBarWidth = 32;
   const chartSpacing = 22;
 
-  const monthlyTotalLogsChartData = useMemo(() => {
+  const monthlyTotalLepPagesChartData = useMemo(() => {
     const monthlyTotals = new Map(
-      monthlyTotalLogs.map((item) => [item.month.toString(), item.totalLogs]),
+      monthlyTotalLepPages.map((item) => [
+        item.month.toString(),
+        item.totalLepPages,
+      ]),
     );
 
     return MONTHS.map((month) => {
@@ -71,7 +75,7 @@ const Insights = () => {
         barBorderWidth: isCurrentCalendarMonth ? 0 : 1,
       };
     });
-  }, [chartBarWidth, selectedMonth, monthlyTotalLogs]);
+  }, [chartBarWidth, selectedMonth, monthlyTotalLepPages]);
 
   const onSelect = (name: FieldName<InsightTypes>, value: string | number) => {
     setSelectedMonth(value.toString());
@@ -110,42 +114,83 @@ const Insights = () => {
             contentContainerClassName="flex-col gap-4 pb-32"
             showsVerticalScrollIndicator={false}
           >
+            {/* LEP pages */}
             <View className="border border-white p-4 rounded-md flex-col gap-y-4">
-              <Text className="text-text-secondary base-bold">Total Files</Text>
-              <Text className="text-text-primary text-7xl">
-                {summary?.totalLogs}
+              <Text className="text-text-secondary base-bold">
+                Total LEP Pages
               </Text>
+              <Text className="text-text-primary text-7xl">
+                {summary?.totalLepPages}
+              </Text>
+              <View className="flex-row gap-x-2 items-center">
+                <DynamicIcon
+                  family="Feather"
+                  name={
+                    lepMomGrowth.isNegative ? "trending-down" : "trending-up"
+                  }
+                  size={22}
+                  color="#FFFFFF"
+                />
+                <Text className="base-paragraph">
+                  <Text className="font-bold">{lepMomGrowth.percent}</Text> vs
+                  last month
+                </Text>
+              </View>
             </View>
 
+            {/* sml and manual */}
             <View className="flex-row gap-x-4">
-              <View className="border border-white p-4 rounded-md basis-0 flex-1 flex-col gap-y-4">
-                <Text className="text-text-secondary base-bold">SMLs</Text>
+              <View className="p-4 rounded-md basis-0 flex-1 flex-col gap-y-4">
+                <Text className="text-text-secondary base-bold">SML Files</Text>
                 <Text className="text-text-primary text-7xl">
                   {summary?.smlCount}
                 </Text>
               </View>
 
-              <View className="border border-white p-4 rounded-md basis-0 flex-1 flex-col gap-y-4">
-                <Text className="text-text-secondary base-bold">Manuals</Text>
+              <View className="p-4 rounded-md basis-0 flex-1 flex-col gap-y-4">
+                <Text className="text-text-secondary base-bold">
+                  Manual Files
+                </Text>
                 <Text className="text-text-primary text-7xl">
                   {summary?.manualCount}
                 </Text>
               </View>
             </View>
 
+            {/* files */}
+            <View className="p-4 rounded-md basis-0 flex-1 flex-col gap-y-2">
+              <Text className="text-xl text-text-primary">
+                {summary?.totalLogs} Files
+              </Text>
+              <View className="flex-row gap-x-2 items-center">
+                <DynamicIcon
+                  family="Feather"
+                  name={
+                    filesMomGrowth.isNegative ? "trending-down" : "trending-up"
+                  }
+                  size={22}
+                  color="#FFFFFF"
+                />
+                <Text className="base-paragraph">
+                  <Text className="font-bold">{filesMomGrowth.percent}</Text> vs
+                  last month
+                </Text>
+              </View>
+            </View>
+
             <View className="rounded-md flex-col gap-y-4">
               <View className="flex-row items-center justify-between gap-x-3">
-                <Text className="text-text-secondary base-bold uppercase">
-                  Performance Trends
+                <Text className="text-text-secondary base-bold">
+                  Monthly Trends
                 </Text>
-                <Text className="text-text-primary text-sm font-bold">
-                  Annual Flow
+                <Text className="text-text-secondary text-sm font-bold">
+                  LEP Pages
                 </Text>
               </View>
 
               <View className="overflow-hidden">
                 <BarChart
-                  data={monthlyTotalLogsChartData}
+                  data={monthlyTotalLepPagesChartData}
                   minHeight={1}
                   barWidth={chartBarWidth}
                   spacing={chartSpacing}
@@ -172,29 +217,6 @@ const Insights = () => {
                   labelsDistanceFromXaxis={8}
                 />
               </View>
-            </View>
-
-            <View className="border border-white p-4 rounded-md flex-row items-end justify-between gap-x-4">
-              <View className="flex-col gap-y-3">
-                <Text className="text-text-secondary base-bold uppercase">
-                  MOM Growth
-                </Text>
-                <View className="flex-col gap-y-1">
-                  <Text className="text-text-secondary base-bold">
-                    vs Last Month
-                  </Text>
-                  <Text className="text-text-primary text-3xl font-bold">
-                    {momGrowthPercent}
-                  </Text>
-                </View>
-              </View>
-
-              <DynamicIcon
-                family="Feather"
-                name={isMomGrowthNegative ? "trending-down" : "trending-up"}
-                size={32}
-                color="#FFFFFF"
-              />
             </View>
           </ScrollView>
         ) : (
