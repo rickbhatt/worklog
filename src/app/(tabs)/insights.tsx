@@ -5,11 +5,16 @@ import ScreenHeader from "@/components/screen-header";
 import { MONTH_NAMES, MONTHS, WEEKDAY_LABELS } from "@/constants";
 import { getPreviousMonthSummary } from "@/db/queries/fileworklog.queries";
 import {
+  getAttendanceDatesQuery,
   getInsightsQuery,
   getMonthlyTotalLepPagesQuery,
 } from "@/db/queries/insights.queries";
 import { useDb } from "@/hooks/useDb";
-import { calcMomGrowthPercent } from "@/lib/utils";
+import {
+  calcMomGrowthPercent,
+  checkDateGreaterThanToday,
+  checkSunday,
+} from "@/lib/utils";
 import { getDaysInMonth } from "date-fns";
 import { useLiveQuery } from "drizzle-orm/expo-sqlite";
 import { Tabs } from "expo-router";
@@ -79,26 +84,45 @@ const Insights = () => {
     });
   }, [chartBarWidth, selectedMonth, monthlyTotalLepPages]);
 
-  const attendanceDates = useMemo(() => {
+  const { data: attendanceDatesData } = useLiveQuery(
+    getAttendanceDatesQuery({ db, month: selectedMonth! }),
+    [selectedMonth],
+  );
+
+  const attendanceMap = useMemo(() => {
+    return new Map(attendanceDatesData.map((item) => [item.date, item.type]));
+  }, [attendanceDatesData]);
+
+  const calendarDates = useMemo(() => {
     const selectedYear = new Date().getFullYear();
     const selectedMonthIndex = Number(selectedMonth) - 1;
     const totalDays = getDaysInMonth(
       new Date(selectedYear, selectedMonthIndex),
     );
 
-    return Array.from({ length: totalDays }, (_, index) => index + 1);
-  }, [selectedMonth]);
+    // Get the weekday index (0=Sun, 1=Mon, ...) of the 1st of the month
+    const firstDayOfWeek = new Date(
+      selectedYear,
+      selectedMonthIndex,
+      1,
+    ).getDay();
 
+    // Pad the start with nulls so day 1 falls under the correct column
+    const padding = Array(firstDayOfWeek).fill(null);
+    const days = Array.from({ length: totalDays }, (_, i) => i + 1);
+
+    return [...padding, ...days];
+  }, [selectedMonth]);
   const attendanceRows = useMemo(() => {
     return Array.from(
-      { length: Math.ceil(attendanceDates.length / WEEKDAY_LABELS.length) },
+      { length: Math.ceil(calendarDates.length / WEEKDAY_LABELS.length) },
       (_, index) =>
-        attendanceDates.slice(
+        calendarDates.slice(
           index * WEEKDAY_LABELS.length,
           (index + 1) * WEEKDAY_LABELS.length,
         ),
     );
-  }, [attendanceDates]);
+  }, [calendarDates]);
 
   const onSelect = (name: FieldName<InsightTypes>, value: string | number) => {
     setSelectedMonth(value.toString());
@@ -262,7 +286,14 @@ const Insights = () => {
                   <View key={rowIndex} className="flex-row">
                     {WEEKDAY_LABELS.map((_, dayIndex) => {
                       const date = row[dayIndex];
-
+                      const isSunday = checkSunday({
+                        date,
+                        currentMonth: parseInt(selectedMonth!),
+                      });
+                      const isDateGreaterThanToday = checkDateGreaterThanToday(
+                        date,
+                        parseInt(selectedMonth!),
+                      );
                       return (
                         <View
                           key={`${rowIndex}-${dayIndex}`}
@@ -273,7 +304,17 @@ const Insights = () => {
                               <Text className="text-text-primary text-xs font-bold">
                                 {date}
                               </Text>
-                              <AttendanceIndicator type="stripped" />
+                              <AttendanceIndicator
+                                type={
+                                  isSunday || isDateGreaterThanToday
+                                    ? "empty"
+                                    : attendanceMap.get(date) === "full"
+                                      ? "filled"
+                                      : attendanceMap.get(date) === "half"
+                                        ? "stripped"
+                                        : "outline" // date exists but no logs → absent
+                                }
+                              />
                             </>
                           ) : null}
                         </View>

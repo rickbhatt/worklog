@@ -44,4 +44,4 @@ export const MONTH_NAMES: Record<string, string> = {
   "12": "December",
 };
 
-export const WEEKDAY_LABELS = ["M", "T", "W", "T", "F", "S", "S"];
+export const WEEKDAY_LABELS = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
