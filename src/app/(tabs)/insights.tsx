@@ -9,6 +9,7 @@ import {
 } from "@/db/queries/insights.queries";
 import { useDb } from "@/hooks/useDb";
 import { calcMomGrowthPercent } from "@/lib/utils";
+import { getDaysInMonth } from "date-fns";
 import { useLiveQuery } from "drizzle-orm/expo-sqlite";
 import { Tabs } from "expo-router";
 import { useMemo, useState } from "react";
@@ -19,6 +20,8 @@ import { FieldName } from "type";
 type InsightTypes = {
   month: string;
 };
+
+const WEEKDAY_LABELS = ["M", "T", "W", "T", "F", "S", "S"];
 
 const Insights = () => {
   const db = useDb();
@@ -76,6 +79,27 @@ const Insights = () => {
       };
     });
   }, [chartBarWidth, selectedMonth, monthlyTotalLepPages]);
+
+  const attendanceDates = useMemo(() => {
+    const selectedYear = new Date().getFullYear();
+    const selectedMonthIndex = Number(selectedMonth) - 1;
+    const totalDays = getDaysInMonth(
+      new Date(selectedYear, selectedMonthIndex),
+    );
+
+    return Array.from({ length: totalDays }, (_, index) => index + 1);
+  }, [selectedMonth]);
+
+  const attendanceRows = useMemo(() => {
+    return Array.from(
+      { length: Math.ceil(attendanceDates.length / WEEKDAY_LABELS.length) },
+      (_, index) =>
+        attendanceDates.slice(
+          index * WEEKDAY_LABELS.length,
+          (index + 1) * WEEKDAY_LABELS.length,
+        ),
+    );
+  }, [attendanceDates]);
 
   const onSelect = (name: FieldName<InsightTypes>, value: string | number) => {
     setSelectedMonth(value.toString());
@@ -216,6 +240,47 @@ const Insights = () => {
                   }}
                   labelsDistanceFromXaxis={8}
                 />
+              </View>
+            </View>
+
+            <View className="rounded-md flex-col gap-y-4">
+              <Text className="text-text-secondary base-bold">Attendance</Text>
+
+              <View className="flex-col gap-y-3">
+                <View className="flex-row justify-between">
+                  {WEEKDAY_LABELS.map((day, index) => (
+                    <Text
+                      key={`${day}-${index}`}
+                      className="basis-0 flex-1 text-center text-text-primary text-xs font-bold"
+                    >
+                      {day}
+                    </Text>
+                  ))}
+                </View>
+
+                {attendanceRows.map((row, rowIndex) => (
+                  <View key={rowIndex} className="flex-row">
+                    {WEEKDAY_LABELS.map((_, dayIndex) => {
+                      const date = row[dayIndex];
+
+                      return (
+                        <View
+                          key={`${rowIndex}-${dayIndex}`}
+                          className="basis-0 flex-1 flex-col items-center gap-y-1"
+                        >
+                          {date ? (
+                            <>
+                              <Text className="text-text-primary text-xs font-bold">
+                                {date}
+                              </Text>
+                              <View className="h-5 w-5 rounded-sm border border-text-secondary" />
+                            </>
+                          ) : null}
+                        </View>
+                      );
+                    })}
+                  </View>
+                ))}
               </View>
             </View>
           </ScrollView>
