@@ -195,3 +195,18 @@ export const backupDateTimeDisplay = (date: string | Date) => {
 
   return `${dateLabel}, ${timeLabel}`;
 };
+
+export const checkSunday = ({
+  currentMonth,
+
+  date,
+}: {
+  date: number | undefined;
+
+  currentMonth: number;
+}) => {
+  if (!date) return;
+  const currentYear = new Date().getFullYear();
+  const dateObj = new Date(currentYear, currentMonth - 1, date);
+  console.log("🚀 ~ checkSunday ~ dateObj:", dateObj, dateObj.getDay() === 0);
+};

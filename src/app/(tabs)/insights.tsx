@@ -2,7 +2,7 @@ import AttendanceIndicator from "@/components/attendance-indicator";
 import DynamicIcon from "@/components/dynamic-icon";
 import FormInput from "@/components/form-input";
 import ScreenHeader from "@/components/screen-header";
-import { MONTH_NAMES, MONTHS } from "@/constants";
+import { MONTH_NAMES, MONTHS, WEEKDAY_LABELS } from "@/constants";
 import { getPreviousMonthSummary } from "@/db/queries/fileworklog.queries";
 import {
   getInsightsQuery,
@@ -21,8 +21,6 @@ import { FieldName } from "type";
 type InsightTypes = {
   month: string;
 };
-
-const WEEKDAY_LABELS = ["M", "T", "W", "T", "F", "S", "S"];
 
 const Insights = () => {
   const db = useDb();
@@ -244,6 +242,7 @@ const Insights = () => {
               </View>
             </View>
 
+            {/* Attendance */}
             <View className="rounded-md flex-col gap-y-4">
               <Text className="text-text-secondary base-bold">Attendance</Text>
 
@@ -282,6 +281,21 @@ const Insights = () => {
                     })}
                   </View>
                 ))}
+              </View>
+              {/* labels */}
+              <View className="flex-row items-center justify-between mt-3">
+                <View className="flex-row items-center gap-x-2">
+                  <AttendanceIndicator type="filled" />
+                  <Text className="text-sm text-text-primary">Full Day</Text>
+                </View>
+                <View className="flex-row items-center gap-x-2">
+                  <AttendanceIndicator type="stripped" />
+                  <Text className="text-sm text-text-primary">Half Day</Text>
+                </View>
+                <View className="flex-row items-center gap-x-2">
+                  <AttendanceIndicator type="outline" />
+                  <Text className="text-sm text-text-primary">Absent</Text>
+                </View>
               </View>
             </View>
           </ScrollView>
