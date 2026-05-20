@@ -42,3 +42,30 @@ export const getMonthlyTotalLepPagesQuery = ({ db }: { db: Db }) => {
     .where(sql`strftime('%Y', ${fileLogs.workedAt}) = ${currentYear}`)
     .groupBy(sql`strftime('%m', ${fileLogs.workedAt})`);
 };
+
+export const getAttendanceDatesQuery = ({
+  db,
+  month,
+}: {
+  db: Db;
+  month: string;
+}) => {
+  const currentYear = new Date().getFullYear();
+  const { start, end } = getMonthRange(month, currentYear.toString());
+
+  return db
+    .select({
+      date: sql<number>`cast(strftime('%d', ${fileLogs.workedAt}) as integer)`,
+      totalLepPages: sql<number>`sum(${fileLogs.lepPages})`,
+      type: sql<"full" | "half" | "absent">`
+          case 
+            when sum(${fileLogs.lepPages}) >= 65 then 'full'
+            when sum(${fileLogs.lepPages}) between 1 and 64 then 'half'
+            else 'absent'
+          end
+      `,
+    })
+    .from(fileLogs)
+    .where(and(gte(fileLogs.workedAt, start), lte(fileLogs.workedAt, end)))
+    .groupBy(sql`strftime('%d', ${fileLogs.workedAt})`);
+};

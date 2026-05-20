@@ -198,7 +198,6 @@ export const backupDateTimeDisplay = (date: string | Date) => {
 
 export const checkSunday = ({
   currentMonth,
-
   date,
 }: {
   date: number | undefined;
@@ -207,6 +206,14 @@ export const checkSunday = ({
 }) => {
   if (!date) return;
   const currentYear = new Date().getFullYear();
-  const dateObj = new Date(currentYear, currentMonth - 1, date);
-  console.log("🚀 ~ checkSunday ~ dateObj:", dateObj, dateObj.getDay() === 0);
+  return new Date(currentYear, currentMonth - 1, date).getDay() === 0;
+};
+
+export const checkDateGreaterThanToday = (date: number, month: number) => {
+  if (!date) return;
+  const currentYear = new Date().getFullYear();
+
+  const dateObj = new Date(currentYear, month - 1, date);
+  const today = new Date();
+  return dateObj > today;
 };
