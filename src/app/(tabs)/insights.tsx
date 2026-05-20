@@ -1,3 +1,4 @@
+import AttendanceIndicator from "@/components/attendance-indicator";
 import DynamicIcon from "@/components/dynamic-icon";
 import FormInput from "@/components/form-input";
 import ScreenHeader from "@/components/screen-header";
@@ -273,7 +274,7 @@ const Insights = () => {
                               <Text className="text-text-primary text-xs font-bold">
                                 {date}
                               </Text>
-                              <View className="h-5 w-5 rounded-sm border border-text-secondary" />
+                              <AttendanceIndicator type="stripped" />
                             </>
                           ) : null}
                         </View>
