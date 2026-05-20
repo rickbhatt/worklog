@@ -1,7 +1,7 @@
 import { View } from "react-native";
 
 type AttendanceIndicatorProps = {
-  type: "filled" | "empty" | "stripped" | "outline";
+  type: "filled" | "stripped" | "outline";
 };
 
 const AttendanceIndicator = ({ type }: AttendanceIndicatorProps) => {
@@ -28,13 +28,9 @@ const AttendanceIndicator = ({ type }: AttendanceIndicatorProps) => {
     case "outline":
       return <View className="h-5 w-5 rounded-sm border border-dark-300" />;
 
-    case "empty":
-      return <View className="h-5 w-5 rounded-sm" />;
     default:
       return null;
   }
-
-  return;
 };
 
 export default AttendanceIndicator;

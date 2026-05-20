@@ -100,19 +100,26 @@ const Insights = () => {
       new Date(selectedYear, selectedMonthIndex),
     );
 
-    // Get the weekday index (0=Sun, 1=Mon, ...) of the 1st of the month
     const firstDayOfWeek = new Date(
       selectedYear,
       selectedMonthIndex,
       1,
     ).getDay();
 
-    // Pad the start with nulls so day 1 falls under the correct column
-    const padding = Array(firstDayOfWeek).fill(null);
+    const startPadding = Array(firstDayOfWeek).fill(null);
     const days = Array.from({ length: totalDays }, (_, i) => i + 1);
+    const combined = [...startPadding, ...days];
 
-    return [...padding, ...days];
+    // Pad the end to complete the last row
+    const remainder = combined.length % WEEKDAY_LABELS.length;
+    const endPadding =
+      remainder === 0
+        ? []
+        : Array(WEEKDAY_LABELS.length - remainder).fill(null);
+
+    return [...combined, ...endPadding];
   }, [selectedMonth]);
+
   const attendanceRows = useMemo(() => {
     return Array.from(
       { length: Math.ceil(calendarDates.length / WEEKDAY_LABELS.length) },
@@ -294,28 +301,31 @@ const Insights = () => {
                         date,
                         parseInt(selectedMonth!),
                       );
+
                       return (
                         <View
                           key={`${rowIndex}-${dayIndex}`}
-                          className="basis-0 flex-1 flex-col items-center gap-y-1"
+                          className="basis-0 flex-1 flex-col items-center gap-y-1 min-h-11"
                         >
-                          {date ? (
+                          {date && !isSunday && !isDateGreaterThanToday ? (
                             <>
                               <Text className="text-text-primary text-xs font-bold">
                                 {date}
                               </Text>
                               <AttendanceIndicator
                                 type={
-                                  isSunday || isDateGreaterThanToday
-                                    ? "empty"
-                                    : attendanceMap.get(date) === "full"
-                                      ? "filled"
-                                      : attendanceMap.get(date) === "half"
-                                        ? "stripped"
-                                        : "outline" // date exists but no logs → absent
+                                  attendanceMap.get(date) === "full"
+                                    ? "filled"
+                                    : attendanceMap.get(date) === "half"
+                                      ? "stripped"
+                                      : "outline"
                                 }
                               />
                             </>
+                          ) : date ? (
+                            <Text className="text-text-primary text-xs font-bold">
+                              {date}
+                            </Text>
                           ) : null}
                         </View>
                       );
