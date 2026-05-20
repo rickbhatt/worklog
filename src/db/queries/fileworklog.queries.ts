@@ -1,5 +1,5 @@
 import { getCurrentMonthRange, getPreviousMonthRange } from "@/lib/utils";
-import { and, count, desc, eq, gte, lte } from "drizzle-orm";
+import { and, count, desc, eq, gte, lte, sql } from "drizzle-orm";
 import type { Db } from "type";
 
 import { fileLogs, targetInfo } from "../schema";
@@ -50,7 +50,7 @@ export const getFileLogs = ({ db, filters }: FileLogsWithFilers) => {
   return logs;
 };
 
-export const getPreviousMonthTotalLogs = ({
+export const getPreviousMonthSummary = ({
   db,
   month,
 }: {
@@ -58,14 +58,15 @@ export const getPreviousMonthTotalLogs = ({
   month: string;
 }) => {
   const currentYear = new Date().getFullYear();
-  const { start, end } = getPreviousMonthRange(
-    month,
-    currentYear.toString(),
-  );
+  const { start, end } = getPreviousMonthRange(month, currentYear.toString());
 
   return db
     .select({
       totalLogs: count(),
+
+      totalLepPages: sql<number>`
+        sum(${fileLogs.lepPages})
+      `,
     })
     .from(fileLogs)
     .where(and(gte(fileLogs.workedAt, start), lte(fileLogs.workedAt, end)));

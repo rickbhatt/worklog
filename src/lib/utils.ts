@@ -133,20 +133,33 @@ export const calcMomGrowthPercent = ({
 }: {
   currentTotal: number | null | undefined;
   previousTotal: number | null | undefined;
-}): string => {
+}): { percent: string; isNegative: boolean } => {
   const current = currentTotal ?? 0;
   const previous = previousTotal ?? 0;
 
-  if (current === 0 && previous === 0) return "0%";
-  if (previous === 0 && current > 0) return "+100%";
-  if (current === 0 && previous > 0) return "-100%";
+  if (current === 0 && previous === 0) {
+    return { percent: "0%", isNegative: false };
+  }
+
+  if (previous === 0 && current > 0) {
+    return { percent: "+100%", isNegative: false };
+  }
+
+  if (current === 0 && previous > 0) {
+    return { percent: "-100%", isNegative: true };
+  }
 
   const percent = ((current - previous) / previous) * 100;
   const formattedPercent = Number(percent.toFixed(1)).toString();
 
-  if (formattedPercent === "0") return "0%";
+  if (formattedPercent === "0") {
+    return { percent: "0%", isNegative: false };
+  }
 
-  return percent > 0 ? `+${formattedPercent}%` : `${formattedPercent}%`;
+  return {
+    percent: percent > 0 ? `+${formattedPercent}%` : `${formattedPercent}%`,
+    isNegative: percent < 0,
+  };
 };
 
 export function formatBackupSize(bytes: number): string {
@@ -181,4 +194,26 @@ export const backupDateTimeDisplay = (date: string | Date) => {
   const timeLabel = formatDateTime(date)?.dateTimeToISOString?.split(", ")[1];
 
   return `${dateLabel}, ${timeLabel}`;
+};
+
+export const checkSunday = ({
+  currentMonth,
+  date,
+}: {
+  date: number | undefined;
+
+  currentMonth: number;
+}) => {
+  if (!date) return;
+  const currentYear = new Date().getFullYear();
+  return new Date(currentYear, currentMonth - 1, date).getDay() === 0;
+};
+
+export const checkDateGreaterThanToday = (date: number, month: number) => {
+  if (!date) return;
+  const currentYear = new Date().getFullYear();
+
+  const dateObj = new Date(currentYear, month - 1, date);
+  const today = new Date();
+  return dateObj > today;
 };
