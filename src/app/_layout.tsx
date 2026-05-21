@@ -1,7 +1,6 @@
-import LoadingScreen from "@/components/loading-screen";
 import { DB_NAME } from "@/constants";
 import { AuthProvider } from "@/contexts/AuthContext";
-import { initialiseDb, validateDb } from "@/db/client";
+import { initialiseDb } from "@/db/client";
 import "@/global.css";
 import { useDb } from "@/hooks/useDb";
 import { useDrizzleStudioDev } from "@/hooks/useDrizzleStudioDev";
@@ -19,7 +18,7 @@ import * as Sentry from "@sentry/react-native";
 import { Stack } from "expo-router";
 import { SQLiteProvider } from "expo-sqlite";
 import { StatusBar } from "expo-status-bar";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { InteractionManager } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
@@ -44,45 +43,10 @@ const Layout = () => {
 
   const startupRanRef = useRef(false);
 
-  const [dbReady, setDbReady] = useState(false);
-
-  /*
-   * Validate database connection
-   */
-  useEffect(() => {
-    let mounted = true;
-
-    const validate = async () => {
-      try {
-        const healthy = await validateDb();
-
-        if (!mounted) return;
-
-        console.log("🚀 DB validation result:", healthy);
-
-        setDbReady(healthy);
-      } catch (error) {
-        console.error("🚀 DB validation failed:", error);
-
-        if (!mounted) return;
-
-        setDbReady(false);
-      }
-    };
-
-    validate();
-
-    return () => {
-      mounted = false;
-    };
-  }, []);
-
   /*
    * One-time startup tasks
    */
   useEffect(() => {
-    if (!dbReady) return;
-
     if (startupRanRef.current) return;
 
     startupRanRef.current = true;
@@ -132,11 +96,7 @@ const Layout = () => {
 
       task.cancel();
     };
-  }, [db, dbReady]);
-
-  if (!dbReady) {
-    return <LoadingScreen />;
-  }
+  }, []);
 
   return (
     <>
@@ -164,21 +124,7 @@ const RootLayout = () => {
           <SQLiteProvider
             databaseName={DB_NAME}
             options={{ enableChangeListener: true }}
-            onInit={async (expoDb) => {
-              try {
-                await initialiseDb(expoDb);
-              } catch (error) {
-                captureException(error, {
-                  tags: {
-                    "db.operation": "SQLiteProvider.onInit",
-                  },
-                });
-
-                console.error("Db initialisation failed", error);
-
-                throw error;
-              }
-            }}
+            onInit={initialiseDb}
             onError={(error) => {
               captureException(error, {
                 tags: {
