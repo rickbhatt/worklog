@@ -93,6 +93,7 @@ export const initialiseDb = async (sqliteDb: SQLiteDatabase) => {
   }
 };
 
+// not required for the time being, just commenting out
 export const validateDb = async () => {
   try {
     const db = getDrizzleInstance();
