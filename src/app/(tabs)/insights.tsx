@@ -77,9 +77,9 @@ const Insights = () => {
         value: monthlyTotals.get(month.value) ?? 0,
         label: month.label.slice(0, 3),
         labelWidth: chartBarWidth,
-        frontColor: isCurrentCalendarMonth ? "#FFFFFF" : "transparent",
-        barBorderColor: "#FFFFFF",
-        barBorderWidth: isCurrentCalendarMonth ? 0 : 1,
+        // frontColor: isCurrentCalendarMonth ? "#FFFFFF" : "transparent",
+        // barBorderColor: "#FFFFFF",
+        // barBorderWidth: isCurrentCalendarMonth ? 0 : 1,
       };
     });
   }, [chartBarWidth, selectedMonth, monthlyTotalLepPages]);
@@ -194,14 +194,14 @@ const Insights = () => {
 
             {/* sml and manual */}
             <View className="flex-row gap-x-4">
-              <View className="p-4 rounded-md basis-0 flex-1 flex-col gap-y-4">
+              <View className="p-4 basis-0 flex-1 flex-col gap-y-4">
                 <Text className="text-text-secondary base-bold">SML Files</Text>
                 <Text className="text-text-primary text-7xl">
                   {summary?.smlCount}
                 </Text>
               </View>
 
-              <View className="p-4 rounded-md basis-0 flex-1 flex-col gap-y-4">
+              <View className="p-4 basis-0 flex-1 flex-col gap-y-4">
                 <Text className="text-text-secondary base-bold">
                   Manual Files
                 </Text>
@@ -250,7 +250,10 @@ const Insights = () => {
                   spacing={chartSpacing}
                   initialSpacing={4}
                   endSpacing={0}
+                  frontColor={"#FFFFFF"}
                   nestedScrollEnabled
+                  barBorderColor="#FFFFFF"
+                  barBorderWidth={1}
                   showScrollIndicator={false}
                   hideRules
                   hideYAxisText

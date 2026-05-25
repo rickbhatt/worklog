@@ -27,7 +27,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
   name: getAppName(),
   slug: "worklog",
-  version: "1.3.1",
+  version: "1.4.5",
   orientation: "portrait",
   icon: "./assets/images/icon.png",
   scheme: "worklog",
@@ -70,7 +70,6 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     "@react-native-community/datetimepicker",
     "expo-secure-store",
     "@react-native-google-signin/google-signin",
-    "expo-background-task",
     [
       "expo-notifications",
       {

@@ -485,7 +485,10 @@ export const restoreBackupFromDrive = async (driveFile: {
         restoredFile.delete();
       }
     } catch (cleanupError) {
-      captureBackupException(cleanupError, "restoreBackupFromDrive.cleanupTemp");
+      captureBackupException(
+        cleanupError,
+        "restoreBackupFromDrive.cleanupTemp",
+      );
     }
 
     // Rollback original DB if replacement failed
@@ -508,7 +511,8 @@ export const restoreBackupFromDrive = async (driveFile: {
     };
   }
 };
-export const checkAndAutoBackup = (db: Db) => {
+export const checkAndAutoBackup = async (db: Db) => {
+  if (__DEV__) return;
   const isSignedIn = isUserSignedIn();
   if (!isSignedIn) return;
 
@@ -518,7 +522,7 @@ export const checkAndAutoBackup = (db: Db) => {
     const hasData = checkHasUserData(db);
     if (hasData) {
       console.log("🚀 First backup triggered — user has data");
-      uploadBackupToDrive(db);
+      await uploadBackupToDrive(db);
     }
     return;
   }
@@ -526,8 +530,8 @@ export const checkAndAutoBackup = (db: Db) => {
   const hoursSinceLast =
     (Date.now() - backupRecord.lastBackupAt.getTime()) / (1000 * 60 * 60);
 
-  if (hoursSinceLast >= 12) {
+  if (hoursSinceLast >= 24) {
     console.log("🚀 Auto backup triggered");
-    uploadBackupToDrive(db);
+    await uploadBackupToDrive(db);
   }
 };
