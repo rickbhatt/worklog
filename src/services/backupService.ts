@@ -530,7 +530,7 @@ export const checkAndAutoBackup = async (db: Db) => {
   const hoursSinceLast =
     (Date.now() - backupRecord.lastBackupAt.getTime()) / (1000 * 60 * 60);
 
-  if (hoursSinceLast >= 12) {
+  if (hoursSinceLast >= 24) {
     console.log("🚀 Auto backup triggered");
     await uploadBackupToDrive(db);
   }
