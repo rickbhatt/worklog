@@ -60,9 +60,9 @@ const Layout = () => {
 
           console.log("🚀 Startup tasks: begin");
 
-          await ensureBackupDir();
+          ensureBackupDir();
 
-          await setupNotifications();
+          setupNotifications();
 
           if (!mounted) return;
 
@@ -78,12 +78,16 @@ const Layout = () => {
           
            */
 
-          if (!__DEV__) await checkAndAutoBackup(db);
+          await checkAndAutoBackup(db);
 
           if (!mounted) return;
-
-          console.log("🚀 Startup tasks: complete");
         } catch (error) {
+          captureException(error, {
+            tags: {
+              "startup.operation": "runStartupTasks",
+            },
+          });
+
           console.error("🚀 Startup tasks failed:", error);
         }
       };
