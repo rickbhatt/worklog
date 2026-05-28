@@ -28,7 +28,6 @@ import {
 import { Directory, File, Paths } from "expo-file-system";
 import * as SecureStore from "expo-secure-store";
 import * as Updates from "expo-updates";
-import { toast } from "sonner-native";
 import { Db } from "type";
 
 const captureBackupException = (error: unknown, operation: string) => {
@@ -229,7 +228,6 @@ export async function uploadBackupToDrive(database: Db): Promise<{
         md5Checksum: result.md5Checksum,
       },
     });
-    toast.success("Backup uploaded to Google Drive");
 
     await showBackupSuccessNotification(new Date(result.modifiedTime));
     return { success: true };

@@ -3,7 +3,10 @@ import DynamicIcon from "@/components/dynamic-icon";
 import FormInput from "@/components/form-input";
 import ScreenHeader from "@/components/screen-header";
 import { MONTH_NAMES, MONTHS, WEEKDAY_LABELS } from "@/constants";
-import { getPreviousMonthSummary } from "@/db/queries/fileworklog.queries";
+import {
+  getLatestTargetHour,
+  getPreviousMonthSummary,
+} from "@/db/queries/fileworklog.queries";
 import {
   getAttendanceDatesQuery,
   getInsightsQuery,
@@ -50,6 +53,9 @@ const Insights = () => {
     [],
   );
 
+  const { data: targetData } = useLiveQuery(getLatestTargetHour(db), []);
+  const targetLEP = targetData[0]?.targetLepPages ?? 60;
+
   const lepMomGrowth = calcMomGrowthPercent({
     currentTotal: summary?.totalLepPages,
     previousTotal: previousMonthSummary[0]?.totalLepPages,
@@ -85,8 +91,8 @@ const Insights = () => {
   }, [chartBarWidth, selectedMonth, monthlyTotalLepPages]);
 
   const { data: attendanceDatesData } = useLiveQuery(
-    getAttendanceDatesQuery({ db, month: selectedMonth! }),
-    [selectedMonth],
+    getAttendanceDatesQuery({ db, month: selectedMonth!, targetLEP }),
+    [selectedMonth, targetLEP],
   );
 
   const attendanceMap = useMemo(() => {
