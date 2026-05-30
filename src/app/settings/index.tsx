@@ -2,14 +2,14 @@ import DynamicIcon from "@/components/dynamic-icon";
 import ScreenHeader from "@/components/screen-header";
 import { Button } from "@/components/ui/button";
 import { useAppInfo } from "@/hooks/useAppInfo";
-import { Stack, useRouter } from "expo-router";
+import { Href, Stack, useRouter } from "expo-router";
 import React from "react";
 import { Text, View } from "react-native";
 import { DynamicIconProps } from "type";
 
 const SettingBtns: ReadonlyArray<{
   title: string;
-  path: "/settings/backups" | "/settings/target-hour" | "/settings/load-data";
+  path: Href;
   icon: DynamicIconProps;
 }> = [
   {
@@ -29,11 +29,27 @@ const SettingBtns: ReadonlyArray<{
     },
   },
   {
-    title: "Load Data",
-    path: "/settings/load-data",
+    title: "Import Data",
+    path: "/settings/import-data",
     icon: {
       family: "MaterialCommunityIcons",
       name: "database-import",
+    },
+  },
+  {
+    title: "Export Data",
+    path: "/settings/export-data",
+    icon: {
+      family: "MaterialCommunityIcons",
+      name: "database-export",
+    },
+  },
+  {
+    title: "Manage Google Account",
+    path: "/settings/manage-google-account",
+    icon: {
+      family: "MaterialCommunityIcons",
+      name: "account",
     },
   },
 ];

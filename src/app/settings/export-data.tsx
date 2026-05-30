@@ -1,20 +1,16 @@
-import FormInput from "@/components/form-input";
 import ScreenHeader from "@/components/screen-header";
-import { Button } from "@/components/ui/button";
-import { createBulkFileLogs } from "@/db/mutations/fileworklog.mutations";
 import { useDb } from "@/hooks/useDb";
 import { captureException } from "@/lib/sentry";
+import dataTable from "@assets/images/data-table.json";
 import { Stack } from "expo-router";
 import LottieView from "lottie-react-native";
-
-import dataTable from "@assets/images/data-table.json";
 import React, { useState } from "react";
 import { Text, View } from "react-native";
 import { toast } from "sonner-native";
 
 const api_key = process.env.EXPO_PUBLIC_GOOGLE_API_KEY;
 
-const LoadData = () => {
+const ExportData = () => {
   const [gSheetUrl, setGSheetUrl] = useState<string | null>(null);
   const [sheetName, setSheetName] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -33,7 +29,7 @@ const LoadData = () => {
     }
   };
 
-  const handleSubmit = async () => {
+  const handleExportToGoogleSheet = async () => {
     if (!gSheetUrl || !sheetName) {
       toast.info("Both sheet url and sheet name are required");
       return;
@@ -44,7 +40,7 @@ const LoadData = () => {
 
       captureException(error, {
         tags: {
-          "settings.operation": "loadData.googleApiKey",
+          "settings.operation": "exportData.googleApiKey",
         },
       });
 
@@ -78,9 +74,6 @@ const LoadData = () => {
           timeTaken: Number(item[5]),
         };
       });
-
-      await createBulkFileLogs(db, insertValues);
-      toast.success("Data from Google sheet load successfuly");
     } catch (error) {
       console.error("🚀 ~ Load data handleSubmit ~ error:", error);
       toast.error(
@@ -98,29 +91,12 @@ const LoadData = () => {
       <Stack.Screen
         options={{
           headerShown: true,
-          header: () => <ScreenHeader title="Load Data" backButtonVisible />,
+          header: () => <ScreenHeader title="Export Data" backButtonVisible />,
         }}
       />
       <View className="bg-bg-primary flex-1 screen-x-padding pb-safe">
         {!isLoading ? (
-          <View className="flex-col gap-4">
-            <FormInput
-              label="Public Google Sheet URL"
-              name="gsheet_url"
-              onChange={handleOnChangeText}
-              autoFocus
-              value={gSheetUrl}
-            />
-            <FormInput
-              label="Sheet Name"
-              name="sheet_name"
-              onChange={handleOnChangeText}
-              value={sheetName}
-            />
-            <Button onPress={handleSubmit}>
-              <Text className="btn-label">Load Data</Text>
-            </Button>
-          </View>
+          <></>
         ) : (
           <View className="flex-1 flex-col justify-center items-center">
             <LottieView
@@ -155,7 +131,7 @@ const LoadData = () => {
                 },
               ]}
             />
-            <Text className="base-paragraph">Loading data...</Text>
+            <Text className="base-paragraph">Exporting data...</Text>
           </View>
         )}
       </View>
@@ -163,4 +139,4 @@ const LoadData = () => {
   );
 };
 
-export default LoadData;
+export default ExportData;
