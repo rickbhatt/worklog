@@ -1,7 +1,7 @@
 import { clsx, type ClassValue } from "clsx";
 import { format } from "date-fns";
 import { twMerge } from "tailwind-merge";
-import { RequiredField } from "type";
+import { FileLogsSelectType, RequiredField } from "type";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -22,6 +22,8 @@ export const formatDateTime = (date: string | Date | undefined) => {
 
   const formatDateToISOString = format(new Date(date), "yyyy-MM-dd");
 
+  const formatDateForSheet = format(new Date(date), "dd/MM/yyyy");
+
   const formatDateTimeToISOString = format(
     new Date(date),
     "dd/MM/yyyy, hh:mm a",
@@ -35,6 +37,7 @@ export const formatDateTime = (date: string | Date | undefined) => {
     dateToISOString: formatDateToISOString,
     dateTimeToISOString: formatDateTimeToISOString,
     onlyTime: formatOnlyTime,
+    dateForSheet: formatDateForSheet,
   };
 };
 
@@ -217,3 +220,26 @@ export const checkDateGreaterThanToday = (date: number, month: number) => {
   const today = new Date();
   return dateObj > today;
 };
+
+export const formatLogsForSheet = (logs: FileLogsSelectType[]) => [
+  ["Date", "Task/OT details", "Pages", "OT pages", "Target reached (yes/no)"],
+  ...logs.map((log) => [
+    formatDateTime(log.workedAt).dateForSheet,
+    `${log.journalId}_${log.articleId}`,
+    log.isOT === 0
+      ? log.isSml === 0
+        ? log.lepPages
+        : log.isND === 1
+          ? "ND-SML"
+          : "SML"
+      : "",
+    log.isOT === 1
+      ? log.isSml === 0
+        ? log.lepPages
+        : log.isND === 1
+          ? "ND-SML"
+          : "SML"
+      : "",
+    "YES",
+  ]),
+];
