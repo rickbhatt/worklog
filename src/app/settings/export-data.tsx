@@ -4,16 +4,19 @@ import HorzLoader from "@/components/horz-loader";
 import ScreenHeader from "@/components/screen-header";
 import { Button } from "@/components/ui/button";
 import { MONTH_NAMES, MONTHS } from "@/constants";
+import { useAuth } from "@/contexts/AuthContext";
 import { getFileLogs } from "@/db/queries/fileworklog.queries";
 import { useDb } from "@/hooks/useDb";
 import { formatLogsForSheet, getMonthRange } from "@/lib/utils";
 import { getAccessToken } from "@/services/googleAuthService";
-import { Stack } from "expo-router";
+import { Stack, useRouter } from "expo-router";
 import React, { useState } from "react";
 import { Linking, Text, View } from "react-native";
 import { toast } from "sonner-native";
 
 const ExportData = () => {
+  const { isSignedIn } = useAuth();
+  const router = useRouter();
   const db = useDb();
   const [logsForSheet, setLogsForSheet] = useState<
     (string | number | undefined)[][] | null
@@ -106,71 +109,89 @@ const ExportData = () => {
         }}
       />
       <View className="bg-bg-primary flex-col gap-3 flex-1 screen-x-padding pb-safe">
-        <View className="flex-col gap-2.5 mt-3">
-          <Text className="base-paragraph">Select a month to export data</Text>
-          <FormInput
-            onChange={onSelect}
-            name="month"
-            inputType="select"
-            placeholder="Select a month"
-            selectOptions={MONTHS}
-            value={selectedMonth}
-            className="max-w-52"
-            icon={
-              <DynamicIcon
-                family="Ionicons"
-                name={"calendar"}
-                size={20}
-                color="#c3c3c3"
-              />
-            }
-          />
-        </View>
-        {logsForSheet &&
-          logsForSheet.length > 1 &&
-          !isExporting &&
-          !exportedSheetUrl && (
-            <View className="flex-col gap-4">
+        {isSignedIn ? (
+          <>
+            <View className="flex-col gap-2.5 mt-3">
               <Text className="base-paragraph">
-                Data is ready to be exported. Click the button below to export
-                to Google Sheets.
+                Select a month to export data
               </Text>
-              <Button onPress={exportToGoogleSheet}>
-                <Text className="btn-label">Export to Sheets</Text>
-              </Button>
+              <FormInput
+                onChange={onSelect}
+                name="month"
+                inputType="select"
+                placeholder="Select a month"
+                selectOptions={MONTHS}
+                value={selectedMonth}
+                className="max-w-52"
+                icon={
+                  <DynamicIcon
+                    family="Ionicons"
+                    name={"calendar"}
+                    size={20}
+                    color="#c3c3c3"
+                  />
+                }
+              />
             </View>
-          )}
-
-        {isExporting && (
-          <View className="flex-col gap-4 mt-5">
+            {logsForSheet &&
+              logsForSheet.length > 1 &&
+              !isExporting &&
+              !exportedSheetUrl && (
+                <View className="flex-col gap-4">
+                  <Text className="base-paragraph">
+                    Data is ready to be exported. Click the button below to
+                    export to Google Sheets.
+                  </Text>
+                  <Button onPress={exportToGoogleSheet}>
+                    <Text className="btn-label">Export to Sheets</Text>
+                  </Button>
+                </View>
+              )}
+            {isExporting && (
+              <View className="flex-col gap-4 mt-5">
+                <Text className="base-paragraph">
+                  Exporting to Google Sheets...
+                </Text>
+                <HorzLoader
+                  loading={isExporting}
+                  duration={1000}
+                  className="mt-2"
+                  trackClassName="h-1 bg-dark-200"
+                  indicatorClassName="bg-accent"
+                />
+              </View>
+            )}
+            {exportedSheetUrl && (
+              <View className="flex-col gap-3.5">
+                <Text className="base-paragraph">
+                  Exported data can be found here
+                </Text>
+                <Button
+                  className="flex-row items-center gap-x-2.5"
+                  onPress={() => Linking.openURL(exportedSheetUrl)}
+                >
+                  <DynamicIcon
+                    family="Ionicons"
+                    name={"link"}
+                    size={20}
+                    color="#FFFFFF"
+                  />
+                  <Text className="btn-label">Open Sheet</Text>
+                </Button>
+              </View>
+            )}
+          </>
+        ) : (
+          <View className="flex-col gap-4">
             <Text className="base-paragraph">
-              Exporting to Google Sheets...
-            </Text>
-            <HorzLoader
-              loading={isExporting}
-              duration={1000}
-              className="mt-2"
-              trackClassName="h-1 bg-dark-200"
-              indicatorClassName="bg-accent"
-            />
-          </View>
-        )}
-        {exportedSheetUrl && (
-          <View className="flex-col gap-3.5">
-            <Text className="base-paragraph">
-              Exported data can be found here
+              Please singn in with your Google account to export data to Google
+              Sheets.
             </Text>
             <Button
-              className="flex-row items-center gap-x-2.5"
-              onPress={() => Linking.openURL(exportedSheetUrl)}
+              className="flex-row items-center py-3 px-4"
+              onPress={() => router.push("/settings/manage-google-account")}
             >
-              <DynamicIcon
-                family="Ionicons"
-                name={"link"}
-                size={20}
-                color="#FFFFFF"
-              />
-              <Text className="btn-label">Open Sheet</Text>
+              <Text className="btn-label">Manage Google Account</Text>
             </Button>
           </View>
         )}
