@@ -68,8 +68,6 @@ export const closeDb = async () => {
 };
 
 export const initialiseDb = async (sqliteDb: SQLiteDatabase) => {
-  console.log("initialiseDb: start");
-
   registerDbInstance(sqliteDb);
 
   try {
@@ -82,8 +80,6 @@ export const initialiseDb = async (sqliteDb: SQLiteDatabase) => {
     drizzleInstance = drizzle(sqliteDb, { schema });
 
     await migrate(drizzleInstance, migrations);
-
-    console.log("initialiseDb: done");
   } catch (e) {
     captureDbException(e, "initialiseDb");
 

@@ -1,0 +1,182 @@
+import DynamicIcon from "@/components/dynamic-icon";
+import FormInput from "@/components/form-input";
+import HorzLoader from "@/components/horz-loader";
+import ScreenHeader from "@/components/screen-header";
+import { Button } from "@/components/ui/button";
+import { MONTH_NAMES, MONTHS } from "@/constants";
+import { getFileLogs } from "@/db/queries/fileworklog.queries";
+import { useDb } from "@/hooks/useDb";
+import { formatLogsForSheet, getMonthRange } from "@/lib/utils";
+import { getAccessToken } from "@/services/googleAuthService";
+import { Stack } from "expo-router";
+import React, { useState } from "react";
+import { Linking, Text, View } from "react-native";
+import { toast } from "sonner-native";
+
+const ExportData = () => {
+  const db = useDb();
+  const [logsForSheet, setLogsForSheet] = useState<
+    (string | number | undefined)[][] | null
+  >(null);
+
+  const [selectedMonth, setSelectedMonth] = useState<string | null>(null);
+  const [isExporting, setIsExporting] = useState(false);
+
+  const [exportedSheetUrl, setExportedSheetUrl] = useState<string | null>(null);
+
+  const onSelect = (fieldName: string, rawValue: string | number) => {
+    if (typeof rawValue !== "string") return;
+
+    setExportedSheetUrl(null);
+    setSelectedMonth(rawValue);
+
+    try {
+      const monthRange = getMonthRange(
+        rawValue,
+        new Date().getFullYear().toString(),
+      );
+      const logs = getFileLogs({
+        db,
+        filters: { startDate: monthRange.start, endDate: monthRange.end },
+        sortOrder: "asc",
+      }).all();
+
+      if (logs.length < 1) {
+        toast.error(
+          `No logs found for ${MONTH_NAMES[rawValue]}. Please select a different month.`,
+        );
+      }
+
+      setLogsForSheet(formatLogsForSheet(logs));
+    } catch (error) {
+      toast.error("Failed to load logs. Please try again.");
+    }
+  };
+
+  const exportToGoogleSheet = async () => {
+    setIsExporting(true);
+    setExportedSheetUrl(null);
+
+    try {
+      const accessToken = await getAccessToken();
+      const title = selectedMonth
+        ? `Worklog Export-${MONTH_NAMES[selectedMonth]}`
+        : "Worklog Export";
+
+      const createRes = await fetch(
+        "https://sheets.googleapis.com/v4/spreadsheets",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ properties: { title } }),
+        },
+      );
+
+      const sheet = await createRes.json();
+
+      await fetch(
+        `https://sheets.googleapis.com/v4/spreadsheets/${sheet.spreadsheetId}/values/Sheet1!A1:Z1000?valueInputOption=RAW`,
+        {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ values: logsForSheet }),
+        },
+      );
+
+      setExportedSheetUrl(sheet.spreadsheetUrl);
+    } catch (error) {
+      toast.error("Export failed. Please try again.");
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  return (
+    <>
+      <Stack.Screen
+        options={{
+          headerShown: true,
+          header: () => <ScreenHeader title="Export Data" backButtonVisible />,
+        }}
+      />
+      <View className="bg-bg-primary flex-col gap-3 flex-1 screen-x-padding pb-safe">
+        <View className="flex-col gap-2.5 mt-3">
+          <Text className="base-paragraph">Select a month to export data</Text>
+          <FormInput
+            onChange={onSelect}
+            name="month"
+            inputType="select"
+            placeholder="Select a month"
+            selectOptions={MONTHS}
+            value={selectedMonth}
+            className="max-w-52"
+            icon={
+              <DynamicIcon
+                family="Ionicons"
+                name={"calendar"}
+                size={20}
+                color="#c3c3c3"
+              />
+            }
+          />
+        </View>
+        {logsForSheet &&
+          logsForSheet.length > 1 &&
+          !isExporting &&
+          !exportedSheetUrl && (
+            <View className="flex-col gap-4">
+              <Text className="base-paragraph">
+                Data is ready to be exported. Click the button below to export
+                to Google Sheets.
+              </Text>
+              <Button onPress={exportToGoogleSheet}>
+                <Text className="btn-label">Export to Sheets</Text>
+              </Button>
+            </View>
+          )}
+
+        {isExporting && (
+          <View className="flex-col gap-4 mt-5">
+            <Text className="base-paragraph">
+              Exporting to Google Sheets...
+            </Text>
+            <HorzLoader
+              loading={isExporting}
+              duration={1000}
+              className="mt-2"
+              trackClassName="h-1 bg-dark-200"
+              indicatorClassName="bg-accent"
+            />
+          </View>
+        )}
+        {exportedSheetUrl && (
+          <View className="flex-col gap-3.5">
+            <Text className="base-paragraph">
+              Exported data can be found here
+            </Text>
+            <Button
+              className="flex-row items-center gap-x-2.5"
+              onPress={() => Linking.openURL(exportedSheetUrl)}
+            >
+              <DynamicIcon
+                family="Ionicons"
+                name={"link"}
+                size={20}
+                color="#FFFFFF"
+              />
+              <Text className="btn-label">Open Sheet</Text>
+            </Button>
+          </View>
+        )}
+      </View>
+    </>
+  );
+};
+
+export default ExportData;

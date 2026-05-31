@@ -46,12 +46,18 @@ export const getMonthlyTotalLepPagesQuery = ({ db }: { db: Db }) => {
 export const getAttendanceDatesQuery = ({
   db,
   month,
+  targetLEP,
 }: {
   db: Db;
   month: string;
+  targetLEP: number;
 }) => {
   const currentYear = new Date().getFullYear();
   const { start, end } = getMonthRange(month, currentYear.toString());
+
+  const halfTargetPages = Math.ceil(targetLEP / 2);
+
+  const minFullTarget = targetLEP - 5;
 
   return db
     .select({
@@ -59,8 +65,8 @@ export const getAttendanceDatesQuery = ({
       totalLepPages: sql<number>`sum(${fileLogs.lepPages})`,
       type: sql<"full" | "half" | "absent">`
           case 
-            when sum(${fileLogs.lepPages}) >= 65 then 'full'
-            when sum(${fileLogs.lepPages}) between 1 and 64 then 'half'
+            when sum(${fileLogs.lepPages}) >= ${minFullTarget} then 'full'
+            when sum(${fileLogs.lepPages}) between ${halfTargetPages} and ${minFullTarget - 1} then 'half'
             else 'absent'
           end
       `,

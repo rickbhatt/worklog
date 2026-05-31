@@ -1,5 +1,5 @@
-import { getCurrentMonthRange, getPreviousMonthRange } from "@/lib/utils";
-import { and, count, desc, eq, gte, lte, sql } from "drizzle-orm";
+import { getPreviousMonthRange } from "@/lib/utils";
+import { and, asc, count, desc, eq, gte, lte, sql } from "drizzle-orm";
 import type { Db } from "type";
 
 import { fileLogs, targetInfo } from "../schema";
@@ -12,18 +12,23 @@ interface FileLogsWithFilers {
     startDate?: string | undefined;
     endDate?: string | undefined;
   };
+  sortOrder?: "asc" | "desc";
 }
 
-export const getFileLogs = ({ db, filters }: FileLogsWithFilers) => {
-  const { start, end } = getCurrentMonthRange();
-
+export const getFileLogs = ({
+  db,
+  filters,
+  sortOrder = "desc",
+}: FileLogsWithFilers) => {
   const conditions = [];
 
-  if (filters.startDate && filters.endDate) {
-    conditions.push(gte(fileLogs.workedAt, filters.startDate));
-    conditions.push(lte(fileLogs.workedAt, filters.endDate));
-  } else {
-    conditions.push(gte(fileLogs.workedAt, start), lte(fileLogs.workedAt, end));
+  const { startDate, endDate } = filters;
+
+  if (startDate && endDate) {
+    conditions.push(
+      gte(fileLogs.workedAt, startDate),
+      lte(fileLogs.workedAt, endDate),
+    );
   }
 
   if (filters.journalId) {
@@ -34,20 +39,13 @@ export const getFileLogs = ({ db, filters }: FileLogsWithFilers) => {
     conditions.push(eq(fileLogs.articleId, filters.articleId));
   }
 
-  let logs = db
-    .select({
-      id: fileLogs.id,
-      journalId: fileLogs.journalId,
-      articleId: fileLogs.articleId,
-      timeTaken: fileLogs.timeTaken,
-      lepPages: fileLogs.lepPages,
-      workedAt: fileLogs.workedAt,
-    })
+  return db
+    .select()
     .from(fileLogs)
     .where(and(...conditions))
-    .orderBy(desc(fileLogs.workedAt));
-
-  return logs;
+    .orderBy(
+      sortOrder === "asc" ? asc(fileLogs.workedAt) : desc(fileLogs.workedAt),
+    );
 };
 
 export const getPreviousMonthSummary = ({

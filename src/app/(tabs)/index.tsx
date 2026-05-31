@@ -171,11 +171,6 @@ const History = () => {
 
   const currentYear = new Date().getFullYear();
 
-  const monthRange = getMonthRange(
-    currentMonth.toString(),
-    currentYear.toString(),
-  );
-
   // check if any filter param is present
   const isParams =
     journalId !== undefined ||
@@ -228,6 +223,11 @@ const History = () => {
 
   useEffect(() => {
     if (!isParams) {
+      const monthRange = getMonthRange(
+        currentMonth.toString(),
+        currentYear.toString(),
+      );
+
       router.replace({
         pathname: "/(tabs)",
         params: {
@@ -236,7 +236,7 @@ const History = () => {
         },
       });
     }
-  }, [isParams, router, monthRange.start, monthRange.end]);
+  }, [isParams, router]);
 
   if (!isParams) {
     return <LoadingScreen />;

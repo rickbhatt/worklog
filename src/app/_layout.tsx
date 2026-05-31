@@ -58,8 +58,6 @@ const Layout = () => {
         try {
           if (!mounted) return;
 
-          console.log("🚀 Startup tasks: begin");
-
           ensureBackupDir();
 
           setupNotifications();

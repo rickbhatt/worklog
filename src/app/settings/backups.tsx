@@ -1,5 +1,3 @@
-import RestoreBottomsheet from "@/components/bottomsheets/restore-bottomsheet";
-import DynamicIcon from "@/components/dynamic-icon";
 import HorzLoader from "@/components/horz-loader";
 import ScreenHeader from "@/components/screen-header";
 import { Button } from "@/components/ui/button";
@@ -12,26 +10,19 @@ import {
   listAppDataFiles,
   uploadBackupToDrive,
 } from "@/services/backupService";
-import { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { eq } from "drizzle-orm";
 import { useLiveQuery } from "drizzle-orm/expo-sqlite";
-import { Stack } from "expo-router";
-import { useRef, useState } from "react";
+import { Stack, useRouter } from "expo-router";
+import { useState } from "react";
 import { Text, View } from "react-native";
 
 const Backups = () => {
   const { isSignedIn, signIn, signOut } = useAuth();
   const [isUploading, setIsUploading] = useState(false);
-  const restoreBottomsheetRef = useRef<BottomSheetModal | null>(null);
-  const [restoreData, setRestoreData] = useState<{
-    lastBackedUpDate: string;
-    size: string;
-    checksum: string;
-    driveFileId: string;
-    name: string;
-  } | null>(null);
 
   const db = useDb();
+
+  const router = useRouter();
 
   const { data: cloudAccountInfo } = useLiveQuery(
     db.select().from(cloudAccount).limit(1),
@@ -53,27 +44,6 @@ const Backups = () => {
     } finally {
       setIsUploading(false);
     }
-  };
-
-  const checkAndTriggerRestore = async () => {
-    if (backupStateInfo.length < 1) {
-      const files = await listAppDataFiles();
-      if (files.length > 0) {
-        setRestoreData({
-          lastBackedUpDate: files[0].modifiedTime,
-          size: files[0].size,
-          checksum: files[0].md5Checksum,
-          driveFileId: files[0].id,
-          name: files[0].name,
-        });
-        restoreBottomsheetRef.current?.present();
-      }
-    }
-  };
-
-  const handleSignIn = async () => {
-    await signIn();
-    await checkAndTriggerRestore();
   };
 
   return (
@@ -140,10 +110,9 @@ const Backups = () => {
             </Text>
             <Button
               className="flex-row items-center py-3 px-4"
-              onPress={handleSignIn}
+              onPress={() => router.push("/settings/manage-google-account")}
             >
-              <DynamicIcon name="google" family="AntDesign" color="#FFFFFF" />
-              <Text className="btn-label">Sign in with Google</Text>
+              <Text className="btn-label">Manage Google Account</Text>
             </Button>
           </View>
         )}
@@ -175,16 +144,6 @@ const Backups = () => {
           </View>
         </View>
       )}
-      <RestoreBottomsheet
-        data={{
-          lastBackedUpDate: restoreData?.lastBackedUpDate || "",
-          size: restoreData?.size || "",
-          checksum: restoreData?.checksum || "",
-          driveFileId: restoreData?.driveFileId || "",
-          name: restoreData?.name || "",
-        }}
-        ref={restoreBottomsheetRef}
-      />
     </>
   );
 };

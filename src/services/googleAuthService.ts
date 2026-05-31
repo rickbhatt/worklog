@@ -9,7 +9,10 @@ const WEB_CLIENT_ID =
 export function configureGoogleSignIn() {
   GoogleSignin.configure({
     webClientId: WEB_CLIENT_ID,
-    scopes: ["https://www.googleapis.com/auth/drive.appdata"],
+    scopes: [
+      "https://www.googleapis.com/auth/drive.appdata",
+      "https://www.googleapis.com/auth/spreadsheets",
+    ],
     offlineAccess: true,
   });
 }
