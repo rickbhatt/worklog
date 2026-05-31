@@ -1,5 +1,6 @@
 import { fileLogs, targetInfo } from "@/db/models/log.schema";
 import { cloudAccount } from "@/db/schema";
+import * as schema from "@/db/schema";
 
 import {
   AntDesign,
