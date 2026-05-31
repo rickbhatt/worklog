@@ -124,6 +124,8 @@ const FormInput = <TExtraFields extends Record<string, unknown> = {}>({
             maxLength={maxLength}
             editable={editable}
             placeholder={placeholder}
+            numberOfLines={1}
+            multiline={false}
             value={value?.toString()}
             onFocus={onFocus}
             onBlur={onBlur}
