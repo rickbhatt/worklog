@@ -1,15 +1,16 @@
 import FormInput from "@/components/form-input";
 import ScreenHeader from "@/components/screen-header";
 import { Button } from "@/components/ui/button";
-import { createBulkFileLogs } from "@/db/mutations/fileworklog.mutations";
 import { useDb } from "@/hooks/useDb";
 import { captureException } from "@/lib/sentry";
 import { Stack } from "expo-router";
 import LottieView from "lottie-react-native";
 
+import { createBulkFileLogs } from "@/db/mutations/fileworklog.mutations";
+import { validateHeaders } from "@/lib/utils";
 import dataTable from "@assets/images/data-table.json";
 import React, { useState } from "react";
-import { Text, View } from "react-native";
+import { ScrollView, Text, View } from "react-native";
 import { toast } from "sonner-native";
 
 const api_key = process.env.EXPO_PUBLIC_GOOGLE_API_KEY;
@@ -61,8 +62,16 @@ const ImportData = () => {
       );
 
       const data = await res.json();
+      console.log("🚀 ~ handleSubmit ~ data:", data.values);
       if (!data?.values)
         throw new Error("No data found. Error in link or the sheet name");
+
+      const headers = data.values[0];
+
+      if (!headers || !validateHeaders(data.values))
+        throw new Error(
+          "Invalid sheet format. Headers are missing or incorrect.",
+        );
 
       const gSheetLogData = data?.values?.slice(1);
 
@@ -82,10 +91,11 @@ const ImportData = () => {
       await createBulkFileLogs(db, insertValues);
       toast.success("Data from Google sheet load successfuly");
     } catch (error) {
-      console.error("🚀 ~ Load data handleSubmit ~ error:", error);
-      toast.error(
-        "Failed to load data from Google sheet. Please check the link or the sheet name.",
-      );
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Failed to load data from Google sheet.";
+      toast.error(message);
     } finally {
       setIsLoading(false);
       setGSheetUrl(null);
@@ -101,12 +111,16 @@ const ImportData = () => {
           header: () => <ScreenHeader title="Import Data" backButtonVisible />,
         }}
       />
-      <View className="bg-bg-primary flex-1 screen-x-padding pb-safe">
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        className="bg-bg-primary flex-1 screen-x-padding pb-safe"
+      >
         {!isLoading ? (
           <View className="flex-col gap-4">
             <Text className="text-sm text-text-secondary mt-3.5">
               You can only import data from Google sheets
             </Text>
+            {/* form */}
             <FormInput
               label="Public Google Sheet URL"
               name="gsheet_url"
@@ -123,6 +137,45 @@ const ImportData = () => {
             <Button onPress={handleSubmit}>
               <Text className="btn-label">Load Data</Text>
             </Button>
+            {/* instruction */}
+            <View className="flex-col gap-3 mt-4">
+              <Text className="text-sm text-text-secondary">
+                Please follow the instructions before importing data:
+              </Text>
+              <Text className="text-sm text-text-secondary">
+                1. Ensure the Google Sheet is publicly accessible.
+              </Text>
+              <Text className="text-sm text-text-secondary">
+                2. Verify the sheet name is correct.
+              </Text>
+              <Text className="text-sm text-text-secondary">
+                3. Before loading the data, make sure that the sheet contains
+                the following columns in order:
+              </Text>
+
+              <Text className="text-sm text-text-secondary">
+                Date | JID | AID | Pages | File type | Minutes
+              </Text>
+              <Text className="text-sm text-text-secondary">
+                • Date: yyyy-mm-dd
+              </Text>
+              <Text className="text-sm text-text-secondary">
+                • JID: Journal ID
+              </Text>
+              <Text className="text-sm text-text-secondary">
+                • AID: Article ID
+              </Text>
+              <Text className="text-sm text-text-secondary">
+                • Pages: Number of pages. For sml pages = 15; for nd-sml pages =
+                0
+              </Text>
+              <Text className="text-sm text-text-secondary">
+                • File type: manual/nd-sml/sml
+              </Text>
+              <Text className="text-sm text-text-secondary">
+                • Minutes: Time taken in minutes; for nd-sml time = 0
+              </Text>
+            </View>
           </View>
         ) : (
           <View className="flex-1 flex-col justify-center items-center">
@@ -161,7 +214,7 @@ const ImportData = () => {
             <Text className="base-paragraph">Importing data...</Text>
           </View>
         )}
-      </View>
+      </ScrollView>
     </>
   );
 };

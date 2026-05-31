@@ -243,3 +243,16 @@ export const formatLogsForSheet = (logs: FileLogsSelectType[]) => [
     "YES",
   ]),
 ];
+
+export const validateHeaders = (rows: string[][]): boolean => {
+  const EXPECTED_HEADERS = [
+    "Date",
+    "JID",
+    "AID",
+    "Pages",
+    "File type",
+    "Minutes",
+  ];
+  const headers = rows[0];
+  return EXPECTED_HEADERS.every((col, i) => col === headers[i]);
+};
