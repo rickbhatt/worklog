@@ -106,7 +106,8 @@ const Backups = () => {
         ) : (
           <View className="flex-col gap-4">
             <Text className="base-paragraph">
-              Please add a Google Drive account for backup
+              Please singn in with your Google account to enable backup and
+              restore features.
             </Text>
             <Button
               className="flex-row items-center py-3 px-4"
