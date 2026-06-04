@@ -16,13 +16,16 @@ import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { PortalHost } from "@rn-primitives/portal";
 import * as Sentry from "@sentry/react-native";
 import { Stack } from "expo-router";
-import { SQLiteProvider } from "expo-sqlite";
+import * as SplashScreen from "expo-splash-screen";
+import { SQLiteDatabase, SQLiteProvider } from "expo-sqlite";
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useRef } from "react";
 import { InteractionManager } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { Toaster } from "sonner-native";
+
+SplashScreen.preventAutoHideAsync();
 
 Sentry.init({
   dsn: "https://7334a78670d0235b3427d1e4c7e0e344@o4509792171393024.ingest.us.sentry.io/4511359683067904",
@@ -119,6 +122,20 @@ const Layout = () => {
 };
 
 const RootLayout = () => {
+  const handleInit = async (db: SQLiteDatabase) => {
+    await initialiseDb(db);
+    await SplashScreen.hideAsync();
+  };
+  const handleError = (err: Error) => {
+    captureException(err, {
+      tags: {
+        "db.operation": "SQLiteProvider.onError",
+      },
+    });
+
+    console.error("SQLiteProvider error", err);
+  };
+
   return (
     <KeyboardProvider>
       <GestureHandlerRootView style={{ flex: 1 }}>
@@ -126,16 +143,8 @@ const RootLayout = () => {
           <SQLiteProvider
             databaseName={DB_NAME}
             options={{ enableChangeListener: true }}
-            onInit={initialiseDb}
-            onError={(error) => {
-              captureException(error, {
-                tags: {
-                  "db.operation": "SQLiteProvider.onError",
-                },
-              });
-
-              console.error("SQLiteProvider error", error);
-            }}
+            onInit={handleInit}
+            onError={handleError}
           >
             <AuthProvider>
               <Layout />
