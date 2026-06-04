@@ -36,6 +36,7 @@ const TabsLayout = () => {
         screenOptions={{
           tabBarShowLabel: false,
           headerShown: false,
+
           tabBarStyle: {
             position: "absolute",
             bottom: Math.max(insets.bottom, 20),

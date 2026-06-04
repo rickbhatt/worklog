@@ -111,6 +111,7 @@ const Layout = () => {
         screenOptions={{
           headerShown: false,
           animation: "ios_from_right",
+          contentStyle: { backgroundColor: "#000" },
         }}
       >
         <Stack.Screen name="(tabs)" />
@@ -138,7 +139,7 @@ const RootLayout = () => {
 
   return (
     <KeyboardProvider>
-      <GestureHandlerRootView style={{ flex: 1 }}>
+      <GestureHandlerRootView>
         <BottomSheetModalProvider>
           <SQLiteProvider
             databaseName={DB_NAME}
