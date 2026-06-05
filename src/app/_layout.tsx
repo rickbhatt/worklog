@@ -139,7 +139,7 @@ const RootLayout = () => {
 
   return (
     <KeyboardProvider>
-      <GestureHandlerRootView>
+      <GestureHandlerRootView style={{ flex: 1 }}>
         <BottomSheetModalProvider>
           <SQLiteProvider
             databaseName={DB_NAME}
