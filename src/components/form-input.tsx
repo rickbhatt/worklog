@@ -169,7 +169,6 @@ const FormInput = <TExtraFields extends Record<string, unknown> = {}>({
               maximumDate={maxDate}
               minimumDate={minDate}
               onChange={(_, selectedDate) => {
-                console.log("🚀 ~ FormInput ~ selectedDate:", selectedDate);
                 if (selectedDate) {
                   let timestamp = formatDateTime(selectedDate).dateToISOString;
 

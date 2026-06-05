@@ -71,6 +71,8 @@ export const initialiseDb = async (sqliteDb: SQLiteDatabase) => {
   registerDbInstance(sqliteDb);
 
   try {
+    await sqliteDb.execAsync(`PRAGMA busy_timeout = 3000;`);
+
     await sqliteDb.execAsync(`
       PRAGMA foreign_keys = ON;
       PRAGMA journal_mode = WAL;

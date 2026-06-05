@@ -7,6 +7,7 @@ const SettingsLayout = () => {
       screenOptions={{
         headerShown: false,
         animation: "ios_from_right",
+        contentStyle: { backgroundColor: "#000" },
       }}
     >
       <Stack.Screen name="index" />
