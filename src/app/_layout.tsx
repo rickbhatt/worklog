@@ -154,7 +154,7 @@ const RootLayout = () => {
 
           <PortalHost />
 
-          <Toaster position="top-center" offset={70} />
+          <Toaster position="top-center" offset={70} richColors />
         </BottomSheetModalProvider>
       </GestureHandlerRootView>
     </KeyboardProvider>
