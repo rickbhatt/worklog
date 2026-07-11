@@ -27,7 +27,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
   name: getAppName(),
   slug: "worklog",
-  version: "1.5.0",
+  version: "1.6.0",
   orientation: "portrait",
   icon: "./assets/images/icon.png",
   scheme: "worklog",

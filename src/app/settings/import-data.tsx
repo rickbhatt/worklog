@@ -70,6 +70,12 @@ const ImportData = () => {
 
       const insertValues = gSheetLogData?.map((item: any) => {
         const fileType = item[4];
+        const isCompensatedFile = ["1", "true", "yes", "y"].includes(
+          item[6]?.toString().trim().toLowerCase(),
+        )
+          ? 1
+          : 0;
+
         return {
           workedAt: item[0],
           journalId: item[1],
@@ -78,6 +84,7 @@ const ImportData = () => {
           isSml: fileType === "manual" ? 0 : 1,
           isND: fileType === "nd-sml" ? 1 : 0,
           timeTaken: Number(item[5]),
+          isCompensatedFile,
         };
       });
 
@@ -150,7 +157,8 @@ const ImportData = () => {
                   </Text>
 
                   <Text className="text-sm text-text-secondary">
-                    Date | JID | AID | Pages | File type | Minutes
+                    Date | JID | AID | Pages | File type | Minutes |
+                    Compensated file
                   </Text>
                   <Text className="text-sm text-text-secondary">
                     • Date: yyyy-mm-dd
@@ -170,6 +178,9 @@ const ImportData = () => {
                   </Text>
                   <Text className="text-sm text-text-secondary">
                     • Minutes: Time taken in minutes; for nd-sml time = 0
+                  </Text>
+                  <Text className="text-sm text-text-secondary">
+                    Compensated file: yes/no (optional)
                   </Text>
                 </View>
               </View>

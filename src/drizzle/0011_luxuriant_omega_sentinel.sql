@@ -1,0 +1,1 @@
+ALTER TABLE `file_logs` ADD `is_compensated_file` integer DEFAULT 0 NOT NULL;

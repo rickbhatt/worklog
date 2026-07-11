@@ -126,6 +126,13 @@ const FileWorklogForm = ({
           onChange={handleInputChange}
         />
         <FormInput
+          inputType="checkbox"
+          label="Compensatory file?"
+          name="isCompensatedFile"
+          value={value.isCompensatedFile}
+          onChange={handleInputChange}
+        />
+        <FormInput
           label="Worked At"
           name="workedAt"
           placeholder={"YYYY-MM-DD"}
