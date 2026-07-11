@@ -19,14 +19,15 @@ const CreateWorkLog = () => {
     isSml: 0,
     isOT: 0,
     isND: 0,
+    isCompensatedFile: 0,
     remarks: undefined,
   });
 
   const db = useDb();
   const handleSubmit = async () => {
     const requiredFields = [
-      { key: "journalId", message: "Please select a journal" },
-      { key: "articleId", message: "Please select an article" },
+      { key: "journalId", message: "Please enter a journal ID" },
+      { key: "articleId", message: "Please enter an article ID" },
       { key: "lepPages", message: "Please enter LEP pages" },
       { key: "timeTaken", message: "Please enter time taken" },
       { key: "workedAt", message: "Please select worked at date" },
@@ -39,6 +40,13 @@ const CreateWorkLog = () => {
       return;
     }
 
+    if (formData.isCompensatedFile && !formData.remarks) {
+      toast.error(
+        "Please enter the date of work for compensated file in the remarks field",
+      );
+      return;
+    }
+
     const payload: FileLogsCreateInput = {
       journalId: formData.journalId!,
       articleId: formData.articleId!,
@@ -48,6 +56,7 @@ const CreateWorkLog = () => {
       isSml: formData.isSml,
       isOT: formData.isOT,
       isND: formData.isND,
+      isCompensatedFile: formData.isCompensatedFile,
       remarks: formData.remarks,
     };
 
@@ -63,6 +72,7 @@ const CreateWorkLog = () => {
         isSml: 0,
         isOT: 0,
         isND: 0,
+        isCompensatedFile: 0,
         remarks: undefined,
       });
 

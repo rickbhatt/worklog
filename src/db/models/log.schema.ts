@@ -15,6 +15,8 @@ export const fileLogs = sqliteTable(
 
     isOT: integer("is_ot").notNull().default(0),
 
+    isCompensatedFile: integer("is_compensated_file").notNull().default(0),
+
     timeTaken: integer("time_taken").notNull(), // time in minutes
 
     lepPages: integer("lep_pages").notNull(),
