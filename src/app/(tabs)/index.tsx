@@ -187,14 +187,7 @@ const SectionHeader = ({
 };
 
 const SectionItem = ({ item }: { item: FileLogsListItemType }) => {
-  return (
-    <LogCard
-      id={item.id}
-      journalId={item.journalId}
-      articleId={item.articleId}
-      lepPages={item.lepPages}
-    />
-  );
+  return <LogCard item={item} />;
 };
 
 const History = () => {
