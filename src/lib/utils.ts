@@ -222,7 +222,14 @@ export const checkDateGreaterThanToday = (date: number, month: number) => {
 };
 
 export const formatLogsForSheet = (logs: FileLogsSelectType[]) => [
-  ["Date", "Task/OT details", "Pages", "OT pages", "Target reached (yes/no)"],
+  [
+    "Date",
+    "Task/OT details",
+    "Pages",
+    "OT pages",
+    "Compensated file",
+    "Target reached (yes/no)",
+  ],
   ...logs.map((log) => [
     formatDateTime(log.workedAt).dateForSheet,
     `${log.journalId}_${log.articleId}`,
@@ -240,12 +247,13 @@ export const formatLogsForSheet = (logs: FileLogsSelectType[]) => [
           ? "ND-SML"
           : "SML"
       : "",
+    log.isCompensatedFile === 1 ? "YES" : "NO",
     "YES",
   ]),
 ];
 
 export const validateHeaders = (rows: string[][]): boolean => {
-  const EXPECTED_HEADERS = [
+  const REQUIRED_HEADERS = [
     "Date",
     "JID",
     "AID",
@@ -254,5 +262,14 @@ export const validateHeaders = (rows: string[][]): boolean => {
     "Minutes",
   ];
   const headers = rows[0];
-  return EXPECTED_HEADERS.every((col, i) => col === headers[i]);
+
+  const hasRequiredHeaders = REQUIRED_HEADERS.every(
+    (col, i) => col === headers[i],
+  );
+
+  return (
+    hasRequiredHeaders &&
+    (headers.length === REQUIRED_HEADERS.length ||
+      headers[REQUIRED_HEADERS.length] === "Compensated file")
+  );
 };

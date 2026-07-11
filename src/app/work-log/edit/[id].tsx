@@ -30,6 +30,7 @@ const EditFileLog = () => {
         isSml: row.isSml,
         isOT: row.isOT,
         isND: row.isND,
+        isCompensatedFile: row.isCompensatedFile,
         remarks: row.remarks,
       };
 
@@ -40,6 +41,12 @@ const EditFileLog = () => {
   };
 
   const handleSubmit = async (data: Partial<FileLogsInsertType>) => {
+    if (formData.isCompensatedFile && !data.remarks) {
+      toast.error(
+        "Please enter the date of work for compensated file in the remarks field",
+      );
+      return;
+    }
     try {
       let row = await updateFileLogById({
         db,

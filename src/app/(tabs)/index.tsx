@@ -4,13 +4,14 @@ import FormInput from "@/components/form-input";
 import LoadingScreen from "@/components/loading-screen";
 import LogCard from "@/components/log-card";
 import ScreenHeader from "@/components/screen-header";
-import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { MONTHS } from "@/constants";
 import {
   getFileLogs,
   getLatestTargetHour,
 } from "@/db/queries/fileworklog.queries";
 import { useDb } from "@/hooks/useDb";
+import { useDebounce } from "@/hooks/useDebounce";
 import {
   calcTargetPagePercent,
   determineTodayOrYesterday,
@@ -39,6 +40,10 @@ const ListHeader = ({
     currentMonth.toString(),
   );
 
+  const [query, setQuery] = useState<string | null>(null);
+
+  const debouncedQuery = useDebounce({ value: query });
+
   const router = useRouter();
 
   type ListHeaderFields = {
@@ -46,12 +51,12 @@ const ListHeader = ({
   };
 
   const onSelectChange = (
-    name: FieldName<ListHeaderFields>,
+    _: FieldName<ListHeaderFields>,
     value: string | number,
   ) => {
     setSelectedMonth(value.toString());
-
     const monthRange = getMonthRange(value.toString(), currentYear.toString());
+
     router.replace({
       pathname: "/(tabs)",
       params: {
@@ -61,8 +66,39 @@ const ListHeader = ({
     });
   };
 
+  useEffect(() => {
+    if (debouncedQuery !== null) {
+      if (debouncedQuery === "") {
+        const monthRange = getMonthRange(
+          selectedMonth!,
+          currentYear.toString(),
+        );
+        router.replace({
+          pathname: "/(tabs)",
+          params: {
+            startDate: monthRange.start,
+            endDate: monthRange.end,
+          },
+        });
+      }
+
+      if (!debouncedQuery.includes("-")) return;
+
+      const [journalId, articleId] = debouncedQuery.split("-");
+      if (!articleId) return;
+
+      router.replace({
+        pathname: "/(tabs)",
+        params: {
+          journalId,
+          articleId,
+        },
+      });
+    }
+  }, [debouncedQuery]);
+
   return (
-    <View className="flex-row items-center justify-between">
+    <View className="flex-row items-center justify-between gap-x-4">
       <FormInput<ListHeaderFields>
         onChange={onSelectChange}
         name="month"
@@ -79,18 +115,22 @@ const ListHeader = ({
           />
         }
       />
-      <Button
-        className="w-12 h-12 rounded-full border border-border"
-        variant={"iconOnly"}
-        onPress={() => bottomSheetRef.current?.present()}
-      >
-        <DynamicIcon
-          family="FontAwesome"
-          name="filter"
-          size={20}
-          color="#FFFFFF"
+      <View className="flex-row h-full items-center gap-x-2 rounded-md border border-light-100 px-1 flex-1">
+        <Input
+          className="flex-1 rounded-none border-0"
+          placeholder="JournalID-ArticleID"
+          value={query ?? ""}
+          onChangeText={setQuery}
+          maxLength={10}
         />
-      </Button>
+
+        <DynamicIcon
+          family="MaterialCommunityIcons"
+          name="magnify"
+          size={20}
+          color="#c3c3c3"
+        />
+      </View>
     </View>
   );
 };
@@ -147,14 +187,7 @@ const SectionHeader = ({
 };
 
 const SectionItem = ({ item }: { item: FileLogsListItemType }) => {
-  return (
-    <LogCard
-      id={item.id}
-      journalId={item.journalId}
-      articleId={item.articleId}
-      lepPages={item.lepPages}
-    />
-  );
+  return <LogCard item={item} />;
 };
 
 const History = () => {

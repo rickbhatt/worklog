@@ -162,6 +162,11 @@ const LogDetailBottomsheet = ({
             {fileLog?.isOT === 1 && (
               <Text className="text-base text-text-primary">OT File: Yes</Text>
             )}
+            {fileLog?.isCompensatedFile === 1 && (
+              <Text className="text-base text-text-primary">
+                Compensatory File: Yes
+              </Text>
+            )}
             {fileLog?.remarks && (
               <Text className="text-base text-text-primary">
                 Remarks: {fileLog.remarks}

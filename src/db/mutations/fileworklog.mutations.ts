@@ -27,6 +27,7 @@ export const createFileLog = async (db: Db, logData: FileLogsCreateInput) => {
         id: fileLogs.id,
         journalId: fileLogs.journalId,
         articleId: fileLogs.articleId,
+        isCompensatedFile: fileLogs.isCompensatedFile,
       });
 
     return row;
@@ -42,6 +43,7 @@ export const deleteFileLogById = async (db: Db, id: string) => {
       id: fileLogs.id,
       journalId: fileLogs.journalId,
       articleId: fileLogs.articleId,
+      isCompensatedFile: fileLogs.isCompensatedFile,
     });
 
     return row;
@@ -71,6 +73,7 @@ export const updateFileLogById = async ({
         id: fileLogs.id,
         journalId: fileLogs.journalId,
         articleId: fileLogs.articleId,
+        isCompensatedFile: fileLogs.isCompensatedFile,
       });
 
     return row;

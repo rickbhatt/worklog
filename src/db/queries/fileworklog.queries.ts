@@ -32,20 +32,22 @@ export const getFileLogs = ({
   }
 
   if (filters.journalId) {
-    conditions.push(eq(fileLogs.journalId, filters.journalId));
+    conditions.push(eq(fileLogs.journalId, filters.journalId.toUpperCase()));
   }
 
   if (filters.articleId) {
     conditions.push(eq(fileLogs.articleId, filters.articleId));
   }
 
-  return db
+  let data = db
     .select()
     .from(fileLogs)
     .where(and(...conditions))
     .orderBy(
       sortOrder === "asc" ? asc(fileLogs.workedAt) : desc(fileLogs.workedAt),
     );
+
+  return data;
 };
 
 export const getPreviousMonthSummary = ({
