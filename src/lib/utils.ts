@@ -228,6 +228,7 @@ export const formatLogsForSheet = (logs: FileLogsSelectType[]) => [
     "Pages",
     "OT pages",
     "Compensated file",
+    "QC file",
     "Target reached (yes/no)",
   ],
   ...logs.map((log) => [
@@ -248,6 +249,7 @@ export const formatLogsForSheet = (logs: FileLogsSelectType[]) => [
           : "SML"
       : "",
     log.isCompensatedFile === 1 ? "YES" : "NO",
+    log.isQcFile === 1 ? "YES" : "NO",
     "YES",
   ]),
 ];
@@ -267,9 +269,15 @@ export const validateHeaders = (rows: string[][]): boolean => {
     (col, i) => col === headers[i],
   );
 
+  if (!hasRequiredHeaders) return false;
+
+  const optionalHeaders = headers.slice(REQUIRED_HEADERS.length);
+  const allowedOptionalHeaders = ["Compensated file", "QC file"];
+
   return (
-    hasRequiredHeaders &&
-    (headers.length === REQUIRED_HEADERS.length ||
-      headers[REQUIRED_HEADERS.length] === "Compensated file")
+    optionalHeaders.length <= allowedOptionalHeaders.length &&
+    optionalHeaders.every(
+      (header, index) => header === allowedOptionalHeaders[index],
+    )
   );
 };

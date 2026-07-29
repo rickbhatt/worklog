@@ -127,6 +127,13 @@ const FileWorklogForm = ({
         />
         <FormInput
           inputType="checkbox"
+          label="QC file?"
+          name="isQcFile"
+          value={value.isQcFile}
+          onChange={handleInputChange}
+        />
+        <FormInput
+          inputType="checkbox"
           label="Compensatory file?"
           name="isCompensatedFile"
           value={value.isCompensatedFile}

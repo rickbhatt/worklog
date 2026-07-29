@@ -1,0 +1,1 @@
+ALTER TABLE `file_logs` ADD `is_qc_file` integer DEFAULT 0 NOT NULL;
