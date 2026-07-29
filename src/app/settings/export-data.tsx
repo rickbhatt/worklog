@@ -1,7 +1,7 @@
 import DynamicIcon from "@/components/dynamic-icon";
 import FormInput from "@/components/form-input";
 import HorzLoader from "@/components/horz-loader";
-import QrScanner from "@/components/qr-scanner";
+import QrScanner from "@/components/qrscanner/qr-scanner";
 import ScreenHeader from "@/components/screen-header";
 import { Button } from "@/components/ui/button";
 import { MONTH_NAMES } from "@/constants";
