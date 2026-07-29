@@ -31,6 +31,7 @@ const EditFileLog = () => {
         isOT: row.isOT,
         isND: row.isND,
         isCompensatedFile: row.isCompensatedFile,
+        isQcFile: row.isQcFile,
         remarks: row.remarks,
       };
 

@@ -67,14 +67,19 @@ const ImportData = () => {
         );
 
       const gSheetLogData = data?.values?.slice(1);
-
-      const insertValues = gSheetLogData?.map((item: any) => {
-        const fileType = item[4];
-        const isCompensatedFile = ["1", "true", "yes", "y"].includes(
-          item[6]?.toString().trim().toLowerCase(),
+      const compensatedFileIndex = headers.indexOf("Compensated file");
+      const qcFileIndex = headers.indexOf("QC file");
+      const parseBooleanCell = (value: unknown) =>
+        ["1", "true", "yes", "y"].includes(
+          value?.toString().trim().toLowerCase() ?? "",
         )
           ? 1
           : 0;
+
+      const insertValues = gSheetLogData?.map((item: any) => {
+        const fileType = item[4];
+        const isCompensatedFile = parseBooleanCell(item[compensatedFileIndex]);
+        const isQcFile = parseBooleanCell(item[qcFileIndex]);
 
         return {
           workedAt: item[0],
@@ -85,6 +90,7 @@ const ImportData = () => {
           isND: fileType === "nd-sml" ? 1 : 0,
           timeTaken: Number(item[5]),
           isCompensatedFile,
+          isQcFile,
         };
       });
 
@@ -111,15 +117,11 @@ const ImportData = () => {
           header: () => <ScreenHeader title="Import Data" backButtonVisible />,
         }}
       />
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        className="bg-bg-primary screen-x-padding pb-safe"
-        contentContainerClassName="flex-1"
-      >
+      <View className="flex-1 bg-bg-primary screen-x-padding pt-4 pb-safe">
         {isSignedIn ? (
           <>
             {!isLoading ? (
-              <View className="flex-col gap-4 mt-4">
+              <View className="flex-1 flex-col gap-4">
                 {/* form */}
                 <FormInput
                   label="Google Sheet URL"
@@ -140,7 +142,11 @@ const ImportData = () => {
                   <Text className="btn-label">Load Data</Text>
                 </Button>
                 {/* instruction */}
-                <View className="flex-col gap-3 mt-4">
+                <ScrollView
+                  showsVerticalScrollIndicator={false}
+                  className="flex-1"
+                  contentContainerClassName="flex-col gap-3 pb-safe-offset-6"
+                >
                   <Text className="text-sm text-text-secondary">
                     Please follow the instructions before importing data:
                   </Text>
@@ -157,8 +163,8 @@ const ImportData = () => {
                   </Text>
 
                   <Text className="text-sm text-text-secondary">
-                    Date | JID | AID | Pages | File type | Minutes |
-                    Compensated file
+                    Date | JID | AID | Pages | File type | Minutes | Compensated
+                    file | QC file
                   </Text>
                   <Text className="text-sm text-text-secondary">
                     • Date: yyyy-mm-dd
@@ -180,9 +186,12 @@ const ImportData = () => {
                     • Minutes: Time taken in minutes; for nd-sml time = 0
                   </Text>
                   <Text className="text-sm text-text-secondary">
-                    Compensated file: yes/no (optional)
+                    • Compensated file: yes/no (optional)
                   </Text>
-                </View>
+                  <Text className="text-sm text-text-secondary">
+                    • QC file: yes/no (optional)
+                  </Text>
+                </ScrollView>
               </View>
             ) : (
               <View className="flex-1 flex-col justify-center items-center">
@@ -236,7 +245,7 @@ const ImportData = () => {
             </Button>
           </View>
         )}
-      </ScrollView>
+      </View>
     </>
   );
 };

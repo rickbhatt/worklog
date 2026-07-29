@@ -13,6 +13,7 @@ const LogCard = ({ item }: { item: FileLogsListItemType }) => {
     isOT: "OT",
     isND: "ND",
     isCompensatedFile: "COMP",
+    isQcFile: "QC",
   };
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
 

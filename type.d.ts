@@ -133,7 +133,17 @@ export type FileLogsUpdateType = typeof fileLogs.$inferUpdate;
 export type FileLogsSelectType = typeof fileLogs.$inferSelect;
 export type FileLogsListItemType = Pick<
   FileLogsSelectType,
-  "id" | "journalId" | "articleId" | "timeTaken" | "lepPages" | "workedAt"
+  | "id"
+  | "journalId"
+  | "articleId"
+  | "timeTaken"
+  | "lepPages"
+  | "workedAt"
+  | "isSml"
+  | "isOT"
+  | "isND"
+  | "isCompensatedFile"
+  | "isQcFile"
 >;
 export type TargetInfoSelectType = typeof targetInfo.$inferSelect;
 export type TargetInfoInsertType = typeof targetInfo.$inferInsert;

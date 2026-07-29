@@ -20,6 +20,7 @@ const CreateWorkLog = () => {
     isOT: 0,
     isND: 0,
     isCompensatedFile: 0,
+    isQcFile: 0,
     remarks: undefined,
   });
 
@@ -57,6 +58,7 @@ const CreateWorkLog = () => {
       isOT: formData.isOT,
       isND: formData.isND,
       isCompensatedFile: formData.isCompensatedFile,
+      isQcFile: formData.isQcFile,
       remarks: formData.remarks,
     };
 
@@ -73,6 +75,7 @@ const CreateWorkLog = () => {
         isOT: 0,
         isND: 0,
         isCompensatedFile: 0,
+        isQcFile: 0,
         remarks: undefined,
       });
 
