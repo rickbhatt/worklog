@@ -1,18 +1,30 @@
 import DynamicIcon from "@/components/dynamic-icon";
 import FormInput from "@/components/form-input";
 import HorzLoader from "@/components/horz-loader";
+import QrScanner from "@/components/qr-scanner";
 import ScreenHeader from "@/components/screen-header";
 import { Button } from "@/components/ui/button";
-import { MONTH_NAMES, MONTHS } from "@/constants";
+import { MONTH_NAMES } from "@/constants";
 import { useAuth } from "@/contexts/AuthContext";
 import { getFileLogs } from "@/db/queries/fileworklog.queries";
 import { useDb } from "@/hooks/useDb";
-import { formatLogsForSheet, getMonthRange } from "@/lib/utils";
+import { formatDateTime, formatLogsForSheet, getMonthRange } from "@/lib/utils";
 import { getAccessToken } from "@/services/googleAuthService";
 import { Stack, useRouter } from "expo-router";
 import React, { useState } from "react";
 import { Linking, Text, View } from "react-native";
 import { toast } from "sonner-native";
+
+const EXPORT_TYPES = [
+  {
+    label: "Append To Existing Sheet",
+    value: "append",
+  },
+  {
+    label: "Create New Sheet",
+    value: "create",
+  },
+];
 
 const ExportData = () => {
   const { isSignedIn } = useAuth();
@@ -24,10 +36,35 @@ const ExportData = () => {
 
   const [selectedMonth, setSelectedMonth] = useState<string | null>(null);
   const [isExporting, setIsExporting] = useState(false);
+  const [exportType, setExportType] = useState<"append" | "create" | null>(
+    null,
+  );
+  const [dateRange, setDateRange] = useState<{
+    start: string | undefined;
+    end: string | undefined;
+  }>({
+    start: formatDateTime(new Date()).dateToISOString,
+    end: formatDateTime(new Date()).dateToISOString,
+  });
+
+  const [gsheetUrl, setGsheetUrl] = useState<string | null>(null);
 
   const [exportedSheetUrl, setExportedSheetUrl] = useState<string | null>(null);
 
-  const onSelect = (fieldName: string, rawValue: string | number) => {
+  const onSelectExportType = (fieldName: string, rawValue: string | number) => {
+    if (typeof rawValue !== "string") return;
+    setExportType(rawValue as "append" | "create");
+  };
+
+  const handleOnChangeDateRange = (
+    fieldName: string,
+    rawValue: string | number,
+  ) => {
+    if (typeof rawValue !== "string") return;
+    setDateRange((prev) => ({ ...prev, [fieldName]: rawValue }));
+  };
+
+  const onSelectMonthOnly = (fieldName: string, rawValue: string | number) => {
     if (typeof rawValue !== "string") return;
 
     setExportedSheetUrl(null);
@@ -56,7 +93,7 @@ const ExportData = () => {
     }
   };
 
-  const exportToGoogleSheet = async () => {
+  const exportToNewSheet = async () => {
     setIsExporting(true);
     setExportedSheetUrl(null);
 
@@ -111,12 +148,56 @@ const ExportData = () => {
       <View className="bg-bg-primary flex-col gap-3 flex-1 screen-x-padding pb-safe">
         {isSignedIn ? (
           <>
-            <View className="flex-col gap-2.5 mt-3">
-              <Text className="base-paragraph">
+            <View className="flex-col gap-5 mt-3">
+              {/* header */}
+
+              <FormInput
+                onChange={onSelectExportType}
+                name="exportType"
+                label="Export Type"
+                inputType="select"
+                placeholder="Select an export type"
+                selectOptions={EXPORT_TYPES}
+                value={exportType}
+              />
+
+              {exportType && (
+                <View className="flex-col gap-y-2">
+                  <Text className="form-label">Select a date range</Text>
+                  <View className="flex-row items-center gap-x-2">
+                    <FormInput
+                      inputType="date"
+                      label="From"
+                      name="start"
+                      placeholder="YYYY-MM-DD"
+                      value={dateRange.start}
+                      onChange={handleOnChangeDateRange}
+                      rowMode
+                    />
+                    <FormInput
+                      inputType="date"
+                      label="To"
+                      name="end"
+                      placeholder="YYYY-MM-DD"
+                      value={dateRange.end}
+                      onChange={handleOnChangeDateRange}
+                      rowMode
+                    />
+                  </View>
+                </View>
+              )}
+
+              {exportType === "append" && (
+                <View className="form-group">
+                  <Text className="form-label">G-Sheet Url</Text>
+                  <QrScanner value={gsheetUrl} onScan={setGsheetUrl} />
+                </View>
+              )}
+              {/* <Text className="base-paragraph">
                 Select a month to export data
               </Text>
               <FormInput
-                onChange={onSelect}
+                onChange={onSelectMonthOnly}
                 name="month"
                 inputType="select"
                 placeholder="Select a month"
@@ -131,7 +212,7 @@ const ExportData = () => {
                     color="#c3c3c3"
                   />
                 }
-              />
+              /> */}
             </View>
             {logsForSheet &&
               logsForSheet.length > 1 &&
@@ -142,7 +223,7 @@ const ExportData = () => {
                     Data is ready to be exported. Click the button below to
                     export to Google Sheets.
                   </Text>
-                  <Button onPress={exportToGoogleSheet}>
+                  <Button onPress={exportToNewSheet}>
                     <Text className="btn-label">Export to Sheets</Text>
                   </Button>
                 </View>
