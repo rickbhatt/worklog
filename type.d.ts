@@ -92,9 +92,9 @@ export type InputModeOptions =
   | "url";
 
 export interface FileWorklogFormProps {
-  value: Partial<FileLogsInsertType>;
-  onChange: (data: Partial<FileLogsInsertType>) => void;
-  onSubmit: (data: Partial<FileLogsInsertType>) => void;
+  value: Partial<FileLogsCreateInput>;
+  onChange: React.Dispatch<React.SetStateAction<Partial<FileLogsCreateInput>>>;
+  onSubmit: (data: Partial<FileLogsCreateInput>) => void;
 }
 
 interface ScreenHeaderProps {

@@ -227,9 +227,8 @@ export const formatLogsForSheet = (logs: FileLogsSelectType[]) => [
     "Task/OT details",
     "Pages",
     "OT pages",
-    "Compensated file",
-    "QC file",
     "Target reached (yes/no)",
+    "Remarks",
   ],
   ...logs.map((log) => [
     formatDateTime(log.workedAt).dateForSheet,
@@ -248,9 +247,8 @@ export const formatLogsForSheet = (logs: FileLogsSelectType[]) => [
           ? "ND-SML"
           : "SML"
       : "",
-    log.isCompensatedFile === 1 ? "YES" : "NO",
-    log.isQcFile === 1 ? "YES" : "NO",
-    "YES",
+    "",
+    log.remarks ?? "",
   ]),
 ];
 
