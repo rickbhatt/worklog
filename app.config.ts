@@ -66,6 +66,13 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         },
       },
     ],
+    [
+      "expo-camera",
+      {
+        cameraPermission:
+          "Allow $(PRODUCT_NAME) to access your camera to scan QR codes.",
+      },
+    ],
     "expo-sqlite",
     "@react-native-community/datetimepicker",
     "expo-secure-store",
