@@ -22,27 +22,34 @@ const FileWorklogForm = ({
 
   const handleInputChange = (field: FieldName, rawValue: string | number) => {
     if (field === "isSml") {
-      let smlValue = Number(rawValue);
+      const smlValue = Number(rawValue);
 
-      onChange({
-        ...value,
+      onChange((prev) => ({
+        ...prev,
         isSml: smlValue,
         lepPages: smlValue === 1 ? 15 : undefined,
-        isND: smlValue === 0 ? 0 : value.isND,
-      });
+        isND: smlValue === 0 ? 0 : prev.isND,
+      }));
     } else if (field === "isND") {
-      let ndValue = Number(rawValue);
-      onChange({
-        ...value,
+      const ndValue = Number(rawValue);
+      onChange((prev) => ({
+        ...prev,
         isND: ndValue,
         lepPages: ndValue === 1 ? 0 : 15,
-        timeTaken: 0,
-      });
+        timeTaken: ndValue === 1 ? 0 : prev.timeTaken,
+      }));
+    } else if (field === "isQcFile") {
+      const qcValue = Number(rawValue);
+      onChange((prev) => ({
+        ...prev,
+        isQcFile: qcValue,
+        remarks: qcValue === 1 ? "QC" : "",
+      }));
     } else {
-      onChange({
-        ...value,
+      onChange((prev) => ({
+        ...prev,
         [field]: rawValue,
-      });
+      }));
     }
   };
 
