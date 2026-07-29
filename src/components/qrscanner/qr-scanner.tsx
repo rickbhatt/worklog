@@ -1,3 +1,5 @@
+import DynamicIcon from "@/components/dynamic-icon";
+import ScannerFrame from "@/components/qrscanner/scanner-frame";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Portal } from "@rn-primitives/portal";
@@ -70,12 +72,20 @@ const QrScanner = ({ value: externalValue, onScan }: QrScannerProps) => {
               barcodeScannerSettings={{ barcodeTypes: ["qr"] }}
               onBarcodeScanned={scanned ? undefined : handleBarcodeScanned}
             />
-            <Pressable
-              onPress={() => setIsScanning(false)}
-              className="absolute top-14 right-5 bg-black/60 px-4 py-3 rounded-lg"
-            >
-              <Text className="text-white">Close</Text>
-            </Pressable>
+            <ScannerFrame />
+            <View className="flex-row absolute top-14 screen-x-padding">
+              <Pressable
+                onPress={() => setIsScanning(false)}
+                className="bg-black/60 h-12 w-12 flex-row items-center justify-center p-2 rounded-full"
+              >
+                <DynamicIcon
+                  family="Ionicons"
+                  name="chevron-back"
+                  size={24}
+                  color="#FFFFFF"
+                />
+              </Pressable>
+            </View>
           </View>
         </Portal>
       )}
