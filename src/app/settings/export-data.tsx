@@ -8,7 +8,12 @@ import { MONTH_NAMES } from "@/constants";
 import { useAuth } from "@/contexts/AuthContext";
 import { getFileLogs } from "@/db/queries/fileworklog.queries";
 import { useDb } from "@/hooks/useDb";
-import { formatDateTime, formatLogsForSheet, getMonthRange } from "@/lib/utils";
+import {
+  formatDateTime,
+  formatLogsForSheet,
+  getCurrentDate,
+  getMonthRange,
+} from "@/lib/utils";
 import { getAccessToken } from "@/services/googleAuthService";
 import { Stack, useRouter } from "expo-router";
 import React, { useState } from "react";
@@ -181,6 +186,7 @@ const ExportData = () => {
                       placeholder="YYYY-MM-DD"
                       value={dateRange.end}
                       onChange={handleOnChangeDateRange}
+                      maxDate={new Date(getCurrentDate())}
                       rowMode
                     />
                   </View>
