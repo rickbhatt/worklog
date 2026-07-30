@@ -9,10 +9,10 @@ import { useAuth } from "@/contexts/AuthContext";
 import { getFileLogs } from "@/db/queries/fileworklog.queries";
 import { useDb } from "@/hooks/useDb";
 import {
+  extractSpreadsheetId,
   formatDateTime,
   formatLogsForSheet,
   getCurrentDate,
-  getMonthRange,
 } from "@/lib/utils";
 import { getAccessToken } from "@/services/googleAuthService";
 import { Stack, useRouter } from "expo-router";
@@ -54,6 +54,8 @@ const ExportData = () => {
 
   const [gsheetUrl, setGsheetUrl] = useState<string | null>(null);
 
+  const [sheetName, setSheetName] = useState<string | null>(null);
+
   const [exportedSheetUrl, setExportedSheetUrl] = useState<string | null>(null);
 
   const onSelectExportType = (fieldName: string, rawValue: string | number) => {
@@ -69,32 +71,133 @@ const ExportData = () => {
     setDateRange((prev) => ({ ...prev, [fieldName]: rawValue }));
   };
 
-  const onSelectMonthOnly = (fieldName: string, rawValue: string | number) => {
-    if (typeof rawValue !== "string") return;
-
-    setExportedSheetUrl(null);
-    setSelectedMonth(rawValue);
-
+  const prepareData = () => {
     try {
-      const monthRange = getMonthRange(
-        rawValue,
-        new Date().getFullYear().toString(),
-      );
       const logs = getFileLogs({
         db,
-        filters: { startDate: monthRange.start, endDate: monthRange.end },
+        filters: { startDate: dateRange.start, endDate: dateRange.end },
         sortOrder: "asc",
       }).all();
-
       if (logs.length < 1) {
         toast.error(
-          `No logs found for ${MONTH_NAMES[rawValue]}. Please select a different month.`,
+          `No logs found for the selected date range. Please select a different month.`,
         );
+        return;
       }
 
-      setLogsForSheet(formatLogsForSheet(logs));
+      const formattedLogs = formatLogsForSheet(logs);
+
+      return formattedLogs;
     } catch (error) {
       toast.error("Failed to load logs. Please try again.");
+    }
+  };
+  const ensureSheetExists = async ({
+    accessToken,
+    spreadsheetId,
+    sheetName,
+  }: {
+    accessToken: string;
+    spreadsheetId: string;
+    sheetName: string;
+  }) => {
+    const metaRes = await fetch(
+      `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}?fields=sheets.properties.title`,
+      { headers: { Authorization: `Bearer ${accessToken}` } },
+    );
+
+    if (!metaRes.ok) {
+      const err = await metaRes.json();
+      throw new Error(
+        err.error?.message ||
+          "Could not access this spreadsheet. Check the link and sharing permissions.",
+      );
+    }
+
+    const meta = await metaRes.json();
+    const exists = meta.sheets?.some(
+      (s: any) => s.properties.title === sheetName,
+    );
+
+    if (!exists) {
+      const addRes = await fetch(
+        `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}:batchUpdate`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            requests: [{ addSheet: { properties: { title: sheetName } } }],
+          }),
+        },
+      );
+      if (!addRes.ok) {
+        const err = await addRes.json();
+        throw new Error(
+          err.error?.message ||
+            "Could not create the tab (edit access required).",
+        );
+      }
+    }
+  };
+
+  const appendToExistingSheet = async () => {
+    if (!gsheetUrl) {
+      toast.error("Gsheet url is required");
+      return;
+    }
+
+    if (!sheetName) {
+      toast.error("Sheet name is required");
+      return;
+    }
+
+    setIsExporting(true);
+    try {
+      const data = prepareData();
+
+      const spreadsheetId = extractSpreadsheetId(gsheetUrl);
+
+      const accessToken = await getAccessToken();
+      if (!accessToken) {
+        toast.error("Could not fetch access token");
+        return;
+      }
+
+      await ensureSheetExists({
+        accessToken: accessToken,
+        spreadsheetId: spreadsheetId,
+        sheetName: sheetName,
+      });
+      const appendRes = await fetch(
+        `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(
+          sheetName,
+        )}!A1:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ values: data }),
+        },
+      );
+
+      if (!appendRes.ok) {
+        const err = await appendRes.json();
+        throw new Error(err.error?.message || "Append failed");
+      }
+
+      setExportedSheetUrl(
+        `https://docs.google.com/spreadsheets/d/${spreadsheetId}`,
+      );
+    } catch (error: any) {
+      console.error(error);
+      toast.error(error.message || "Export failed. Please try again.");
+    } finally {
+      setIsExporting(false);
     }
   };
 
@@ -153,7 +256,7 @@ const ExportData = () => {
       <View className="bg-bg-primary flex-col gap-3 flex-1 screen-x-padding pb-safe">
         {isSignedIn ? (
           <>
-            <View className="flex-col gap-5 mt-3">
+            <View className="form-group gap-y-5">
               {/* header */}
 
               <FormInput
@@ -167,7 +270,7 @@ const ExportData = () => {
               />
 
               {exportType && (
-                <View className="flex-col gap-y-2">
+                <View className="form-group">
                   <Text className="form-label">Select a date range</Text>
                   <View className="flex-row items-center gap-x-2">
                     <FormInput
@@ -194,46 +297,40 @@ const ExportData = () => {
               )}
 
               {exportType === "append" && (
-                <View className="form-group">
-                  <Text className="form-label">G-Sheet Url</Text>
-                  <QrScanner value={gsheetUrl} onScan={setGsheetUrl} />
-                </View>
-              )}
-              {/* <Text className="base-paragraph">
-                Select a month to export data
-              </Text>
-              <FormInput
-                onChange={onSelectMonthOnly}
-                name="month"
-                inputType="select"
-                placeholder="Select a month"
-                selectOptions={MONTHS}
-                value={selectedMonth}
-                className="max-w-52"
-                icon={
-                  <DynamicIcon
-                    family="Ionicons"
-                    name={"calendar"}
-                    size={20}
-                    color="#c3c3c3"
+                <>
+                  <View className="form-group">
+                    <Text className="form-label">G-Sheet Url</Text>
+                    <QrScanner value={gsheetUrl} onScan={setGsheetUrl} />
+                  </View>
+                  <FormInput
+                    name="sheetName"
+                    label="Sheet Name"
+                    placeholder="sheet name or tab name here..."
+                    value={sheetName}
+                    onChange={(
+                      fieldnName: string,
+                      rawValue: string | number,
+                    ) => {
+                      if (typeof rawValue !== "string") return;
+                      setSheetName(rawValue);
+                    }}
                   />
-                }
-              /> */}
-            </View>
-            {logsForSheet &&
-              logsForSheet.length > 1 &&
-              !isExporting &&
-              !exportedSheetUrl && (
-                <View className="flex-col gap-4">
-                  <Text className="base-paragraph">
-                    Data is ready to be exported. Click the button below to
-                    export to Google Sheets.
-                  </Text>
-                  <Button onPress={exportToNewSheet}>
-                    <Text className="btn-label">Export to Sheets</Text>
-                  </Button>
-                </View>
+                </>
               )}
+            </View>
+
+            {/* export button */}
+            {exportType && (
+              <Button
+                onPress={
+                  exportType === "append"
+                    ? appendToExistingSheet
+                    : exportToNewSheet
+                }
+              >
+                <Text className="btn-label">Export Data</Text>
+              </Button>
+            )}
             {isExporting && (
               <View className="flex-col gap-4 mt-5">
                 <Text className="base-paragraph">
