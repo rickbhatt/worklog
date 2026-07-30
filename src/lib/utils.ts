@@ -279,3 +279,8 @@ export const validateHeaders = (rows: string[][]): boolean => {
     )
   );
 };
+
+export const extractSpreadsheetId = (url: string) => {
+  const match = url.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
+  return match ? match[1] : url; // assume it's already a bare ID if no match
+};

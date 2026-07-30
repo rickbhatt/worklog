@@ -1,0 +1,46 @@
+      {logsForSheet &&
+              logsForSheet.length > 1 &&
+              !isExporting &&
+              !exportedSheetUrl && (
+                <View className="flex-col gap-4">
+                  <Text className="base-paragraph">
+                    Data is ready to be exported. Click the button below to
+                    export to Google Sheets.
+                  </Text>
+                  <Button onPress={exportToNewSheet}>
+                    <Text className="btn-label">Export to Sheets</Text>
+                  </Button>
+                </View>
+              )}
+
+
+
+
+                const onSelectMonthOnly = (fieldName: string, rawValue: string | number) => {
+    if (typeof rawValue !== "string") return;
+
+    setExportedSheetUrl(null);
+    setSelectedMonth(rawValue);
+
+    try {
+      const monthRange = getMonthRange(
+        rawValue,
+        new Date().getFullYear().toString(),
+      );
+      const logs = getFileLogs({
+        db,
+        filters: { startDate: monthRange.start, endDate: monthRange.end },
+        sortOrder: "asc",
+      }).all();
+
+      if (logs.length < 1) {
+        toast.error(
+          `No logs found for ${MONTH_NAMES[rawValue]}. Please select a different month.`,
+        );
+      }
+
+      setLogsForSheet(formatLogsForSheet(logs));
+    } catch (error) {
+      toast.error("Failed to load logs. Please try again.");
+    }
+  };
