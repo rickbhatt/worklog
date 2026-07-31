@@ -1,7 +1,12 @@
 import { clsx, type ClassValue } from "clsx";
 import { format } from "date-fns";
 import { twMerge } from "tailwind-merge";
-import { FileLogsSelectType, RequiredField } from "type";
+import {
+  FileLogsSelectType,
+  RequiredField,
+  SheetExportData,
+  SheetRow,
+} from "type";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -227,31 +232,8 @@ export const formatLogsForSheet = ({
 }: {
   logs: FileLogsSelectType[];
   exportType: "append" | "create";
-}) => {
-  let logsArray = [
-    ...logs.map((log) => [
-      formatDateTime(log.workedAt).dateForSheet,
-      `${log.journalId}_${log.articleId}`,
-      log.isOT === 0
-        ? log.isSml === 0
-          ? log.lepPages
-          : log.isND === 1
-            ? "ND-SML"
-            : "SML"
-        : "",
-      log.isOT === 1
-        ? log.isSml === 0
-          ? log.lepPages
-          : log.isND === 1
-            ? "ND-SML"
-            : "SML"
-        : "",
-      "",
-      log.remarks ?? "",
-    ]),
-  ];
-
-  const headerElements = [
+}): SheetExportData => {
+  const headerElements: string[] = [
     "Date",
     "Task/OT details",
     "Pages",
@@ -260,13 +242,21 @@ export const formatLogsForSheet = ({
     "Remarks",
   ];
 
-  let finalArray: any = [...logsArray];
+  const logsArray: SheetRow[] = logs.map((log) => {
+    const pagesValue: number | "SML" | "ND-SML" =
+      log.isSml === 0 ? log.lepPages : log.isND === 1 ? "ND-SML" : "SML";
 
-  if (exportType === "create") {
-    finalArray.unshift(headerElements);
-  }
+    return [
+      formatDateTime(log.workedAt).dateForSheet,
+      `${log.journalId}_${log.articleId}`,
+      log.isOT === 0 ? pagesValue : "",
+      log.isOT === 1 ? pagesValue : "",
+      "",
+      log.remarks ?? "",
+    ];
+  });
 
-  return finalArray;
+  return exportType === "create" ? [headerElements, ...logsArray] : logsArray;
 };
 
 export const validateHeaders = (rows: string[][]): boolean => {
