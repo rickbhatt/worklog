@@ -93,7 +93,10 @@ const ExportData = () => {
         return;
       }
 
-      const formattedLogs = formatLogsForSheet(logs);
+      const formattedLogs = formatLogsForSheet({
+        logs,
+        exportType: exportType!,
+      });
 
       return formattedLogs;
     } catch (error) {
@@ -292,6 +295,7 @@ const ExportData = () => {
                       name="start"
                       placeholder="YYYY-MM-DD"
                       value={dateRange.start}
+                      maxDate={new Date(getCurrentDate())}
                       onChange={handleOnChangeDateRange}
                       rowMode
                     />
