@@ -1,6 +1,5 @@
 import RestoreBottomsheet from "@/components/bottomsheets/restore-bottomsheet";
 import DynamicIcon from "@/components/dynamic-icon";
-import ScreenHeader from "@/components/screen-header";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { backupState, cloudAccount } from "@/db/schema";
@@ -9,7 +8,6 @@ import { listAppDataFiles } from "@/services/backupService";
 import { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { eq } from "drizzle-orm";
 import { useLiveQuery } from "drizzle-orm/expo-sqlite";
-import { Stack } from "expo-router";
 import React, { useRef, useState } from "react";
 import { Text, View } from "react-native";
 
@@ -58,14 +56,6 @@ const ManageAccount = () => {
 
   return (
     <>
-      <Stack.Screen
-        options={{
-          headerShown: true,
-          header: () => (
-            <ScreenHeader title="Manage Google Account" backButtonVisible />
-          ),
-        }}
-      />
       <View className="bg-bg-primary flex-col gap-3 flex-1 screen-x-padding pb-safe">
         <View className="flex-col mt-3">
           <Text className="text-sm text-text-secondary">

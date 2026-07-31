@@ -1,6 +1,5 @@
 import TargetAndHourForm from "@/components/bottomsheets/target-and-hour-formsheet";
 import DynamicIcon from "@/components/dynamic-icon";
-import ScreenHeader from "@/components/screen-header";
 import { Button } from "@/components/ui/button";
 import { deleteTargetInfoById } from "@/db/mutations/fileworklog.mutations";
 import { getAllTargetHour } from "@/db/queries/fileworklog.queries";
@@ -8,7 +7,6 @@ import { useDb } from "@/hooks/useDb";
 import { formatDateTime } from "@/lib/utils";
 import { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { useLiveQuery } from "drizzle-orm/expo-sqlite";
-import { Stack } from "expo-router";
 import React, { useRef } from "react";
 import { FlatList, Text, View } from "react-native";
 import { TargetInfoSelectType } from "type";
@@ -82,15 +80,6 @@ const TargetAndHour = () => {
 
   return (
     <>
-      <Stack.Screen
-        options={{
-          headerShown: true,
-          header: () => (
-            <ScreenHeader title="Target and Hour" backButtonVisible />
-          ),
-        }}
-      />
-
       <FlatList
         keyExtractor={(item) => item.id}
         data={data}

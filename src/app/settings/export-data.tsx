@@ -1,8 +1,7 @@
-import DynamicIcon from "@/components/dynamic-icon";
 import FormInput from "@/components/form-input";
 import HorzLoader from "@/components/horz-loader";
+import OpenExportSheetUrl from "@/components/open-exported-sheet-alert";
 import QrScanner from "@/components/qrscanner/qr-scanner";
-import ScreenHeader from "@/components/screen-header";
 import { Button } from "@/components/ui/button";
 import { MONTH_NAMES } from "@/constants";
 import { useAuth } from "@/contexts/AuthContext";
@@ -15,9 +14,9 @@ import {
   getCurrentDate,
 } from "@/lib/utils";
 import { getAccessToken } from "@/services/googleAuthService";
-import { Stack, useRouter } from "expo-router";
+import { useRouter } from "expo-router";
 import React, { useState } from "react";
-import { Linking, Text, View } from "react-native";
+import { Text, View } from "react-native";
 import { toast } from "sonner-native";
 
 const EXPORT_TYPES = [
@@ -48,7 +47,7 @@ const ExportData = () => {
     start: string | undefined;
     end: string | undefined;
   }>({
-    start: formatDateTime(new Date()).dateToISOString,
+    start: undefined,
     end: formatDateTime(new Date()).dateToISOString,
   });
 
@@ -144,6 +143,10 @@ const ExportData = () => {
   };
 
   const appendToExistingSheet = async () => {
+    if (dateRange.start === undefined) {
+      toast.error("From date is required");
+      return;
+    }
     if (!gsheetUrl) {
       toast.error("Gsheet url is required");
       return;
@@ -155,6 +158,7 @@ const ExportData = () => {
     }
 
     setIsExporting(true);
+    setExportedSheetUrl(null);
     try {
       const data = prepareData();
 
@@ -247,12 +251,6 @@ const ExportData = () => {
 
   return (
     <>
-      <Stack.Screen
-        options={{
-          headerShown: true,
-          header: () => <ScreenHeader title="Export Data" backButtonVisible />,
-        }}
-      />
       <View className="bg-bg-primary flex-col gap-3 flex-1 screen-x-padding pb-safe">
         {isSignedIn ? (
           <>
@@ -318,9 +316,8 @@ const ExportData = () => {
                 </>
               )}
             </View>
-
             {/* export button */}
-            {exportType && (
+            {exportType && !isExporting && (
               <Button
                 onPress={
                   exportType === "append"
@@ -331,6 +328,7 @@ const ExportData = () => {
                 <Text className="btn-label">Export Data</Text>
               </Button>
             )}
+
             {isExporting && (
               <View className="flex-col gap-4 mt-5">
                 <Text className="base-paragraph">
@@ -343,25 +341,6 @@ const ExportData = () => {
                   trackClassName="h-1 bg-dark-200"
                   indicatorClassName="bg-accent"
                 />
-              </View>
-            )}
-            {exportedSheetUrl && (
-              <View className="flex-col gap-3.5">
-                <Text className="base-paragraph">
-                  Exported data can be found here
-                </Text>
-                <Button
-                  className="flex-row items-center gap-x-2.5"
-                  onPress={() => Linking.openURL(exportedSheetUrl)}
-                >
-                  <DynamicIcon
-                    family="Ionicons"
-                    name={"link"}
-                    size={20}
-                    color="#FFFFFF"
-                  />
-                  <Text className="btn-label">Open Sheet</Text>
-                </Button>
               </View>
             )}
           </>
@@ -380,6 +359,11 @@ const ExportData = () => {
           </View>
         )}
       </View>
+      <OpenExportSheetUrl
+        open={!!exportedSheetUrl}
+        onDismiss={() => setExportedSheetUrl(null)}
+        url={exportedSheetUrl}
+      />
     </>
   );
 };

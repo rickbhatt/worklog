@@ -1,8 +1,7 @@
 import FormInput from "@/components/form-input";
-import ScreenHeader from "@/components/screen-header";
 import { Button } from "@/components/ui/button";
 import { useDb } from "@/hooks/useDb";
-import { Stack, useRouter } from "expo-router";
+import { useRouter } from "expo-router";
 import LottieView from "lottie-react-native";
 
 import { useAuth } from "@/contexts/AuthContext";
@@ -110,143 +109,135 @@ const ImportData = () => {
   };
 
   return (
-    <>
-      <Stack.Screen
-        options={{
-          headerShown: true,
-          header: () => <ScreenHeader title="Import Data" backButtonVisible />,
-        }}
-      />
-      <View className="flex-1 bg-bg-primary screen-x-padding pt-4 pb-safe">
-        {isSignedIn ? (
-          <>
-            {!isLoading ? (
-              <View className="flex-1 flex-col gap-4">
-                {/* form */}
-                <FormInput
-                  label="Google Sheet URL"
-                  name="gsheet_url"
-                  onChange={handleOnChangeText}
-                  placeholder={"https://docs.google.com/spreadsheet..."}
-                  autoFocus
-                  value={gSheetUrl}
-                />
-                <FormInput
-                  label="Sheet Name"
-                  name="sheet_name"
-                  placeholder="Sheet1"
-                  onChange={handleOnChangeText}
-                  value={sheetName}
-                />
-                <Button onPress={handleSubmit}>
-                  <Text className="btn-label">Load Data</Text>
-                </Button>
-                {/* instruction */}
-                <ScrollView
-                  showsVerticalScrollIndicator={false}
-                  className="flex-1"
-                  contentContainerClassName="flex-col gap-3 pb-safe-offset-6"
-                >
-                  <Text className="text-sm text-text-secondary">
-                    Please follow the instructions before importing data:
-                  </Text>
-                  <Text className="text-sm text-text-secondary">
-                    1. Ensure you are signed in with the Google account that has
-                    access to the sheet.
-                  </Text>
-                  <Text className="text-sm text-text-secondary">
-                    2. Verify the sheet name is correct.
-                  </Text>
-                  <Text className="text-sm text-text-secondary">
-                    3. Before loading the data, make sure that the sheet
-                    contains the following columns in order:
-                  </Text>
+    <View className="flex-1 bg-bg-primary screen-x-padding pt-4 pb-safe">
+      {isSignedIn ? (
+        <>
+          {!isLoading ? (
+            <View className="flex-1 flex-col gap-4">
+              {/* form */}
+              <FormInput
+                label="Google Sheet URL"
+                name="gsheet_url"
+                onChange={handleOnChangeText}
+                placeholder={"https://docs.google.com/spreadsheet..."}
+                autoFocus
+                value={gSheetUrl}
+              />
+              <FormInput
+                label="Sheet Name"
+                name="sheet_name"
+                placeholder="Sheet1"
+                onChange={handleOnChangeText}
+                value={sheetName}
+              />
+              <Button onPress={handleSubmit}>
+                <Text className="btn-label">Load Data</Text>
+              </Button>
+              {/* instruction */}
+              <ScrollView
+                showsVerticalScrollIndicator={false}
+                className="flex-1"
+                contentContainerClassName="flex-col gap-3 pb-safe-offset-6"
+              >
+                <Text className="text-sm text-text-secondary">
+                  Please follow the instructions before importing data:
+                </Text>
+                <Text className="text-sm text-text-secondary">
+                  1. Ensure you are signed in with the Google account that has
+                  access to the sheet.
+                </Text>
+                <Text className="text-sm text-text-secondary">
+                  2. Verify the sheet name is correct.
+                </Text>
+                <Text className="text-sm text-text-secondary">
+                  3. Before loading the data, make sure that the sheet contains
+                  the following columns in order:
+                </Text>
 
-                  <Text className="text-sm text-text-secondary">
-                    Date | JID | AID | Pages | File type | Minutes | Compensated
-                    file | QC file
-                  </Text>
-                  <Text className="text-sm text-text-secondary">
-                    • Date: yyyy-mm-dd
-                  </Text>
-                  <Text className="text-sm text-text-secondary">
-                    • JID: Journal ID
-                  </Text>
-                  <Text className="text-sm text-text-secondary">
-                    • AID: Article ID
-                  </Text>
-                  <Text className="text-sm text-text-secondary">
-                    • Pages: Number of pages. For sml pages = 15; for nd-sml
-                    pages = 0
-                  </Text>
-                  <Text className="text-sm text-text-secondary">
-                    • File type: manual/nd-sml/sml
-                  </Text>
-                  <Text className="text-sm text-text-secondary">
-                    • Minutes: Time taken in minutes; for nd-sml time = 0
-                  </Text>
-                  <Text className="text-sm text-text-secondary">
-                    • Compensated file: yes/no (optional)
-                  </Text>
-                  <Text className="text-sm text-text-secondary">
-                    • QC file: yes/no (optional)
-                  </Text>
-                </ScrollView>
-              </View>
-            ) : (
-              <View className="flex-1 flex-col justify-center items-center">
-                <LottieView
-                  autoPlay
-                  loop
-                  source={dataTable}
-                  style={{ width: 150, height: 150 }}
-                  colorFilters={[
-                    {
-                      keypath: "Layer 5 Outlines.Group 1.Stroke 1",
-                      color: "#FFFFFF",
-                    },
-                    {
-                      keypath: "Layer 11 Outlines.Group 1.Stroke 1",
-                      color: "#FFFFFF",
-                    },
-                    {
-                      keypath: "Layer 9 Outlines.Group 1.Stroke 1",
-                      color: "#FFFFFF",
-                    },
-                    {
-                      keypath: "Layer 6 Outlines.Group 1.Stroke 1",
-                      color: "#FFFFFF",
-                    },
-                    {
-                      keypath: "Layer 12 Outlines.Group 1.Stroke 1",
-                      color: "#FFFFFF",
-                    },
-                    {
-                      keypath: "Layer 10 Outlines.Group 1.Stroke 1",
-                      color: "#FFFFFF",
-                    },
-                  ]}
-                />
-                <Text className="base-paragraph">Importing data...</Text>
-              </View>
-            )}
-          </>
-        ) : (
-          <View className="flex-col gap-4">
-            <Text className="base-paragraph">
-              Please singn in with your Google account to import data to Google
-              Sheets.
-            </Text>
-            <Button
-              className="flex-row items-center py-3 px-4"
-              onPress={() => router.push("/settings/manage-google-account")}
-            >
-              <Text className="btn-label">Manage Google Account</Text>
-            </Button>
-          </View>
-        )}
-      </View>
-    </>
+                <Text className="text-sm text-text-secondary">
+                  Date | JID | AID | Pages | File type | Minutes | Compensated
+                  file | QC file
+                </Text>
+                <Text className="text-sm text-text-secondary">
+                  • Date: yyyy-mm-dd
+                </Text>
+                <Text className="text-sm text-text-secondary">
+                  • JID: Journal ID
+                </Text>
+                <Text className="text-sm text-text-secondary">
+                  • AID: Article ID
+                </Text>
+                <Text className="text-sm text-text-secondary">
+                  • Pages: Number of pages. For sml pages = 15; for nd-sml pages
+                  = 0
+                </Text>
+                <Text className="text-sm text-text-secondary">
+                  • File type: manual/nd-sml/sml
+                </Text>
+                <Text className="text-sm text-text-secondary">
+                  • Minutes: Time taken in minutes; for nd-sml time = 0
+                </Text>
+                <Text className="text-sm text-text-secondary">
+                  • Compensated file: yes/no (optional)
+                </Text>
+                <Text className="text-sm text-text-secondary">
+                  • QC file: yes/no (optional)
+                </Text>
+              </ScrollView>
+            </View>
+          ) : (
+            <View className="flex-1 flex-col justify-center items-center">
+              <LottieView
+                autoPlay
+                loop
+                source={dataTable}
+                style={{ width: 150, height: 150 }}
+                colorFilters={[
+                  {
+                    keypath: "Layer 5 Outlines.Group 1.Stroke 1",
+                    color: "#FFFFFF",
+                  },
+                  {
+                    keypath: "Layer 11 Outlines.Group 1.Stroke 1",
+                    color: "#FFFFFF",
+                  },
+                  {
+                    keypath: "Layer 9 Outlines.Group 1.Stroke 1",
+                    color: "#FFFFFF",
+                  },
+                  {
+                    keypath: "Layer 6 Outlines.Group 1.Stroke 1",
+                    color: "#FFFFFF",
+                  },
+                  {
+                    keypath: "Layer 12 Outlines.Group 1.Stroke 1",
+                    color: "#FFFFFF",
+                  },
+                  {
+                    keypath: "Layer 10 Outlines.Group 1.Stroke 1",
+                    color: "#FFFFFF",
+                  },
+                ]}
+              />
+              <Text className="base-paragraph">Importing data...</Text>
+            </View>
+          )}
+        </>
+      ) : (
+        <View className="flex-col gap-4">
+          <Text className="base-paragraph">
+            Please singn in with your Google account to import data to Google
+            Sheets.
+          </Text>
+          <Button
+            className="flex-row items-center py-3 px-4"
+            onPress={() => router.push("/settings/manage-google-account")}
+          >
+            <Text className="btn-label">Manage Google Account</Text>
+          </Button>
+        </View>
+      )}
+    </View>
   );
 };
 

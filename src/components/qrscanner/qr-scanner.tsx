@@ -10,7 +10,7 @@ import { toast } from "sonner-native";
 
 interface QrScannerProps {
   value: string | null;
-  onScan: (value: string) => void;
+  onScan: (value: string | null) => void;
 }
 
 const QrScanner = ({ value, onScan }: QrScannerProps) => {
@@ -21,6 +21,7 @@ const QrScanner = ({ value, onScan }: QrScannerProps) => {
 
   // handles the button press to open the scanner
   const handlePress = async () => {
+    onScan(null);
     if (permission?.granted) {
       setScanned(false);
       setIsScanning(true);
@@ -45,8 +46,9 @@ const QrScanner = ({ value, onScan }: QrScannerProps) => {
 
     setScanned(true);
 
-    onScan?.(data);
+    onScan(data);
     setIsScanning(false);
+    setScanned(false);
   };
 
   return (
