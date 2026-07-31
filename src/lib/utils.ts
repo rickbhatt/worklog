@@ -221,36 +221,53 @@ export const checkDateGreaterThanToday = (date: number, month: number) => {
   return dateObj > today;
 };
 
-export const formatLogsForSheet = (logs: FileLogsSelectType[]) => [
-  [
+export const formatLogsForSheet = ({
+  logs,
+  exportType,
+}: {
+  logs: FileLogsSelectType[];
+  exportType: "append" | "create";
+}) => {
+  let logsArray = [
+    ...logs.map((log) => [
+      formatDateTime(log.workedAt).dateForSheet,
+      `${log.journalId}_${log.articleId}`,
+      log.isOT === 0
+        ? log.isSml === 0
+          ? log.lepPages
+          : log.isND === 1
+            ? "ND-SML"
+            : "SML"
+        : "",
+      log.isOT === 1
+        ? log.isSml === 0
+          ? log.lepPages
+          : log.isND === 1
+            ? "ND-SML"
+            : "SML"
+        : "",
+      "",
+      log.remarks ?? "",
+    ]),
+  ];
+
+  const headerElements = [
     "Date",
     "Task/OT details",
     "Pages",
     "OT pages",
     "Target reached (yes/no)",
     "Remarks",
-  ],
-  ...logs.map((log) => [
-    formatDateTime(log.workedAt).dateForSheet,
-    `${log.journalId}_${log.articleId}`,
-    log.isOT === 0
-      ? log.isSml === 0
-        ? log.lepPages
-        : log.isND === 1
-          ? "ND-SML"
-          : "SML"
-      : "",
-    log.isOT === 1
-      ? log.isSml === 0
-        ? log.lepPages
-        : log.isND === 1
-          ? "ND-SML"
-          : "SML"
-      : "",
-    "",
-    log.remarks ?? "",
-  ]),
-];
+  ];
+
+  let finalArray: any = [...logsArray];
+
+  if (exportType === "create") {
+    finalArray.unshift(headerElements);
+  }
+
+  return finalArray;
+};
 
 export const validateHeaders = (rows: string[][]): boolean => {
   const REQUIRED_HEADERS = [
