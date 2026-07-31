@@ -1,6 +1,6 @@
 import { fileLogs, targetInfo } from "@/db/models/log.schema";
-import { cloudAccount } from "@/db/schema";
 import * as schema from "@/db/schema";
+import { cloudAccount } from "@/db/schema";
 
 import {
   AntDesign,
@@ -175,3 +175,15 @@ interface HorzLoaderProps {
   trackClassName?: string;
   indicatorClassName?: string;
 }
+
+type SheetRow = [
+  string | undefined,
+  string,
+  number | "SML" | "ND-SML" | "",
+  number | "SML" | "ND-SML" | "",
+  "",
+  string,
+];
+type SheetData = SheetRow[];
+
+type SheetExportData = (SheetRow | string[])[];

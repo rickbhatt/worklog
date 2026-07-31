@@ -173,6 +173,7 @@ const ExportData = () => {
     setExportedSheetUrl(null);
     try {
       const data = prepareData();
+      console.log("🚀 ~ appendToExistingSheet ~ data:", data);
 
       const spreadsheetId = extractSpreadsheetId(gsheetUrl);
 
