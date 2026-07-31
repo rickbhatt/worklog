@@ -33,11 +33,12 @@ function AlertDialogOverlay({
           Platform.select({
             web: "animate-in fade-in-0 fixed",
           }),
-          className
+          className,
         )}
         {...props}
       >
         <NativeOnlyAnimatedView
+          className="w-[92%]"
           entering={FadeIn.duration(200).delay(50)}
           exiting={FadeOut.duration(150)}
         >
@@ -65,7 +66,7 @@ function AlertDialogContent({
             Platform.select({
               web: "animate-in fade-in-0 zoom-in-95 duration-200",
             }),
-            className
+            className,
           )}
           {...props}
         />
@@ -87,7 +88,7 @@ function AlertDialogFooter({ className, ...props }: ViewProps) {
     <View
       className={cn(
         "flex flex-col-reverse gap-2 sm:flex-row sm:justify-end",
-        className
+        className,
       )}
       {...props}
     />

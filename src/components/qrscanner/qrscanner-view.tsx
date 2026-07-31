@@ -1,7 +1,7 @@
 import DynamicIcon from "@/components/dynamic-icon";
 import { Portal } from "@rn-primitives/portal";
 import { CameraView } from "expo-camera";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Pressable, View } from "react-native";
 import ScannerFrame from "./scanner-frame";
 
@@ -14,13 +14,18 @@ interface QrScannerViewProps {
 const QrScannerView = ({ visible, onClose, onScan }: QrScannerViewProps) => {
   const [scanned, setScanned] = useState(false);
 
-  if (!visible) return null;
+  useEffect(() => {
+    if (visible) {
+      setScanned(false); // fresh scan session every time it opens
+    }
+  }, [visible]);
 
   const handleBarcodeScanned = ({ data }: { data: string }) => {
     if (scanned) return;
     setScanned(true);
     onScan(data);
   };
+  if (!visible) return null;
 
   return (
     <Portal name="qr-scanner">
