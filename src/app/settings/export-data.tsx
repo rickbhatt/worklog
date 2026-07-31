@@ -15,8 +15,14 @@ import {
 } from "@/lib/utils";
 import { getAccessToken } from "@/services/googleAuthService";
 import { useRouter } from "expo-router";
+
 import React, { useState } from "react";
 import { Text, View } from "react-native";
+import {
+  KeyboardAwareScrollView,
+  useKeyboardState,
+} from "react-native-keyboard-controller";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { toast } from "sonner-native";
 
 const EXPORT_TYPES = [
@@ -34,6 +40,9 @@ const ExportData = () => {
   const { isSignedIn } = useAuth();
   const router = useRouter();
   const db = useDb();
+  const insets = useSafeAreaInsets();
+  const keyboard = useKeyboardState();
+
   const [logsForSheet, setLogsForSheet] = useState<
     (string | number | undefined)[][] | null
   >(null);
@@ -250,8 +259,14 @@ const ExportData = () => {
   };
 
   return (
-    <>
-      <View className="bg-bg-primary flex-col gap-3 flex-1 screen-x-padding pb-safe">
+    <View className="bg-bg-primary flex-col gap-3 flex-1 pb-safe">
+      <KeyboardAwareScrollView
+        bottomOffset={0}
+        extraKeyboardSpace={0}
+        contentContainerClassName="flex-col gap-5 screen-x-padding"
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
         {isSignedIn ? (
           <>
             <View className="form-group gap-y-5">
@@ -358,13 +373,14 @@ const ExportData = () => {
             </Button>
           </View>
         )}
-      </View>
+      </KeyboardAwareScrollView>
+
       <OpenExportSheetUrl
         open={!!exportedSheetUrl}
         onDismiss={() => setExportedSheetUrl(null)}
         url={exportedSheetUrl}
       />
-    </>
+    </View>
   );
 };
 
