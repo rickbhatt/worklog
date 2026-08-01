@@ -66,6 +66,8 @@ const ExportData = () => {
 
   const [exportedSheetUrl, setExportedSheetUrl] = useState<string | null>(null);
 
+  const [fileName, setFileName] = useState<string | null>(null);
+
   const onSelectExportType = (fieldName: string, rawValue: string | number) => {
     if (typeof rawValue !== "string") return;
     setExportType(rawValue as "append" | "create");
@@ -79,6 +81,7 @@ const ExportData = () => {
     setDateRange((prev) => ({ ...prev, [fieldName]: rawValue }));
   };
 
+  // formats data for export to google sheet
   const prepareData = () => {
     try {
       const logs = getFileLogs({
@@ -103,6 +106,8 @@ const ExportData = () => {
       toast.error("Failed to load logs. Please try again.");
     }
   };
+
+  // checks if a sheet exists before appending data to it.
   const ensureSheetExists = async ({
     accessToken,
     spreadsheetId,
@@ -118,10 +123,8 @@ const ExportData = () => {
     );
 
     if (!metaRes.ok) {
-      const err = await metaRes.json();
       throw new Error(
-        err.error?.message ||
-          "Could not access this spreadsheet. Check the link and sharing permissions.",
+        "Could not access this spreadsheet. Check the link and sharing permissions.",
       );
     }
 
@@ -131,26 +134,9 @@ const ExportData = () => {
     );
 
     if (!exists) {
-      const addRes = await fetch(
-        `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}:batchUpdate`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            requests: [{ addSheet: { properties: { title: sheetName } } }],
-          }),
-        },
+      throw new Error(
+        `Sheet tab "${sheetName}" was not found in this spreadsheet.`,
       );
-      if (!addRes.ok) {
-        const err = await addRes.json();
-        throw new Error(
-          err.error?.message ||
-            "Could not create the tab (edit access required).",
-        );
-      }
     }
   };
 
@@ -313,7 +299,7 @@ const ExportData = () => {
                 </View>
               )}
 
-              {exportType === "append" && (
+              {exportType === "append" ? (
                 <>
                   <View className="form-group">
                     <Text className="form-label">G-Sheet Url</Text>
@@ -333,6 +319,8 @@ const ExportData = () => {
                     }}
                   />
                 </>
+              ) : (
+                <View></View>
               )}
             </View>
             {/* export button */}
