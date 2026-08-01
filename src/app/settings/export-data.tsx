@@ -3,7 +3,6 @@ import HorzLoader from "@/components/horz-loader";
 import OpenExportSheetUrl from "@/components/open-exported-sheet-alert";
 import QrScanner from "@/components/qrscanner/qr-scanner";
 import { Button } from "@/components/ui/button";
-import { MONTH_NAMES } from "@/constants";
 import { useAuth } from "@/contexts/AuthContext";
 import { getFileLogs } from "@/db/queries/fileworklog.queries";
 import { useDb } from "@/hooks/useDb";
@@ -18,11 +17,7 @@ import { useRouter } from "expo-router";
 
 import React, { useState } from "react";
 import { Text, View } from "react-native";
-import {
-  KeyboardAwareScrollView,
-  useKeyboardState,
-} from "react-native-keyboard-controller";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { toast } from "sonner-native";
 
 const EXPORT_TYPES = [
@@ -40,12 +35,6 @@ const ExportData = () => {
   const { isSignedIn } = useAuth();
   const router = useRouter();
   const db = useDb();
-  const insets = useSafeAreaInsets();
-  const keyboard = useKeyboardState();
-
-  const [logsForSheet, setLogsForSheet] = useState<
-    (string | number | undefined)[][] | null
-  >(null);
 
   const [selectedMonth, setSelectedMonth] = useState<string | null>(null);
   const [isExporting, setIsExporting] = useState(false);
@@ -140,6 +129,7 @@ const ExportData = () => {
     }
   };
 
+  // appeds data to an existing sheet in a google spreadsheet.
   const appendToExistingSheet = async () => {
     if (dateRange.start === undefined) {
       toast.error("From date is required");
@@ -203,15 +193,15 @@ const ExportData = () => {
     }
   };
 
+  // creates a new google sheet and exports data to it.
   const exportToNewSheet = async () => {
     setIsExporting(true);
     setExportedSheetUrl(null);
 
     try {
       const accessToken = await getAccessToken();
-      const title = selectedMonth
-        ? `Worklog Export-${MONTH_NAMES[selectedMonth]}`
-        : "Worklog Export";
+
+      const data = prepareData();
 
       const createRes = await fetch(
         "https://sheets.googleapis.com/v4/spreadsheets",
@@ -221,7 +211,7 @@ const ExportData = () => {
             Authorization: `Bearer ${accessToken}`,
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ properties: { title } }),
+          body: JSON.stringify({ properties: { title: fileName } }),
         },
       );
 
@@ -235,7 +225,7 @@ const ExportData = () => {
             Authorization: `Bearer ${accessToken}`,
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ values: logsForSheet }),
+          body: JSON.stringify({ values: data }),
         },
       );
 
@@ -254,7 +244,6 @@ const ExportData = () => {
         extraKeyboardSpace={0}
         contentContainerClassName="flex-col gap-5 screen-x-padding"
         showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
       >
         {isSignedIn ? (
           <>
@@ -299,8 +288,9 @@ const ExportData = () => {
                 </View>
               )}
 
-              {exportType === "append" ? (
-                <>
+              {/* append fields */}
+              {exportType === "append" && (
+                <View className="form-group">
                   <View className="form-group">
                     <Text className="form-label">G-Sheet Url</Text>
                     <QrScanner value={gsheetUrl} onScan={setGsheetUrl} />
@@ -318,9 +308,21 @@ const ExportData = () => {
                       setSheetName(rawValue);
                     }}
                   />
-                </>
-              ) : (
-                <View></View>
+                </View>
+              )}
+
+              {/* create fields */}
+              {exportType === "create" && (
+                <FormInput
+                  name="fileName"
+                  label="File Name"
+                  placeholder="file name here..."
+                  value={fileName}
+                  onChange={(fieldnName: string, rawValue: string | number) => {
+                    if (typeof rawValue !== "string") return;
+                    setFileName(rawValue);
+                  }}
+                />
               )}
             </View>
             {/* export button */}
