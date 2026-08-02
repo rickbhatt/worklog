@@ -1,5 +1,6 @@
 import AlertDialogBox from "@/components/alert-dialogbox";
 import DynamicIcon from "@/components/dynamic-icon";
+import ScreenHeader from "@/components/screen-header";
 import { checkTargetInfoExists } from "@/db/queries/fileworklog.queries";
 import { useDb } from "@/hooks/useDb";
 import { clsx } from "clsx";
@@ -35,7 +36,7 @@ const TabsLayout = () => {
       <Tabs
         screenOptions={{
           tabBarShowLabel: false,
-          headerShown: false,
+          header: ({ options }) => <ScreenHeader title={options.title ?? ""} />,
 
           tabBarStyle: {
             position: "absolute",
@@ -72,6 +73,7 @@ const TabsLayout = () => {
         <Tabs.Screen
           name="index"
           options={{
+            title: "History",
             tabBarIcon: ({ focused }) => (
               <TabIconAndLabel
                 focused={focused}
@@ -121,6 +123,7 @@ const TabsLayout = () => {
         <Tabs.Screen
           name="insights"
           options={{
+            title: "Insights",
             tabBarIcon: ({ focused }) => (
               <TabIconAndLabel
                 focused={focused}

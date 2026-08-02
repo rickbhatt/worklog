@@ -1,9 +1,7 @@
 import FileWorklogForm from "@/components/file-worklog-form";
-import ScreenHeader from "@/components/screen-header";
 import { createFileLog } from "@/db/mutations/fileworklog.mutations";
 import { useDb } from "@/hooks/useDb";
 import { validateForm } from "@/lib/utils";
-import { Tabs } from "expo-router";
 import React, { useState } from "react";
 import { View } from "react-native";
 import { toast } from "sonner-native";
@@ -86,23 +84,13 @@ const CreateWorkLog = () => {
     }
   };
   return (
-    <>
-      <Tabs.Screen
-        options={{
-          header: () => (
-            <ScreenHeader backButtonVisible={true} title="Create Log" />
-          ),
-          headerShown: true,
-        }}
+    <View className="pt-2 flex-1 bg-bg-primary">
+      <FileWorklogForm
+        value={formData}
+        onChange={setFormData}
+        onSubmit={handleSubmit}
       />
-      <View className="pt-2 flex-1 bg-bg-primary">
-        <FileWorklogForm
-          value={formData}
-          onChange={setFormData}
-          onSubmit={handleSubmit}
-        />
-      </View>
-    </>
+    </View>
   );
 };
 export default CreateWorkLog;
