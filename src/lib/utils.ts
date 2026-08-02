@@ -1,7 +1,12 @@
 import { clsx, type ClassValue } from "clsx";
 import { format } from "date-fns";
 import { twMerge } from "tailwind-merge";
-import { FileLogsSelectType, RequiredField } from "type";
+import {
+  FileLogsSelectType,
+  RequiredField,
+  SheetExportData,
+  SheetRow,
+} from "type";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -221,36 +226,38 @@ export const checkDateGreaterThanToday = (date: number, month: number) => {
   return dateObj > today;
 };
 
-export const formatLogsForSheet = (logs: FileLogsSelectType[]) => [
-  [
+export const formatLogsForSheet = ({
+  logs,
+  exportType,
+}: {
+  logs: FileLogsSelectType[];
+  exportType: "append" | "create";
+}): SheetExportData => {
+  const headerElements: string[] = [
     "Date",
     "Task/OT details",
     "Pages",
     "OT pages",
-    "Compensated file",
     "Target reached (yes/no)",
-  ],
-  ...logs.map((log) => [
-    formatDateTime(log.workedAt).dateForSheet,
-    `${log.journalId}_${log.articleId}`,
-    log.isOT === 0
-      ? log.isSml === 0
-        ? log.lepPages
-        : log.isND === 1
-          ? "ND-SML"
-          : "SML"
-      : "",
-    log.isOT === 1
-      ? log.isSml === 0
-        ? log.lepPages
-        : log.isND === 1
-          ? "ND-SML"
-          : "SML"
-      : "",
-    log.isCompensatedFile === 1 ? "YES" : "NO",
-    "YES",
-  ]),
-];
+    "Remarks",
+  ];
+
+  const logsArray: SheetRow[] = logs.map((log) => {
+    const pagesValue: number | "SML" | "ND-SML" =
+      log.isSml === 0 ? log.lepPages : log.isND === 1 ? "ND-SML" : "SML";
+
+    return [
+      formatDateTime(log.workedAt).dateForSheet,
+      `${log.journalId}_${log.articleId}`,
+      log.isOT === 0 ? pagesValue : "",
+      log.isOT === 1 ? pagesValue : "",
+      "",
+      log.remarks ?? "",
+    ];
+  });
+
+  return exportType === "create" ? [headerElements, ...logsArray] : logsArray;
+};
 
 export const validateHeaders = (rows: string[][]): boolean => {
   const REQUIRED_HEADERS = [
@@ -267,9 +274,52 @@ export const validateHeaders = (rows: string[][]): boolean => {
     (col, i) => col === headers[i],
   );
 
+  if (!hasRequiredHeaders) return false;
+
+  const optionalHeaders = headers.slice(REQUIRED_HEADERS.length);
+  const allowedOptionalHeaders = ["Compensated file", "QC file"];
+
   return (
-    hasRequiredHeaders &&
-    (headers.length === REQUIRED_HEADERS.length ||
-      headers[REQUIRED_HEADERS.length] === "Compensated file")
+    optionalHeaders.length <= allowedOptionalHeaders.length &&
+    optionalHeaders.every(
+      (header, index) => header === allowedOptionalHeaders[index],
+    )
   );
+};
+
+export const extractSpreadsheetId = (url: string) => {
+  const match = url.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
+  return match ? match[1] : url; // assume it's already a bare ID if no match
+};
+
+export const ensureSheetExists = async ({
+  accessToken,
+  spreadsheetId,
+  sheetName,
+}: {
+  accessToken: string;
+  spreadsheetId: string;
+  sheetName: string;
+}) => {
+  const metaRes = await fetch(
+    `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}?fields=sheets.properties.title`,
+    { headers: { Authorization: `Bearer ${accessToken}` } },
+  );
+
+  if (!metaRes.ok) {
+    throw new Error(
+      "Could not access this spreadsheet. Check the link and sharing permissions.",
+    );
+  }
+
+  const meta = await metaRes.json();
+  const exists = meta.sheets?.some(
+    (s: any) => s.properties.title === sheetName,
+  );
+
+  if (!exists) {
+    throw new Error(
+      `Sheet tab "${sheetName}" was not found in this spreadsheet.`,
+    );
+  }
 };

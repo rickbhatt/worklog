@@ -1,6 +1,6 @@
 import { fileLogs, targetInfo } from "@/db/models/log.schema";
-import { cloudAccount } from "@/db/schema";
 import * as schema from "@/db/schema";
+import { cloudAccount } from "@/db/schema";
 
 import {
   AntDesign,
@@ -92,9 +92,9 @@ export type InputModeOptions =
   | "url";
 
 export interface FileWorklogFormProps {
-  value: Partial<FileLogsInsertType>;
-  onChange: (data: Partial<FileLogsInsertType>) => void;
-  onSubmit: (data: Partial<FileLogsInsertType>) => void;
+  value: Partial<FileLogsCreateInput>;
+  onChange: React.Dispatch<React.SetStateAction<Partial<FileLogsCreateInput>>>;
+  onSubmit: (data: Partial<FileLogsCreateInput>) => void;
 }
 
 interface ScreenHeaderProps {
@@ -133,7 +133,17 @@ export type FileLogsUpdateType = typeof fileLogs.$inferUpdate;
 export type FileLogsSelectType = typeof fileLogs.$inferSelect;
 export type FileLogsListItemType = Pick<
   FileLogsSelectType,
-  "id" | "journalId" | "articleId" | "timeTaken" | "lepPages" | "workedAt"
+  | "id"
+  | "journalId"
+  | "articleId"
+  | "timeTaken"
+  | "lepPages"
+  | "workedAt"
+  | "isSml"
+  | "isOT"
+  | "isND"
+  | "isCompensatedFile"
+  | "isQcFile"
 >;
 export type TargetInfoSelectType = typeof targetInfo.$inferSelect;
 export type TargetInfoInsertType = typeof targetInfo.$inferInsert;
@@ -165,3 +175,15 @@ interface HorzLoaderProps {
   trackClassName?: string;
   indicatorClassName?: string;
 }
+
+type SheetRow = [
+  string | undefined,
+  string,
+  number | "SML" | "ND-SML" | "",
+  number | "SML" | "ND-SML" | "",
+  "",
+  string,
+];
+type SheetData = SheetRow[];
+
+type SheetExportData = (SheetRow | string[])[];

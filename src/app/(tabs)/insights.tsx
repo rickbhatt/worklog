@@ -1,7 +1,6 @@
 import AttendanceIndicator from "@/components/attendance-indicator";
 import DynamicIcon from "@/components/dynamic-icon";
 import FormInput from "@/components/form-input";
-import ScreenHeader from "@/components/screen-header";
 import { MONTH_NAMES, MONTHS, WEEKDAY_LABELS } from "@/constants";
 import {
   getLatestTargetHour,
@@ -20,7 +19,6 @@ import {
 } from "@/lib/utils";
 import { getDaysInMonth } from "date-fns";
 import { useLiveQuery } from "drizzle-orm/expo-sqlite";
-import { Tabs } from "expo-router";
 import { useMemo, useState } from "react";
 import { ScrollView, Text, View } from "react-native";
 import { BarChart } from "react-native-gifted-charts";
@@ -143,13 +141,6 @@ const Insights = () => {
 
   return (
     <>
-      <Tabs.Screen
-        options={{
-          headerShown: true,
-          header: () => <ScreenHeader title="Insights" />,
-        }}
-      />
-
       <View className="flex-1 flex-col gap-y-4 bg-bg-primary screen-x-padding pb-safe">
         <FormInput<InsightTypes>
           onChange={onSelect}

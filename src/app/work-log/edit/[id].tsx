@@ -1,9 +1,8 @@
 import FileWorklogForm from "@/components/file-worklog-form";
-import ScreenHeader from "@/components/screen-header";
 import { updateFileLogById } from "@/db/mutations/fileworklog.mutations";
 import { getFileLogById } from "@/db/queries/fileworklog.queries";
 import { useDb } from "@/hooks/useDb";
-import { Tabs, useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { View } from "react-native";
 import { toast } from "sonner-native";
@@ -31,6 +30,7 @@ const EditFileLog = () => {
         isOT: row.isOT,
         isND: row.isND,
         isCompensatedFile: row.isCompensatedFile,
+        isQcFile: row.isQcFile,
         remarks: row.remarks,
       };
 
@@ -68,23 +68,13 @@ const EditFileLog = () => {
   }, [id]);
 
   return (
-    <>
-      <Tabs.Screen
-        options={{
-          headerShown: true,
-          header: () => (
-            <ScreenHeader title="Edit Log" backButtonVisible={true} />
-          ),
-        }}
+    <View className="screen-x-padding pt-2 flex-1 bg-bg-primary">
+      <FileWorklogForm
+        value={formData}
+        onChange={setFormData}
+        onSubmit={handleSubmit}
       />
-      <View className="screen-x-padding pt-2 flex-1 bg-bg-primary">
-        <FileWorklogForm
-          value={formData}
-          onChange={setFormData}
-          onSubmit={handleSubmit}
-        />
-      </View>
-    </>
+    </View>
   );
 };
 

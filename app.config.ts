@@ -27,7 +27,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
   name: getAppName(),
   slug: "worklog",
-  version: "1.6.0",
+  version: "1.7.5",
   orientation: "portrait",
   icon: "./assets/images/icon.png",
   scheme: "worklog",
@@ -64,6 +64,13 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
           backgroundColor: "#000000",
           image: "./assets/images/splash-icon-light.png",
         },
+      },
+    ],
+    [
+      "expo-camera",
+      {
+        cameraPermission:
+          "Allow $(PRODUCT_NAME) to access your camera to scan QR codes.",
       },
     ],
     "expo-sqlite",

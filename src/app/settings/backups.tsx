@@ -1,5 +1,4 @@
 import HorzLoader from "@/components/horz-loader";
-import ScreenHeader from "@/components/screen-header";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { backupState, cloudAccount } from "@/db/schema";
@@ -12,7 +11,7 @@ import {
 } from "@/services/backupService";
 import { eq } from "drizzle-orm";
 import { useLiveQuery } from "drizzle-orm/expo-sqlite";
-import { Stack, useRouter } from "expo-router";
+import { useRouter } from "expo-router";
 import { useState } from "react";
 import { Text, View } from "react-native";
 
@@ -48,12 +47,6 @@ const Backups = () => {
 
   return (
     <>
-      <Stack.Screen
-        options={{
-          headerShown: true,
-          header: () => <ScreenHeader title="Backups" backButtonVisible />,
-        }}
-      />
       <View className="screen flex-col pb-safe gap-4">
         <View className="flex-row">
           <Text className="text-sm text-text-secondary">

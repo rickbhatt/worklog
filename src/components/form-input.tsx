@@ -145,9 +145,7 @@ const FormInput = <TExtraFields extends Record<string, unknown> = {}>({
             <Pressable
               onPress={() => setIsDatePickerOpen(true)}
               className={cn(
-                "bg-bg-primary border-input h-12 flex flex-row items-center border px-3 py-1 text-base leading-5 sm:h-9 rounded-md",
-                rowMode ? "flex-1 w-full" : "w-full",
-                "h-12 text-base py-0",
+                "bg-bg-primary border-input h-12 py-0 w-full flex-row items-center border px-3 text-base leading-5 rounded-md",
               )}
             >
               <Text
@@ -225,6 +223,7 @@ const FormInput = <TExtraFields extends Record<string, unknown> = {}>({
       );
       return (
         <View className={cn("form-group", rowMode && "flex-1")}>
+          {label && <Text className="form-label">{label}</Text>}
           <Select
             onValueChange={(selectedValue) =>
               onChange(name, selectedValue?.value ? selectedValue.value : "")

@@ -1,70 +1,175 @@
-import DynamicIcon from "@/components/dynamic-icon";
 import FormInput from "@/components/form-input";
 import HorzLoader from "@/components/horz-loader";
-import ScreenHeader from "@/components/screen-header";
+import OpenExportSheetUrl from "@/components/open-exported-sheet-alert";
+import QrScanner from "@/components/qrscanner/qr-scanner";
 import { Button } from "@/components/ui/button";
-import { MONTH_NAMES, MONTHS } from "@/constants";
 import { useAuth } from "@/contexts/AuthContext";
 import { getFileLogs } from "@/db/queries/fileworklog.queries";
 import { useDb } from "@/hooks/useDb";
-import { formatLogsForSheet, getMonthRange } from "@/lib/utils";
+import {
+  ensureSheetExists,
+  extractSpreadsheetId,
+  formatDateTime,
+  formatLogsForSheet,
+  getCurrentDate,
+} from "@/lib/utils";
 import { getAccessToken } from "@/services/googleAuthService";
-import { Stack, useRouter } from "expo-router";
+import { useRouter } from "expo-router";
+
 import React, { useState } from "react";
-import { Linking, Text, View } from "react-native";
+import { Text, View } from "react-native";
+import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { toast } from "sonner-native";
+
+const EXPORT_TYPES = [
+  {
+    label: "Append To Existing Sheet",
+    value: "append",
+  },
+  {
+    label: "Create New Sheet",
+    value: "create",
+  },
+];
 
 const ExportData = () => {
   const { isSignedIn } = useAuth();
   const router = useRouter();
   const db = useDb();
-  const [logsForSheet, setLogsForSheet] = useState<
-    (string | number | undefined)[][] | null
-  >(null);
 
   const [selectedMonth, setSelectedMonth] = useState<string | null>(null);
   const [isExporting, setIsExporting] = useState(false);
+  const [exportType, setExportType] = useState<"append" | "create" | null>(
+    null,
+  );
+  const [dateRange, setDateRange] = useState<{
+    start: string | undefined;
+    end: string | undefined;
+  }>({
+    start: undefined,
+    end: formatDateTime(new Date()).dateToISOString,
+  });
+
+  const [gsheetUrl, setGsheetUrl] = useState<string | null>(null);
+
+  const [sheetName, setSheetName] = useState<string | null>(null);
 
   const [exportedSheetUrl, setExportedSheetUrl] = useState<string | null>(null);
 
-  const onSelect = (fieldName: string, rawValue: string | number) => {
+  const [fileName, setFileName] = useState<string | null>(null);
+
+  const onSelectExportType = (fieldName: string, rawValue: string | number) => {
     if (typeof rawValue !== "string") return;
+    setExportType(rawValue as "append" | "create");
+  };
 
-    setExportedSheetUrl(null);
-    setSelectedMonth(rawValue);
+  const handleOnChangeDateRange = (
+    fieldName: string,
+    rawValue: string | number,
+  ) => {
+    if (typeof rawValue !== "string") return;
+    setDateRange((prev) => ({ ...prev, [fieldName]: rawValue }));
+  };
 
+  // formats data for export to google sheet
+  const prepareData = () => {
     try {
-      const monthRange = getMonthRange(
-        rawValue,
-        new Date().getFullYear().toString(),
-      );
       const logs = getFileLogs({
         db,
-        filters: { startDate: monthRange.start, endDate: monthRange.end },
+        filters: { startDate: dateRange.start, endDate: dateRange.end },
         sortOrder: "asc",
       }).all();
-
       if (logs.length < 1) {
         toast.error(
-          `No logs found for ${MONTH_NAMES[rawValue]}. Please select a different month.`,
+          `No logs found for the selected date range. Please select a different month.`,
         );
+        return;
       }
 
-      setLogsForSheet(formatLogsForSheet(logs));
+      const formattedLogs = formatLogsForSheet({
+        logs,
+        exportType: exportType!,
+      });
+
+      return formattedLogs;
     } catch (error) {
       toast.error("Failed to load logs. Please try again.");
     }
   };
 
-  const exportToGoogleSheet = async () => {
+  // appeds data to an existing sheet in a google spreadsheet.
+  const appendToExistingSheet = async () => {
+    if (dateRange.start === undefined) {
+      toast.error("From date is required");
+      return;
+    }
+    if (!gsheetUrl) {
+      toast.error("Gsheet url is required");
+      return;
+    }
+
+    if (!sheetName) {
+      toast.error("Sheet name is required");
+      return;
+    }
+
+    setIsExporting(true);
+    setExportedSheetUrl(null);
+    try {
+      const data = prepareData();
+
+      const spreadsheetId = extractSpreadsheetId(gsheetUrl);
+
+      const accessToken = await getAccessToken();
+      if (!accessToken) {
+        toast.error("Could not fetch access token");
+        return;
+      }
+
+      await ensureSheetExists({
+        accessToken: accessToken,
+        spreadsheetId: spreadsheetId,
+        sheetName: sheetName,
+      });
+      const appendRes = await fetch(
+        `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(
+          sheetName,
+        )}!A1:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ values: data }),
+        },
+      );
+
+      if (!appendRes.ok) {
+        const err = await appendRes.json();
+        throw new Error(err.error?.message || "Append failed");
+      }
+
+      setExportedSheetUrl(
+        `https://docs.google.com/spreadsheets/d/${spreadsheetId}`,
+      );
+    } catch (error: any) {
+      console.error(error);
+      toast.error(error.message || "Export failed. Please try again.");
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  // creates a new google sheet and exports data to it.
+  const exportToNewSheet = async () => {
     setIsExporting(true);
     setExportedSheetUrl(null);
 
     try {
       const accessToken = await getAccessToken();
-      const title = selectedMonth
-        ? `Worklog Export-${MONTH_NAMES[selectedMonth]}`
-        : "Worklog Export";
+
+      const data = prepareData();
 
       const createRes = await fetch(
         "https://sheets.googleapis.com/v4/spreadsheets",
@@ -74,7 +179,7 @@ const ExportData = () => {
             Authorization: `Bearer ${accessToken}`,
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ properties: { title } }),
+          body: JSON.stringify({ properties: { title: fileName } }),
         },
       );
 
@@ -88,7 +193,7 @@ const ExportData = () => {
             Authorization: `Bearer ${accessToken}`,
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ values: logsForSheet }),
+          body: JSON.stringify({ values: data }),
         },
       );
 
@@ -101,52 +206,106 @@ const ExportData = () => {
   };
 
   return (
-    <>
-      <Stack.Screen
-        options={{
-          headerShown: true,
-          header: () => <ScreenHeader title="Export Data" backButtonVisible />,
-        }}
-      />
-      <View className="bg-bg-primary flex-col gap-3 flex-1 screen-x-padding pb-safe">
+    <View className="bg-bg-primary flex-col gap-3 flex-1 pb-safe">
+      <KeyboardAwareScrollView
+        bottomOffset={0}
+        extraKeyboardSpace={0}
+        contentContainerClassName="flex-col gap-5 screen-x-padding"
+        showsVerticalScrollIndicator={false}
+      >
         {isSignedIn ? (
           <>
-            <View className="flex-col gap-2.5 mt-3">
-              <Text className="base-paragraph">
-                Select a month to export data
-              </Text>
+            <View className="form-group gap-y-5">
+              {/* header */}
+
               <FormInput
-                onChange={onSelect}
-                name="month"
+                onChange={onSelectExportType}
+                name="exportType"
+                label="Export Type"
                 inputType="select"
-                placeholder="Select a month"
-                selectOptions={MONTHS}
-                value={selectedMonth}
-                className="max-w-52"
-                icon={
-                  <DynamicIcon
-                    family="Ionicons"
-                    name={"calendar"}
-                    size={20}
-                    color="#c3c3c3"
-                  />
-                }
+                placeholder="Select an export type"
+                selectOptions={EXPORT_TYPES}
+                value={exportType}
               />
-            </View>
-            {logsForSheet &&
-              logsForSheet.length > 1 &&
-              !isExporting &&
-              !exportedSheetUrl && (
-                <View className="flex-col gap-4">
-                  <Text className="base-paragraph">
-                    Data is ready to be exported. Click the button below to
-                    export to Google Sheets.
-                  </Text>
-                  <Button onPress={exportToGoogleSheet}>
-                    <Text className="btn-label">Export to Sheets</Text>
-                  </Button>
+
+              {exportType && (
+                <View className="form-group">
+                  <Text className="form-label">Select a date range</Text>
+                  <View className="flex-row items-center gap-x-2">
+                    <FormInput
+                      inputType="date"
+                      label="From"
+                      name="start"
+                      placeholder="YYYY-MM-DD"
+                      value={dateRange.start}
+                      maxDate={new Date(getCurrentDate())}
+                      onChange={handleOnChangeDateRange}
+                      rowMode
+                    />
+                    <FormInput
+                      inputType="date"
+                      label="To"
+                      name="end"
+                      placeholder="YYYY-MM-DD"
+                      value={dateRange.end}
+                      onChange={handleOnChangeDateRange}
+                      maxDate={new Date(getCurrentDate())}
+                      rowMode
+                    />
+                  </View>
                 </View>
               )}
+
+              {/* append fields */}
+              {exportType === "append" && (
+                <View className="form-group">
+                  <View className="form-group">
+                    <Text className="form-label">G-Sheet Url</Text>
+                    <QrScanner value={gsheetUrl} onScan={setGsheetUrl} />
+                  </View>
+                  <FormInput
+                    name="sheetName"
+                    label="Sheet Name"
+                    placeholder="sheet name or tab name here..."
+                    value={sheetName}
+                    onChange={(
+                      fieldnName: string,
+                      rawValue: string | number,
+                    ) => {
+                      if (typeof rawValue !== "string") return;
+                      setSheetName(rawValue);
+                    }}
+                  />
+                </View>
+              )}
+
+              {/* create fields */}
+              {exportType === "create" && (
+                <FormInput
+                  name="fileName"
+                  label="File Name"
+                  placeholder="file name here..."
+                  value={fileName}
+                  onChange={(fieldnName: string, rawValue: string | number) => {
+                    if (typeof rawValue !== "string") return;
+                    setFileName(rawValue);
+                  }}
+                />
+              )}
+            </View>
+            {/* export button */}
+            {exportType && !isExporting && (
+              <Button
+                onPress={
+                  exportType === "append"
+                    ? appendToExistingSheet
+                    : exportToNewSheet
+                }
+              >
+                <Text className="btn-label">Export Data</Text>
+              </Button>
+            )}
+
             {isExporting && (
               <View className="flex-col gap-4 mt-5">
                 <Text className="base-paragraph">
@@ -159,25 +318,6 @@ const ExportData = () => {
                   trackClassName="h-1 bg-dark-200"
                   indicatorClassName="bg-accent"
                 />
-              </View>
-            )}
-            {exportedSheetUrl && (
-              <View className="flex-col gap-3.5">
-                <Text className="base-paragraph">
-                  Exported data can be found here
-                </Text>
-                <Button
-                  className="flex-row items-center gap-x-2.5"
-                  onPress={() => Linking.openURL(exportedSheetUrl)}
-                >
-                  <DynamicIcon
-                    family="Ionicons"
-                    name={"link"}
-                    size={20}
-                    color="#FFFFFF"
-                  />
-                  <Text className="btn-label">Open Sheet</Text>
-                </Button>
               </View>
             )}
           </>
@@ -195,8 +335,14 @@ const ExportData = () => {
             </Button>
           </View>
         )}
-      </View>
-    </>
+      </KeyboardAwareScrollView>
+
+      <OpenExportSheetUrl
+        open={!!exportedSheetUrl}
+        onDismiss={() => setExportedSheetUrl(null)}
+        url={exportedSheetUrl}
+      />
+    </View>
   );
 };
 
