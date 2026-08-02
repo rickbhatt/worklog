@@ -3,7 +3,6 @@ import DynamicIcon from "@/components/dynamic-icon";
 import FormInput from "@/components/form-input";
 import LoadingScreen from "@/components/loading-screen";
 import LogCard from "@/components/log-card";
-import ScreenHeader from "@/components/screen-header";
 import { Input } from "@/components/ui/input";
 import { MONTHS } from "@/constants";
 import {
@@ -21,7 +20,7 @@ import {
 import { BottomSheetModal } from "@gorhom/bottom-sheet";
 
 import { useLiveQuery } from "drizzle-orm/expo-sqlite";
-import { Tabs, useLocalSearchParams, useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { SectionList, Text, View } from "react-native";
@@ -276,13 +275,6 @@ const History = () => {
   }
   return (
     <>
-      <Tabs.Screen
-        options={{
-          headerShown: true,
-          header: () => <ScreenHeader title="History" />,
-        }}
-      />
-
       <SectionList
         sections={fileLogsGroupedByWorkedAt}
         showsVerticalScrollIndicator={false}
