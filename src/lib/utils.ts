@@ -291,3 +291,35 @@ export const extractSpreadsheetId = (url: string) => {
   const match = url.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
   return match ? match[1] : url; // assume it's already a bare ID if no match
 };
+
+export const ensureSheetExists = async ({
+  accessToken,
+  spreadsheetId,
+  sheetName,
+}: {
+  accessToken: string;
+  spreadsheetId: string;
+  sheetName: string;
+}) => {
+  const metaRes = await fetch(
+    `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}?fields=sheets.properties.title`,
+    { headers: { Authorization: `Bearer ${accessToken}` } },
+  );
+
+  if (!metaRes.ok) {
+    throw new Error(
+      "Could not access this spreadsheet. Check the link and sharing permissions.",
+    );
+  }
+
+  const meta = await metaRes.json();
+  const exists = meta.sheets?.some(
+    (s: any) => s.properties.title === sheetName,
+  );
+
+  if (!exists) {
+    throw new Error(
+      `Sheet tab "${sheetName}" was not found in this spreadsheet.`,
+    );
+  }
+};
