@@ -7,6 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { getFileLogs } from "@/db/queries/fileworklog.queries";
 import { useDb } from "@/hooks/useDb";
 import {
+  ensureSheetExists,
   extractSpreadsheetId,
   formatDateTime,
   formatLogsForSheet,
@@ -93,39 +94,6 @@ const ExportData = () => {
       return formattedLogs;
     } catch (error) {
       toast.error("Failed to load logs. Please try again.");
-    }
-  };
-
-  // checks if a sheet exists before appending data to it.
-  const ensureSheetExists = async ({
-    accessToken,
-    spreadsheetId,
-    sheetName,
-  }: {
-    accessToken: string;
-    spreadsheetId: string;
-    sheetName: string;
-  }) => {
-    const metaRes = await fetch(
-      `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}?fields=sheets.properties.title`,
-      { headers: { Authorization: `Bearer ${accessToken}` } },
-    );
-
-    if (!metaRes.ok) {
-      throw new Error(
-        "Could not access this spreadsheet. Check the link and sharing permissions.",
-      );
-    }
-
-    const meta = await metaRes.json();
-    const exists = meta.sheets?.some(
-      (s: any) => s.properties.title === sheetName,
-    );
-
-    if (!exists) {
-      throw new Error(
-        `Sheet tab "${sheetName}" was not found in this spreadsheet.`,
-      );
     }
   };
 

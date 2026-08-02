@@ -62,7 +62,7 @@ const QrScanner = ({ value, onScan }: QrScannerProps) => {
             value ? "text-text-primary" : "text-text-primary/60",
           )}
         >
-          {value ? value : "Scan QR code"}
+          {value ? value : "Tap to scan QR code"}
         </Text>
       </Button>
       <QrScannerView

@@ -4,9 +4,14 @@ import { useDb } from "@/hooks/useDb";
 import { useRouter } from "expo-router";
 import LottieView from "lottie-react-native";
 
+import QrScanner from "@/components/qrscanner/qr-scanner";
 import { useAuth } from "@/contexts/AuthContext";
 import { createBulkFileLogs } from "@/db/mutations/fileworklog.mutations";
-import { validateHeaders } from "@/lib/utils";
+import {
+  ensureSheetExists,
+  extractSpreadsheetId,
+  validateHeaders,
+} from "@/lib/utils";
 import { getAccessToken } from "@/services/googleAuthService";
 import dataTable from "@assets/images/data-table.json";
 import React, { useState } from "react";
@@ -17,7 +22,7 @@ const ImportData = () => {
   const { isSignedIn } = useAuth();
   const db = useDb();
   const router = useRouter();
-  const [gSheetUrl, setGSheetUrl] = useState<string | null>(null);
+  const [gsheetUrl, setGsheetUrl] = useState<string | null>(null);
   const [sheetName, setSheetName] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -25,7 +30,7 @@ const ImportData = () => {
     if (typeof rawValue !== "string") return;
     switch (fieldName) {
       case "gsheet_url":
-        setGSheetUrl(rawValue);
+        setGsheetUrl(rawValue);
         break;
       case "sheet_name":
         setSheetName(rawValue);
@@ -34,19 +39,32 @@ const ImportData = () => {
   };
 
   const handleSubmit = async () => {
-    if (!gSheetUrl || !sheetName) {
+    if (!gsheetUrl || !sheetName) {
       toast.info("Both sheet url and sheet name are required");
       return;
     }
+    setIsLoading(true);
 
     const accessToken = await getAccessToken();
 
-    setIsLoading(true);
+    if (!accessToken) {
+      toast.error("Could not fetch access token");
+      return;
+    }
+
+    const spreadsheetId = extractSpreadsheetId(gsheetUrl);
+
     try {
-      const sheetID = gSheetUrl?.split("/")[5];
+      await ensureSheetExists({
+        accessToken: accessToken,
+        spreadsheetId: spreadsheetId,
+        sheetName: sheetName,
+      });
 
       const res = await fetch(
-        `https://sheets.googleapis.com/v4/spreadsheets/${sheetID}/values/${sheetName}`,
+        `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(
+          sheetName,
+        )}`,
         {
           headers: {
             Authorization: `Bearer ${accessToken}`,
@@ -103,7 +121,7 @@ const ImportData = () => {
       toast.error(message);
     } finally {
       setIsLoading(false);
-      setGSheetUrl(null);
+      setGsheetUrl(null);
       setSheetName(null);
     }
   };
@@ -113,16 +131,16 @@ const ImportData = () => {
       {isSignedIn ? (
         <>
           {!isLoading ? (
-            <View className="flex-1 flex-col gap-4">
+            <ScrollView
+              showsVerticalScrollIndicator={false}
+              className="flex-1"
+              contentContainerClassName="flex-col gap-3 pb-safe-offset-6"
+            >
               {/* form */}
-              <FormInput
-                label="Google Sheet URL"
-                name="gsheet_url"
-                onChange={handleOnChangeText}
-                placeholder={"https://docs.google.com/spreadsheet..."}
-                autoFocus
-                value={gSheetUrl}
-              />
+              <View className="form-group">
+                <Text className="form-label">G-Sheet Url</Text>
+                <QrScanner value={gsheetUrl} onScan={setGsheetUrl} />
+              </View>
               <FormInput
                 label="Sheet Name"
                 name="sheet_name"
@@ -134,11 +152,7 @@ const ImportData = () => {
                 <Text className="btn-label">Load Data</Text>
               </Button>
               {/* instruction */}
-              <ScrollView
-                showsVerticalScrollIndicator={false}
-                className="flex-1"
-                contentContainerClassName="flex-col gap-3 pb-safe-offset-6"
-              >
+              <View className="flex-col gap-3">
                 <Text className="text-sm text-text-secondary">
                   Please follow the instructions before importing data:
                 </Text>
@@ -183,8 +197,8 @@ const ImportData = () => {
                 <Text className="text-sm text-text-secondary">
                   • QC file: yes/no (optional)
                 </Text>
-              </ScrollView>
-            </View>
+              </View>
+            </ScrollView>
           ) : (
             <View className="flex-1 flex-col justify-center items-center">
               <LottieView
