@@ -59,12 +59,17 @@ export const getAttendanceDatesQuery = ({
 
   const minFullTarget = targetLEP - 5;
 
+  // note: overrides are intentionally NOT joined in here — drizzle's
+  // useLiveQuery only re-subscribes to change events for this query's FROM
+  // table (fileLogs), so a joined attendanceOverrides table would silently
+  // never trigger a refetch when an override is written. Overrides are
+  // fetched separately (getAttendanceOverridesForMonth) and merged client-side.
   return db
     .select({
       date: sql<number>`cast(strftime('%d', ${fileLogs.workedAt}) as integer)`,
       totalLepPages: sql<number>`sum(${fileLogs.lepPages})`,
       type: sql<"full" | "half" | "absent">`
-          case 
+          case
             when sum(${fileLogs.lepPages}) >= ${minFullTarget} then 'full'
             when sum(${fileLogs.lepPages}) between ${halfTargetPages} and ${minFullTarget - 1} then 'half'
             else 'absent'

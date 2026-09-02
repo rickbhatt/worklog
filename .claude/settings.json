@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git checkout *)",
+      "Bash(xargs grep -l \"useLiveQuery\")",
+      "Bash(git remote *)",
+      "Bash(git rev-list *)"
+    ]
+  }
+}

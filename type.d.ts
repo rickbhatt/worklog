@@ -1,3 +1,4 @@
+import { attendanceOverrides } from "@/db/models/attendance.schema";
 import { fileLogs, targetInfo } from "@/db/models/log.schema";
 import * as schema from "@/db/schema";
 import { cloudAccount } from "@/db/schema";
@@ -152,6 +153,16 @@ export type CloudAccountInsertType = typeof cloudAccount.$inferInsert;
 export type TargetInfoCreateType = Omit<
   TargetInfoInsertType,
   "id" | "createdAt" | "updatedAt"
+>;
+
+export type AttendanceOverrideSelectType =
+  typeof attendanceOverrides.$inferSelect;
+export type AttendanceOverrideInsertType =
+  typeof attendanceOverrides.$inferInsert;
+
+export type AttendanceOverrideCreateType = Omit<
+  AttendanceOverrideInsertType,
+  "createdAt" | "updatedAt"
 >;
 
 type FieldNameFrom<T> = Extract<keyof T, string>;

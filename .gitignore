@@ -10,7 +10,6 @@ dist/
 builds/
 web-build/
 expo-env.d.ts
-command.txt
 
 # Native
 .kotlin/
@@ -38,6 +37,9 @@ yarn-error.*
 
 # typescript
 *.tsbuildinfo
+
+# text files
+*.txt
 
 app-example
 
