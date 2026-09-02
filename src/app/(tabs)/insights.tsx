@@ -6,6 +6,7 @@ import {
   getLatestTargetHour,
   getPreviousMonthSummary,
 } from "@/db/queries/fileworklog.queries";
+import { getAttendanceOverridesForMonth } from "@/db/queries/attendance.queries";
 import {
   getAttendanceDatesQuery,
   getInsightsQuery,
@@ -16,6 +17,7 @@ import {
   calcMomGrowthPercent,
   checkDateGreaterThanToday,
   checkSunday,
+  formatDateTime,
 } from "@/lib/utils";
 import { getDaysInMonth } from "date-fns";
 import { useLiveQuery } from "drizzle-orm/expo-sqlite";
@@ -93,9 +95,25 @@ const Insights = () => {
     [selectedMonth, targetLEP],
   );
 
+  // fetched separately from attendanceDatesData — useLiveQuery only tracks
+  // change events for a query's FROM table, so joining this into the query
+  // above would never refetch when an override is saved
+  const { data: attendanceOverridesData } = useLiveQuery(
+    getAttendanceOverridesForMonth({ db, month: selectedMonth! }),
+    [selectedMonth],
+  );
+
   const attendanceMap = useMemo(() => {
-    return new Map(attendanceDatesData.map((item) => [item.date, item.type]));
-  }, [attendanceDatesData]);
+    const map = new Map(attendanceDatesData.map((item) => [item.date, item.type]));
+
+    // manual overrides win over the dynamic calculation
+    attendanceOverridesData.forEach((override) => {
+      const day = Number(override.date.split("-")[2]);
+      map.set(day, override.type);
+    });
+
+    return map;
+  }, [attendanceDatesData, attendanceOverridesData]);
 
   const calendarDates = useMemo(() => {
     const selectedYear = new Date().getFullYear();
@@ -137,6 +155,14 @@ const Insights = () => {
 
   const onSelect = (name: FieldName<InsightTypes>, value: string | number) => {
     setSelectedMonth(value.toString());
+  };
+
+  const getIsoDateForDay = (day: number) => {
+    const selectedYear = new Date().getFullYear();
+    const selectedMonthIndex = Number(selectedMonth) - 1;
+
+    return formatDateTime(new Date(selectedYear, selectedMonthIndex, day))
+      .dateToISOString;
   };
 
   return (
@@ -320,6 +346,7 @@ const Insights = () => {
                                       ? "stripped"
                                       : "outline"
                                 }
+                                date={getIsoDateForDay(date)}
                               />
                             </>
                           ) : date ? (

@@ -45,3 +45,9 @@ export const MONTH_NAMES: Record<string, string> = {
 };
 
 export const WEEKDAY_LABELS = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
+
+export const ATTENDANCE_TYPE_OPTIONS = [
+  { label: "Full Day", value: "full" },
+  { label: "Half Day", value: "half" },
+  { label: "Absent", value: "absent" },
+];
