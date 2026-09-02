@@ -45,6 +45,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     allowBackup: false,
     predictiveBackGestureEnabled: false,
     package: getUniqueIdentifier(),
+    versionCode: 15,
   },
   web: {
     output: "static",
