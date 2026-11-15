@@ -7,14 +7,20 @@ import { Screen } from "@/components/ui/screen";
 import { Text } from "@/components/ui/text";
 import { useAuth } from "@/contexts/AuthContext";
 import { getLatestTargetHour } from "@/db/queries/fileworklog.queries";
-import { backupState, cloudAccount } from "@/db/schema";
+import { backupState, cloudAccount, journals } from "@/db/schema";
 import { useAppInfo } from "@/hooks/useAppInfo";
 import { useDb } from "@/hooks/useDb";
 import { backupDateTimeDisplay } from "@/lib/utils";
-import { eq } from "drizzle-orm";
+import { count, eq } from "drizzle-orm";
 import { useLiveQuery } from "drizzle-orm/expo-sqlite";
 import { useRouter } from "expo-router";
-import { CloudUpload, Download, Target, Upload } from "lucide-react-native";
+import {
+  BookMarked,
+  CloudUpload,
+  Download,
+  Target,
+  Upload,
+} from "lucide-react-native";
 import React from "react";
 import { Text as RNText, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -44,9 +50,14 @@ const Settings = () => {
 
   const { data: targetData } = useLiveQuery(getLatestTargetHour(db));
 
+  const { data: journalCount } = useLiveQuery(
+    db.select({ total: count() }).from(journals),
+  );
+
   const email = isSignedIn ? cloudAccountInfo[0]?.accountEmail : undefined;
   const target = targetData[0];
   const lastBackupAt = backupStateInfo[0]?.lastBackupAt;
+  const savedJids = journalCount[0]?.total ?? 0;
 
   return (
     <Screen header={<ScreenHeader title="Settings" backButtonVisible />}>
@@ -127,6 +138,17 @@ const Settings = () => {
               title="Export data"
               subtitle="Send logs to a Google Sheet"
               onPress={() => router.push("/settings/export-data")}
+            />
+            <ListRow
+              icon={BookMarked}
+              tone="success"
+              title="Manage JID"
+              subtitle={
+                savedJids > 0
+                  ? `${savedJids} saved journal ${savedJids === 1 ? "ID" : "IDs"}`
+                  : "Add, rename or delete journal IDs"
+              }
+              onPress={() => router.push("/settings/manage-jid")}
             />
           </ListGroup>
         </View>

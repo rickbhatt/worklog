@@ -1,4 +1,9 @@
 import FormInput from "@/components/form-input";
+import {
+  JournalIdInput,
+  JournalIdSuggestions,
+  useJournalIdSuggestions,
+} from "@/components/journal-id-field";
 import { Button } from "@/components/ui/button";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { Text } from "@/components/ui/text";
@@ -23,8 +28,11 @@ const FileWorklogForm = ({
   value,
   onSubmit,
   onChange,
+  submitLabel = "Save log",
 }: FileWorklogFormProps) => {
   const { bottom } = useSafeAreaInsets();
+
+  const journal = useJournalIdSuggestions(value.journalId);
 
   const keyboard = useKeyboardState();
 
@@ -91,16 +99,11 @@ const FileWorklogForm = ({
         }}
       >
         <View className="flex-row gap-3">
-          <FormInput
-            label="Journal ID"
-            autoCapitalize="characters"
-            name="journalId"
-            maxLength={4}
-            autoFocus={true}
-            placeholder="NPP2, MDR2…"
+          <JournalIdInput
             value={value.journalId}
             onChange={handleInputChange}
-            rowMode
+            onFocus={journal.onFocus}
+            onBlur={journal.onBlur}
           />
           <FormInput
             label="Article ID"
@@ -113,6 +116,17 @@ const FileWorklogForm = ({
             rowMode
           />
         </View>
+
+        {journal.open && (
+          <JournalIdSuggestions
+            query={value.journalId ?? ""}
+            suggestions={journal.suggestions}
+            onSelect={(id) => {
+              journal.markPicked(id);
+              handleInputChange("journalId", id);
+            }}
+          />
+        )}
 
         <View className="form-group">
           <RNText className="form-label">File type</RNText>
@@ -190,7 +204,7 @@ const FileWorklogForm = ({
         style={{ paddingBottom: keyboard.isVisible ? 12 : Math.max(bottom, 16) }}
       >
         <Button className="w-full" onPress={() => onSubmit(value)}>
-          <Text>Save log</Text>
+          <Text>{submitLabel}</Text>
         </Button>
       </KeyboardStickyView>
     </View>

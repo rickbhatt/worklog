@@ -90,6 +90,8 @@ export interface FileWorklogFormProps {
   value: Partial<FileLogsCreateInput>;
   onChange: React.Dispatch<React.SetStateAction<Partial<FileLogsCreateInput>>>;
   onSubmit: (data: Partial<FileLogsCreateInput>) => void;
+  /** Text on the submit button. Defaults to "Save log". */
+  submitLabel?: string;
 }
 
 interface ScreenHeaderProps {

@@ -1,4 +1,5 @@
 import { fileLogs, targetInfo } from "@/db/models/log.schema";
+import { saveJournalIds } from "@/db/mutations/journal.mutations";
 import { formatDateTime } from "@/lib/utils";
 import { and, eq, ne, sql } from "drizzle-orm";
 
@@ -105,6 +106,8 @@ export const createFileLog = async (db: Db, logData: FileLogsCreateInput) => {
         isMdc: fileLogs.isMdc,
       });
 
+    await saveJournalIds(db, [row.journalId]);
+
     return row;
   } catch (error) {
     if (!(error instanceof DuplicateFileLogError))
@@ -176,6 +179,10 @@ export const updateFileLogById = async ({
         isQcFile: fileLogs.isQcFile,
         isMdc: fileLogs.isMdc,
       });
+
+    if (row && data.journalId !== undefined) {
+      await saveJournalIds(db, [row.journalId]);
+    }
 
     return row;
   } catch (error) {
@@ -272,6 +279,11 @@ export const createBulkFileLogs = async (
         }
       });
     }
+
+    await saveJournalIds(
+      db,
+      rows.map((r) => r.journalId),
+    );
 
     return { inserted: rows.length, skipped };
   } catch (error) {
