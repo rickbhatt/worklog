@@ -10,6 +10,7 @@ dist/
 builds/
 web-build/
 expo-env.d.ts
+docs/
 
 # Native
 .kotlin/

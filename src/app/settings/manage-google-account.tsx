@@ -1,18 +1,26 @@
 import RestoreBottomsheet from "@/components/bottomsheets/restore-bottomsheet";
 import DynamicIcon from "@/components/dynamic-icon";
+import ScreenHeader from "@/components/screen-header";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Icon } from "@/components/ui/icon";
+import { Screen } from "@/components/ui/screen";
+import { Text } from "@/components/ui/text";
 import { useAuth } from "@/contexts/AuthContext";
 import { backupState, cloudAccount } from "@/db/schema";
 import { useDb } from "@/hooks/useDb";
 import { listAppDataFiles } from "@/services/backupService";
+import { useTheme } from "@/theme/theme-provider";
 import { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { eq } from "drizzle-orm";
 import { useLiveQuery } from "drizzle-orm/expo-sqlite";
+import { LogOut } from "lucide-react-native";
 import React, { useRef, useState } from "react";
-import { Text, View } from "react-native";
+import { Text as RNText, View } from "react-native";
 
 const ManageAccount = () => {
   const db = useDb();
+  const { colors } = useTheme();
   const { signIn, signOut, isSignedIn } = useAuth();
   const { data: cloudAccountInfo } = useLiveQuery(
     db.select().from(cloudAccount).limit(1),
@@ -54,39 +62,60 @@ const ManageAccount = () => {
     await checkAndTriggerRestore();
   };
 
+  const email = cloudAccountInfo[0]?.accountEmail;
+
   return (
     <>
-      <View className="bg-bg-primary flex-col gap-3 flex-1 screen-x-padding pb-safe">
-        <View className="flex-col mt-3">
-          <Text className="text-sm text-text-secondary">
+      <Screen
+        header={<ScreenHeader title="Google account" backButtonVisible />}
+      >
+        <View className="gap-5 px-5 pt-2">
+          {isSignedIn ? (
+            <Card className="gap-4 p-4">
+              <View className="flex-row items-center gap-3.5">
+                <View className="h-12 w-12 items-center justify-center rounded-full bg-accent-soft">
+                  <RNText className="font-manrope-extrabold text-lg text-accent">
+                    {email ? email.charAt(0).toUpperCase() : "G"}
+                  </RNText>
+                </View>
+                <View className="min-w-0 flex-1 gap-0.5">
+                  <RNText
+                    numberOfLines={1}
+                    className="font-inter-semibold text-[15px] text-foreground"
+                  >
+                    {email}
+                  </RNText>
+                  <RNText className="caption">Signed in</RNText>
+                </View>
+              </View>
+              <Button variant="secondary" size="sm" onPress={signOut}>
+                <Icon
+                  as={LogOut}
+                  size={16}
+                  strokeWidth={1.8}
+                  className="text-foreground"
+                />
+                <Text>Sign out</Text>
+              </Button>
+            </Card>
+          ) : (
+            <Button onPress={handleSignIn}>
+              <DynamicIcon
+                name="google"
+                family="AntDesign"
+                size={20}
+                color={colors.onAccent}
+              />
+              <Text>Sign in with Google</Text>
+            </Button>
+          )}
+
+          <RNText className="px-1 font-inter text-sm leading-[22px] text-muted">
             We need your Google account to upload and download your backups and
-            to create and access Google sheets.
-          </Text>
+            to create and access Google Sheets.
+          </RNText>
         </View>
-        {isSignedIn ? (
-          <View className="flex-col gap-3">
-            <View className="flex-col gap-1.5">
-              <Text className="base-paragraph">Google Account</Text>
-              <Text className="text-text-secondary text-sm">
-                {cloudAccountInfo[0]?.accountEmail}
-              </Text>
-            </View>
-            <Button onPress={signOut}>
-              <Text className="btn-label">Sign out</Text>
-            </Button>
-          </View>
-        ) : (
-          <>
-            <Button
-              className="flex-row items-center py-3 px-4"
-              onPress={handleSignIn}
-            >
-              <DynamicIcon name="google" family="AntDesign" color="#FFFFFF" />
-              <Text className="btn-label">Sign in with Google</Text>
-            </Button>
-          </>
-        )}
-      </View>
+      </Screen>
       <RestoreBottomsheet
         data={{
           lastBackedUpDate: restoreData?.lastBackedUpDate || "",

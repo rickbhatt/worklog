@@ -1,30 +1,20 @@
 import AlertDialogBox from "@/components/alert-dialogbox";
-import DynamicIcon from "@/components/dynamic-icon";
 import { Button } from "@/components/ui/button";
+import { Icon } from "@/components/ui/icon";
+import { TypeTag } from "@/components/ui/pill";
+import { useSheetStyles } from "@/components/ui/sheet";
 import { deleteFileLogById } from "@/db/mutations/fileworklog.mutations";
 import { getFileLogById } from "@/db/queries/fileworklog.queries";
 import { useDb } from "@/hooks/useDb";
 import { convertTimeTakenToHoursMins, formatDateTime } from "@/lib/utils";
-import {
-  BottomSheetBackdrop,
-  BottomSheetModal,
-  BottomSheetView,
-} from "@gorhom/bottom-sheet";
+import { BottomSheetModal, BottomSheetView } from "@gorhom/bottom-sheet";
 import { useRouter } from "expo-router";
+import { Pencil, Trash2 } from "lucide-react-native";
 
 import { RefObject, useEffect, useState } from "react";
 import { Text, View } from "react-native";
 import { toast } from "sonner-native";
 import { FileLogsSelectType } from "type";
-
-const renderBackdrop = (props: any) => (
-  <BottomSheetBackdrop
-    {...props}
-    disappearsOnIndex={-1}
-    appearsOnIndex={0}
-    opacity={0.6}
-  />
-);
 
 const LogDetailBottomsheet = ({
   ref,
@@ -41,6 +31,8 @@ const LogDetailBottomsheet = ({
 
   const router = useRouter();
 
+  const sheetStyles = useSheetStyles();
+
   const modalOnChange = () => {
     if (!isModalOpen) {
       setIsModalOpen(true);
@@ -53,7 +45,7 @@ const LogDetailBottomsheet = ({
       const row = await getFileLogById(db, id);
 
       setFileLog(row);
-    } catch (error) {
+    } catch {
       toast.error("Failed to get log");
     }
   };
@@ -77,7 +69,7 @@ const LogDetailBottomsheet = ({
 
       setIsAlertDialogOpen(false);
       toast.success(`${row?.journalId}-${row?.articleId} deleted successfully`);
-    } catch (error) {
+    } catch {
       toast.error("Failed to delete log");
     }
   };
@@ -94,88 +86,102 @@ const LogDetailBottomsheet = ({
       <BottomSheetModal
         name="log-detail"
         onChange={modalOnChange}
-        backdropComponent={renderBackdrop}
+        {...sheetStyles}
         onDismiss={() => setIsModalOpen(false)}
         enableContentPanningGesture={true}
         enableDismissOnClose
         enableDynamicSizing={true}
-        handleIndicatorStyle={{
-          backgroundColor: "#FFFFFF",
-          width: 40,
-        }}
         ref={ref}
-        backgroundStyle={{ backgroundColor: "#242424" }}
       >
-        <BottomSheetView className="pt-4 mt-2 screen-x-padding flex-1 flex-col pb-safe-offset-6">
+        <BottomSheetView className="flex-col gap-5 px-5 pb-safe-offset-6 pt-2">
           {/* Header */}
-          <View className="flex-between flex-row">
-            <Text className="text-2xl font-bold text-text-primary">
-              {fileLog?.journalId}-{fileLog?.articleId}
-            </Text>
-            <View className="flex-row gap-x-3">
-              <Button
-                onPress={handleDelete}
-                className="rounded-full flex-row items-center justify-center h-14 w-14 border-light-100 border"
-                variant={"outline"}
+          <View className="flex-row items-center justify-between gap-3">
+            <View className="min-w-0 flex-1 gap-1.5">
+              <Text
+                numberOfLines={1}
+                className="title-pushed text-[22px]"
               >
-                <DynamicIcon
-                  family="MaterialIcons"
-                  name="delete-outline"
-                  color="#EF4444"
-                  size={24}
+                {fileLog?.journalId}-{fileLog?.articleId}
+              </Text>
+              <View className="flex-row gap-1.5">
+                <TypeTag
+                  label={fileLog?.isSml === 1 ? "SML" : "MNL"}
+                  accent
+                />
+                {fileLog?.isSml === 1 && fileLog?.isND === 1 && (
+                  <TypeTag label="ND" />
+                )}
+                {fileLog?.isOT === 1 && <TypeTag label="OT" />}
+                {fileLog?.isQcFile === 1 && <TypeTag label="QC" />}
+                {fileLog?.isMdc === 1 && <TypeTag label="MDC" />}
+                {fileLog?.isCompensatedFile === 1 && (
+                  <TypeTag label="COMP" />
+                )}
+              </View>
+            </View>
+            <View className="flex-row gap-2">
+              <Button
+                variant="secondary"
+                size="icon"
+                onPress={handleDelete}
+                accessibilityLabel="Delete log"
+              >
+                <Icon
+                  as={Trash2}
+                  size={18}
+                  strokeWidth={1.8}
+                  className="text-accent"
                 />
               </Button>
               <Button
+                size="icon"
                 onPress={handleEditPress}
-                className="rounded-full flex-row items-center justify-center h-14 w-14"
+                accessibilityLabel="Edit log"
               >
-                <DynamicIcon
-                  family="Entypo"
-                  name="edit"
-                  color="#FFFFFF"
-                  size={24}
+                <Icon
+                  as={Pencil}
+                  size={18}
+                  strokeWidth={1.8}
+                  className="text-on-accent"
                 />
               </Button>
             </View>
           </View>
 
           {/* Content */}
-          <View className="mt-3.5 flex-col gap-3">
-            <Text className="text-base text-text-primary">
-              LEP Pages: {fileLog?.lepPages}
-            </Text>
-            <Text className="text-base text-text-primary">
-              Time taken to complete:{" "}
-              {convertTimeTakenToHoursMins(fileLog?.timeTaken)}
-            </Text>
-            <Text className="text-base text-text-primary">
-              Worked At: {formatDateTime(fileLog?.workedAt).shortDateWithYear}
-            </Text>
-            <Text className="text-base text-text-primary">
-              File type: {fileLog?.isSml === 1 ? "SML" : "Manual"}
-            </Text>
-            {fileLog?.isSml === 1 && (
-              <Text className="text-base text-text-primary">
-                ND File: {fileLog?.isND === 1 ? "Yes" : "No"}
-              </Text>
-            )}
-            {fileLog?.isOT === 1 && (
-              <Text className="text-base text-text-primary">OT File: Yes</Text>
-            )}
-            {fileLog?.isQcFile === 1 && (
-              <Text className="text-base text-text-primary">QC File: Yes</Text>
-            )}
-            {fileLog?.isCompensatedFile === 1 && (
-              <Text className="text-base text-text-primary">
-                Compensatory File: Yes
-              </Text>
-            )}
-            {fileLog?.remarks && (
-              <Text className="text-base text-text-primary">
-                Remarks: {fileLog.remarks}
-              </Text>
-            )}
+          <View className="overflow-hidden rounded-[18px] border border-line bg-raised">
+            {[
+              ["LEP pages", fileLog?.lepPages?.toString()],
+              [
+                "Time taken",
+                convertTimeTakenToHoursMins(fileLog?.timeTaken),
+              ],
+              [
+                "Worked on",
+                formatDateTime(fileLog?.workedAt).shortDateWithYear,
+              ],
+            ].map(([label, value], index) => (
+              <View
+                key={label}
+                className={
+                  index > 0
+                    ? "flex-row items-center justify-between border-t border-line px-4 py-3"
+                    : "flex-row items-center justify-between px-4 py-3"
+                }
+              >
+                <Text className="font-inter text-sm text-muted">{label}</Text>
+                <Text className="font-inter-semibold text-sm tabular-nums text-foreground">
+                  {value}
+                </Text>
+              </View>
+            ))}
           </View>
+          {fileLog?.remarks ? (
+            <View className="gap-1.5">
+              <Text className="form-label">Remarks</Text>
+              <Text className="body leading-[22px]">{fileLog.remarks}</Text>
+            </View>
+          ) : null}
         </BottomSheetView>
       </BottomSheetModal>
       <AlertDialogBox

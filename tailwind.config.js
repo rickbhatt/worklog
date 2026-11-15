@@ -8,51 +8,32 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        border: "hsl(var(--border))",
-        input: "hsl(var(--input))",
-        ring: "hsl(var(--ring))",
-        background: "hsl(var(--background))",
-        foreground: "hsl(var(--foreground))",
-        primary: {
-          DEFAULT: "hsl(var(--primary))",
-          foreground: "hsl(var(--primary-foreground))",
-        },
-        secondary: {
-          DEFAULT: "hsl(var(--secondary))",
-          foreground: "hsl(var(--secondary-foreground))",
-        },
-        destructive: "#EF4444",
-        muted: {
-          DEFAULT: "hsl(var(--muted))",
-          foreground: "hsl(var(--muted-foreground))",
-        },
-        popover: {
-          DEFAULT: "hsl(var(--popover))",
-          foreground: "hsl(var(--popover-foreground))",
-        },
-        card: {
-          DEFAULT: "hsl(var(--card))",
-          foreground: "hsl(var(--card-foreground))",
-        },
-        accent: "#F36040",
-        dark: {
-          100: "#070707",
-          200: "#242424",
-          250: "#1f1f1f",
-          300: "#c3c3c3",
-        },
-        light: {
-          100: "#FFFFFF",
-        },
-        "bg-primary": "#070707",
-        "text-primary": "#FFFFFF",
-        "text-secondary": "#c3c3c3",
-        "tab-acitve-tint": "#F36040",
+        // Crimson Noir tokens — values live in src/theme/tokens.ts and are
+        // injected as CSS variables by ThemeProvider (light/dark follow system).
+        background: "var(--bg)",
+        surface: "var(--surface)",
+        raised: "var(--raised)",
+        line: "var(--line)",
+        foreground: "var(--text)",
+        muted: "var(--muted)",
+        accent: "var(--accent)",
+        "accent-soft": "var(--accent-soft)",
+        "on-accent": "var(--on-accent)",
+        success: "var(--success)",
+        "success-soft": "var(--success-soft)",
+        warning: "var(--warning)",
+        "warning-soft": "var(--warning-soft)",
+        neutral: "var(--neutral)",
+        "neutral-soft": "var(--neutral-soft)",
+        "bar-inactive": "var(--bar-inactive)",
+        nav: "var(--nav)",
       },
-      borderRadius: {
-        lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
+      fontFamily: {
+        inter: ["Inter_400Regular"],
+        "inter-medium": ["Inter_500Medium"],
+        "inter-semibold": ["Inter_600SemiBold"],
+        "manrope-bold": ["Manrope_700Bold"],
+        "manrope-extrabold": ["Manrope_800ExtraBold"],
       },
       borderWidth: {
         hairline: hairlineWidth(),

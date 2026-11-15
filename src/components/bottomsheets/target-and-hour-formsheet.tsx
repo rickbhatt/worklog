@@ -1,26 +1,15 @@
 import FormInput from "@/components/form-input";
 import { Button } from "@/components/ui/button";
+import { useSheetBottomPadding, useSheetStyles } from "@/components/ui/sheet";
+import { Text } from "@/components/ui/text";
 import { createTargetInfo } from "@/db/mutations/fileworklog.mutations";
 import { useDb } from "@/hooks/useDb";
 import { validateForm } from "@/lib/utils";
-import {
-  BottomSheetBackdrop,
-  BottomSheetModal,
-  BottomSheetView,
-} from "@gorhom/bottom-sheet";
+import { BottomSheetModal, BottomSheetView } from "@gorhom/bottom-sheet";
 import React, { RefObject, useState } from "react";
-import { Text, View } from "react-native";
+import { Text as RNText, View } from "react-native";
 import { toast } from "sonner-native";
 import { TargetInfoCreateType } from "type";
-
-const renderBackdrop = (props: any) => (
-  <BottomSheetBackdrop
-    {...props}
-    disappearsOnIndex={-1}
-    appearsOnIndex={0}
-    opacity={0.6}
-  />
-);
 
 const TargetAndHourForm = ({
   ref,
@@ -33,6 +22,10 @@ const TargetAndHourForm = ({
   });
 
   const db = useDb();
+
+  const sheetStyles = useSheetStyles();
+
+  const bottomPadding = useSheetBottomPadding();
 
   const handleOnChange = (fieldName: string, rawValue: number | string) => {
     setFormData({
@@ -72,20 +65,24 @@ const TargetAndHourForm = ({
   return (
     <BottomSheetModal
       ref={ref}
-      backdropComponent={renderBackdrop}
-      snapPoints={["90%"]}
-      enableDynamicSizing={false}
-      handleIndicatorStyle={{
-        backgroundColor: "#FFFFFF",
-        width: 40,
-      }}
-      backgroundStyle={{ backgroundColor: "#242424" }}
+      name="new-target"
+      {...sheetStyles}
+      enableDynamicSizing
     >
-      <BottomSheetView className="screen-x-padding pt-5">
-        {/* form */}
-        <View className="flex-col flex-1 gap-y-3">
+      <BottomSheetView
+        className="gap-5 px-5 pt-2"
+        style={{ paddingBottom: bottomPadding }}
+      >
+        <View className="gap-1">
+          <RNText className="title-pushed text-[22px]">New target</RNText>
+          <RNText className="caption">
+            Applies from today and replaces the active target.
+          </RNText>
+        </View>
+
+        <View className="flex-row gap-3">
           <FormInput
-            label="Target LEP pages"
+            label="LEP pages / day"
             name="targetLepPages"
             onChange={handleOnChange}
             maxLength={2}
@@ -93,21 +90,25 @@ const TargetAndHourForm = ({
             inputMode="numeric"
             autoFocus
             value={formData.targetLepPages}
+            numeric
+            rowMode
           />
           <FormInput
-            label="Pages per hour"
+            label="Pages / hour"
             name="pagesPerHour"
             onChange={handleOnChange}
             maxLength={2}
             placeholder="9"
             inputMode="numeric"
             value={formData.pagesPerHour}
+            numeric
+            rowMode
           />
-
-          <Button onPress={handleOnSubmit} className="py-3 w-full">
-            <Text className="btn-label">Save</Text>
-          </Button>
         </View>
+
+        <Button onPress={handleOnSubmit}>
+          <Text>Save target</Text>
+        </Button>
       </BottomSheetView>
     </BottomSheetModal>
   );

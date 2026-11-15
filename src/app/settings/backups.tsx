@@ -1,5 +1,13 @@
 import HorzLoader from "@/components/horz-loader";
+import ScreenHeader from "@/components/screen-header";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { ScrollView } from "@/components/ui/gesture-scroll";
+import { Icon } from "@/components/ui/icon";
+import { IconTile } from "@/components/ui/list-group";
+import { Pill } from "@/components/ui/pill";
+import { Screen } from "@/components/ui/screen";
+import { Text } from "@/components/ui/text";
 import { useAuth } from "@/contexts/AuthContext";
 import { backupState, cloudAccount } from "@/db/schema";
 import { useDb } from "@/hooks/useDb";
@@ -12,16 +20,47 @@ import {
 import { eq } from "drizzle-orm";
 import { useLiveQuery } from "drizzle-orm/expo-sqlite";
 import { useRouter } from "expo-router";
+import { Check, CloudUpload } from "lucide-react-native";
 import { useState } from "react";
-import { Text, View } from "react-native";
+import { Text as RNText, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+
+const DetailRow = ({
+  label,
+  value,
+  first,
+}: {
+  label: string;
+  value: string;
+  first?: boolean;
+}) => (
+  <View
+    className={
+      first
+        ? "flex-row items-center justify-between gap-4 px-[18px] py-4"
+        : "flex-row items-center justify-between gap-4 border-t border-line px-[18px] py-4"
+    }
+  >
+    <RNText className="font-inter text-sm text-muted">{label}</RNText>
+    <RNText
+      numberOfLines={1}
+      ellipsizeMode="middle"
+      className="flex-shrink font-inter-semibold text-sm tabular-nums text-foreground"
+    >
+      {value}
+    </RNText>
+  </View>
+);
 
 const Backups = () => {
-  const { isSignedIn, signIn, signOut } = useAuth();
+  const { isSignedIn, signOut } = useAuth();
   const [isUploading, setIsUploading] = useState(false);
 
   const db = useDb();
 
   const router = useRouter();
+
+  const { bottom } = useSafeAreaInsets();
 
   const { data: cloudAccountInfo } = useLiveQuery(
     db.select().from(cloudAccount).limit(1),
@@ -45,100 +84,150 @@ const Backups = () => {
     }
   };
 
+  const hasBackup = backupStateInfo.length > 0;
+
   return (
-    <>
-      <View className="screen flex-col pb-safe gap-4">
-        <View className="flex-row">
-          <Text className="text-sm text-text-secondary">
-            Backup your logs to Google Drive storage. You can restore them on
-            new phone after you download Worklog on it.
-          </Text>
-        </View>
+    <Screen header={<ScreenHeader title="Backups" backButtonVisible />}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerClassName="gap-[22px] px-5 pt-2"
+        contentContainerStyle={{ paddingBottom: bottom + 24 }}
+      >
         {isSignedIn ? (
-          <View className="flex-col gap-4">
-            {backupStateInfo.length < 1 ? (
-              <View className="flex-row">
-                <Text className="base-paragraph">No backups yet</Text>
-              </View>
-            ) : (
-              <View className="flex-col gap-2">
-                <Text className="base-paragraph">
-                  Last backup:{" "}
-                  {backupDateTimeDisplay(backupStateInfo[0]?.lastBackupAt!)}
-                </Text>
-                <Text className="base-paragraph">
-                  Size: {formatBackupSize(backupStateInfo[0]?.backupSize || 0)}
-                </Text>
-              </View>
-            )}
-            {isUploading ? (
-              <HorzLoader
-                loading={isUploading}
-                duration={1000}
-                className="mt-2"
-                trackClassName="h-1 bg-dark-200"
-                indicatorClassName="bg-accent"
+          <>
+            {/* status */}
+            <Card className="items-center gap-3.5 rounded-[24px] px-5 py-6">
+              <IconTile
+                icon={CloudUpload}
+                tone="accent"
+                size={72}
+                iconSize={34}
+                className="rounded-[24px]"
               />
+              <View className="items-center gap-1">
+                {hasBackup ? (
+                  <Pill
+                    tone="success"
+                    className="self-center px-2.5"
+                    icon={
+                      <Icon
+                        as={Check}
+                        size={14}
+                        strokeWidth={2.4}
+                        className="text-success"
+                      />
+                    }
+                  >
+                    Backed up
+                  </Pill>
+                ) : (
+                  <Pill tone="neutral" className="self-center px-2.5">
+                    Not backed up yet
+                  </Pill>
+                )}
+                <RNText className="mt-2 text-center font-manrope-extrabold text-[22px] text-foreground">
+                  {hasBackup
+                    ? backupDateTimeDisplay(backupStateInfo[0]?.lastBackupAt!)
+                    : "No backups yet"}
+                </RNText>
+                <RNText className="text-center font-inter text-sm text-muted">
+                  {hasBackup
+                    ? "Last backup to Google Drive"
+                    : "Back up now to keep your logs safe"}
+                </RNText>
+              </View>
+            </Card>
+
+            {/* details */}
+            <Card className="overflow-hidden">
+              <DetailRow
+                first
+                label="Backup size"
+                value={
+                  hasBackup
+                    ? formatBackupSize(backupStateInfo[0]?.backupSize || 0)
+                    : "—"
+                }
+              />
+              <DetailRow
+                label="Google account"
+                value={cloudAccountInfo[0]?.accountEmail ?? "—"}
+              />
+            </Card>
+
+            <RNText className="px-1 font-inter text-sm leading-[22px] text-muted">
+              Your logs are saved to your Google Drive. Install Worklog on a
+              new phone and sign in to restore them.
+            </RNText>
+
+            {isUploading ? (
+              <View className="gap-3 py-2">
+                <RNText className="caption text-center">Backing up…</RNText>
+                <HorzLoader loading={isUploading} duration={1000} />
+              </View>
             ) : (
-              <Button
-                onPress={handleManualBackup}
-                className="w-40 p-3 rounded-full"
-                disabled={isUploading}
-              >
-                <Text className="btn-label">Back up</Text>
+              <Button onPress={handleManualBackup} disabled={isUploading}>
+                <Icon
+                  as={CloudUpload}
+                  size={20}
+                  strokeWidth={2}
+                  className="text-on-accent"
+                />
+                <Text>Back up now</Text>
               </Button>
             )}
 
-            <View className="flex-col gap-1.5 items-start p-0">
-              <Text className="base-paragraph">Google Account</Text>
-              <Text className="text-text-secondary text-sm">
-                {cloudAccountInfo[0]?.accountEmail}
-              </Text>
-            </View>
-          </View>
+            {__DEV__ && (
+              <View className="gap-2.5">
+                <Button
+                  variant="secondary"
+                  onPress={async () => {
+                    let resop = await listAppDataFiles();
+                    console.log(
+                      "🚀 ~ Backups ~ resop:",
+                      JSON.stringify(resop[0], null, 2),
+                    );
+                  }}
+                >
+                  <Text>List Drive Files</Text>
+                </Button>
+                <Button
+                  variant="secondary"
+                  onPress={async () => {
+                    await deleteAllDriveFiles(db);
+                  }}
+                >
+                  <Text>Delete Drive Files</Text>
+                </Button>
+                <Button variant="secondary" onPress={signOut}>
+                  <Text>Sign out</Text>
+                </Button>
+              </View>
+            )}
+          </>
         ) : (
-          <View className="flex-col gap-4">
-            <Text className="base-paragraph">
-              Please singn in with your Google account to enable backup and
-              restore features.
-            </Text>
+          <Card className="items-center gap-4 rounded-[24px] px-5 py-6">
+            <IconTile
+              icon={CloudUpload}
+              tone="accent"
+              size={72}
+              iconSize={34}
+              className="rounded-[24px]"
+            />
+            <RNText className="text-center font-inter text-sm leading-[22px] text-muted">
+              Backup your logs to Google Drive storage. Sign in with your
+              Google account to enable backup and restore.
+            </RNText>
             <Button
-              className="flex-row items-center py-3 px-4"
+              className="self-stretch"
               onPress={() => router.push("/settings/manage-google-account")}
             >
-              <Text className="btn-label">Manage Google Account</Text>
+              <Text>Manage Google account</Text>
             </Button>
-          </View>
+          </Card>
         )}
-      </View>
-      {__DEV__ && (
-        <View className="screen flex-1 flex-row gap-2.5 pb-safe">
-          <View className="flex-1 flex-col gap-2.5">
-            <Button
-              onPress={async () => {
-                let resop = await listAppDataFiles();
-                console.log(
-                  "🚀 ~ Backups ~ resop:",
-                  JSON.stringify(resop[0], null, 2),
-                );
-              }}
-            >
-              <Text className="btn-label">List Drive Files</Text>
-            </Button>
-            <Button
-              onPress={async () => {
-                await deleteAllDriveFiles(db);
-              }}
-            >
-              <Text className="btn-label">Delete Drive Files</Text>
-            </Button>
-            <Button onPress={signOut}>
-              <Text className="btn-label">Sign out</Text>
-            </Button>
-          </View>
-        </View>
-      )}
-    </>
+      </ScrollView>
+    </Screen>
   );
 };
 

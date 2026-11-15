@@ -27,7 +27,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
   name: getAppName(),
   slug: "worklog",
-  version: "1.8.0",
+  version: "2.3.0",
   orientation: "portrait",
   icon: "./assets/images/icon.png",
   scheme: "worklog",
@@ -46,6 +46,12 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     predictiveBackGestureEnabled: false,
     package: getUniqueIdentifier(),
     versionCode: 15,
+  },
+  // Turn off Android's grey contrast scrim behind the 3-button navigation
+  // bar; the bar is transparent over the app background and its button
+  // colour follows the theme (NavigationBar.setStyle in src/app/_layout.tsx).
+  androidNavigationBar: {
+    enforceContrast: false,
   },
   web: {
     output: "static",
@@ -76,6 +82,8 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     ],
     "expo-sqlite",
     "@react-native-community/datetimepicker",
+    // Themes the native date picker dialog for light and dark mode.
+    "./plugins/with-date-picker-theme",
     "expo-secure-store",
     "@react-native-google-signin/google-signin",
     [

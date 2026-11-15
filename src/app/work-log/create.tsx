@@ -1,9 +1,13 @@
 import FileWorklogForm from "@/components/file-worklog-form";
-import { createFileLog } from "@/db/mutations/fileworklog.mutations";
+import ScreenHeader from "@/components/screen-header";
+import { Screen } from "@/components/ui/screen";
+import {
+  createFileLog,
+  DuplicateFileLogError,
+} from "@/db/mutations/fileworklog.mutations";
 import { useDb } from "@/hooks/useDb";
 import { validateForm } from "@/lib/utils";
 import React, { useState } from "react";
-import { View } from "react-native";
 import { toast } from "sonner-native";
 import { FileLogsCreateInput } from "type";
 
@@ -19,6 +23,7 @@ const CreateWorkLog = () => {
     isND: 0,
     isCompensatedFile: 0,
     isQcFile: 0,
+    isMdc: 0,
     remarks: undefined,
   });
 
@@ -57,6 +62,7 @@ const CreateWorkLog = () => {
       isND: formData.isND,
       isCompensatedFile: formData.isCompensatedFile,
       isQcFile: formData.isQcFile,
+      isMdc: formData.isMdc,
       remarks: formData.remarks,
     };
 
@@ -74,23 +80,30 @@ const CreateWorkLog = () => {
         isND: 0,
         isCompensatedFile: 0,
         isQcFile: 0,
+        isMdc: 0,
         remarks: undefined,
       });
 
       toast.success("Log saved successfully");
     } catch (error) {
+      if (error instanceof DuplicateFileLogError) {
+        toast.error(error.message);
+        return;
+      }
       console.error("Failed to submit file log", error);
       toast.error("Failed to submit file log");
     }
   };
   return (
-    <View className="pt-2 flex-1 bg-bg-primary">
+    <Screen
+      header={<ScreenHeader title="New log" backButtonVisible />}
+    >
       <FileWorklogForm
         value={formData}
         onChange={setFormData}
         onSubmit={handleSubmit}
       />
-    </View>
+    </Screen>
   );
 };
 export default CreateWorkLog;

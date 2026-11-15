@@ -76,12 +76,6 @@ export type DynamicIconProps =
       color?: string;
     };
 
-interface TabBarIconProps {
-  focused: boolean;
-  icon: React.ReactNode;
-  title: string;
-}
-
 export type InputModeOptions =
   | "none"
   | "text"
@@ -101,11 +95,7 @@ export interface FileWorklogFormProps {
 interface ScreenHeaderProps {
   title: string;
   backButtonVisible?: boolean;
-  rightButtons?: {
-    icon: React.ReactNode;
-    onPress: () => void;
-    name: string;
-  }[];
+  right?: React.ReactNode;
 }
 
 export type FileLogsCreateInput = Omit<
@@ -145,6 +135,7 @@ export type FileLogsListItemType = Pick<
   | "isND"
   | "isCompensatedFile"
   | "isQcFile"
+  | "isMdc"
 >;
 export type TargetInfoSelectType = typeof targetInfo.$inferSelect;
 export type TargetInfoInsertType = typeof targetInfo.$inferInsert;
@@ -167,7 +158,7 @@ export type AttendanceOverrideCreateType = Omit<
 
 type FieldNameFrom<T> = Extract<keyof T, string>;
 
-export type FieldName<TExtraFields extends Record<string, unknown> = {}> =
+export type FieldName<TExtraFields extends Record<string, unknown> = Record<never, never>> =
   | FieldNameFrom<FileLogsInsertType>
   | FieldNameFrom<TargetInfoInsertType>
   | FieldNameFrom<TExtraFields>;

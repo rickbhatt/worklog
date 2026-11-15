@@ -1,10 +1,14 @@
 import FileWorklogForm from "@/components/file-worklog-form";
-import { updateFileLogById } from "@/db/mutations/fileworklog.mutations";
+import ScreenHeader from "@/components/screen-header";
+import { Screen } from "@/components/ui/screen";
+import {
+  DuplicateFileLogError,
+  updateFileLogById,
+} from "@/db/mutations/fileworklog.mutations";
 import { getFileLogById } from "@/db/queries/fileworklog.queries";
 import { useDb } from "@/hooks/useDb";
 import { useLocalSearchParams } from "expo-router";
 import React, { useEffect, useState } from "react";
-import { View } from "react-native";
 import { toast } from "sonner-native";
 import { FileLogsCreateInput, FileLogsInsertType } from "type";
 
@@ -31,11 +35,12 @@ const EditFileLog = () => {
         isND: row.isND,
         isCompensatedFile: row.isCompensatedFile,
         isQcFile: row.isQcFile,
+        isMdc: row.isMdc,
         remarks: row.remarks,
       };
 
       setFormData(initialData);
-    } catch (error) {
+    } catch {
       toast.error("Failed to get log");
     }
   };
@@ -56,6 +61,10 @@ const EditFileLog = () => {
 
       toast.success(`Updated ${row?.journalId}-${row?.articleId} successfully`);
     } catch (error) {
+      if (error instanceof DuplicateFileLogError) {
+        toast.error(error.message);
+        return;
+      }
       console.error("Failed to submit file log", error);
       toast.error("Failed to submit file log");
     }
@@ -68,13 +77,15 @@ const EditFileLog = () => {
   }, [id]);
 
   return (
-    <View className="screen-x-padding pt-2 flex-1 bg-bg-primary">
+    <Screen
+      header={<ScreenHeader title="Edit log" backButtonVisible />}
+    >
       <FileWorklogForm
         value={formData}
         onChange={setFormData}
         onSubmit={handleSubmit}
       />
-    </View>
+    </Screen>
   );
 };
 

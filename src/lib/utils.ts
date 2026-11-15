@@ -1,12 +1,32 @@
 import { clsx, type ClassValue } from "clsx";
 import { format } from "date-fns";
-import { twMerge } from "tailwind-merge";
+import { extendTailwindMerge } from "tailwind-merge";
 import {
   FileLogsSelectType,
   RequiredField,
   SheetExportData,
   SheetRow,
 } from "type";
+
+// Teach tailwind-merge the theme's font-family and colour classes so they
+// override each other (e.g. a Button's text style over the Text default).
+const twMerge = extendTailwindMerge({
+  extend: {
+    classGroups: {
+      "font-family": [
+        {
+          font: [
+            "inter",
+            "inter-medium",
+            "inter-semibold",
+            "manrope-bold",
+            "manrope-extrabold",
+          ],
+        },
+      ],
+    },
+  },
+});
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -195,6 +215,13 @@ export const determineTodayOrYesterday = (date: string | Date) => {
   return formatDateTime(inputDate).shortDateWithYear;
 };
 
+/** Day heading for grouped logs: "Today", "Yesterday" or "Thu, 5 Nov". */
+export const formatDayLabel = (date: string | Date) => {
+  const relative = determineTodayOrYesterday(date);
+  if (relative === "Today" || relative === "Yesterday") return relative;
+  return format(new Date(date), "EEE, d MMM");
+};
+
 export const backupDateTimeDisplay = (date: string | Date) => {
   if (!date) return "";
   const dateLabel = determineTodayOrYesterday(date);
@@ -277,7 +304,7 @@ export const validateHeaders = (rows: string[][]): boolean => {
   if (!hasRequiredHeaders) return false;
 
   const optionalHeaders = headers.slice(REQUIRED_HEADERS.length);
-  const allowedOptionalHeaders = ["Compensated file", "QC file"];
+  const allowedOptionalHeaders = ["Compensated file", "QC file", "MDC"];
 
   return (
     optionalHeaders.length <= allowedOptionalHeaders.length &&

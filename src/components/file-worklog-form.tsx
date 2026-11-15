@@ -1,8 +1,11 @@
 import FormInput from "@/components/form-input";
 import { Button } from "@/components/ui/button";
+import { SegmentedControl } from "@/components/ui/segmented-control";
+import { Text } from "@/components/ui/text";
+import { ToggleChip } from "@/components/ui/toggle-chip";
 import { getCurrentDate } from "@/lib/utils";
 import React from "react";
-import { Text, View } from "react-native";
+import { Text as RNText, View } from "react-native";
 import {
   KeyboardAwareScrollView,
   KeyboardStickyView,
@@ -10,6 +13,11 @@ import {
 } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { FieldName, FileWorklogFormProps } from "type";
+
+const FILE_TYPES = [
+  { label: "MNL", value: "0" },
+  { label: "SML", value: "1" },
+] as const;
 
 const FileWorklogForm = ({
   value,
@@ -53,103 +61,116 @@ const FileWorklogForm = ({
     }
   };
 
+  const toggle = (field: FieldName, current: number | null | undefined) =>
+    handleInputChange(field, current === 1 ? 0 : 1);
+
+  // "Mark as" chips (they replace the old checkboxes). ND only applies to SML.
+  const markAs: { field: FieldName; label: string; value?: number | null }[] = [
+    ...(value.isSml === 1
+      ? [{ field: "isND" as FieldName, label: "ND file", value: value.isND }]
+      : []),
+    { field: "isOT", label: "OT file", value: value.isOT },
+    { field: "isQcFile", label: "QC file", value: value.isQcFile },
+    { field: "isMdc", label: "MDC", value: value.isMdc },
+    {
+      field: "isCompensatedFile",
+      label: "Compensatory",
+      value: value.isCompensatedFile,
+    },
+  ];
+
   return (
     <View className="flex-1">
       <KeyboardAwareScrollView
-        bottomOffset={bottom}
-        className="screen-x-padding"
-        contentContainerClassName="flex-col gap-5"
+        bottomOffset={bottom + 88}
+        keyboardShouldPersistTaps="handled"
+        contentContainerClassName="flex-col gap-[22px] px-5 pt-3"
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{
-          paddingBottom: keyboard.isVisible ? 0 : bottom,
+          paddingBottom: keyboard.isVisible ? 16 : 24,
         }}
       >
-        <FormInput
-          label="Journal ID"
-          autoCapitalize="words"
-          name="journalId"
-          maxLength={4}
-          autoFocus={true}
-          placeholder="NPP2, MDR2,..."
-          value={value.journalId}
-          onChange={handleInputChange}
-        />
-
-        <FormInput
-          label="Article ID"
-          name="articleId"
-          inputMode="numeric"
-          maxLength={5}
-          placeholder="2345"
-          value={value.articleId}
-          onChange={handleInputChange}
-        />
-
-        <FormInput
-          inputType="checkbox"
-          label="SML file?"
-          name="isSml"
-          value={value.isSml}
-          onChange={handleInputChange}
-        />
-
-        {value.isSml === 1 && (
+        <View className="flex-row gap-3">
           <FormInput
-            inputType="checkbox"
-            label="ND file?"
-            name="isND"
-            value={value.isND}
+            label="Journal ID"
+            autoCapitalize="characters"
+            name="journalId"
+            maxLength={4}
+            autoFocus={true}
+            placeholder="NPP2, MDR2…"
+            value={value.journalId}
             onChange={handleInputChange}
+            rowMode
           />
-        )}
+          <FormInput
+            label="Article ID"
+            name="articleId"
+            inputMode="numeric"
+            maxLength={5}
+            placeholder="2345"
+            value={value.articleId}
+            onChange={handleInputChange}
+            rowMode
+          />
+        </View>
+
+        <View className="form-group">
+          <RNText className="form-label">File type</RNText>
+          <SegmentedControl
+            options={FILE_TYPES}
+            value={value.isSml === 1 ? "1" : value.isSml === 0 ? "0" : undefined}
+            onChange={(v) => handleInputChange("isSml", v)}
+          />
+        </View>
+
+        <View className="flex-row gap-3">
+          <FormInput
+            label="LEP pages"
+            value={value.lepPages}
+            inputMode="numeric"
+            maxLength={3}
+            placeholder="63"
+            editable={value.isSml !== 1}
+            name="lepPages"
+            onChange={handleInputChange}
+            suffix="pages"
+            numeric
+            rowMode
+          />
+          <FormInput
+            label="Time taken"
+            name="timeTaken"
+            inputMode="numeric"
+            timePreview
+            maxLength={3}
+            editable={value.isND !== 1}
+            value={value.timeTaken}
+            placeholder="60"
+            onChange={handleInputChange}
+            suffix="min"
+            numeric
+            rowMode
+          />
+        </View>
+
+        <View className="form-group">
+          <RNText className="form-label">Mark as</RNText>
+          <View className="flex-row flex-wrap gap-2">
+            {markAs.map((chip) => (
+              <ToggleChip
+                key={chip.field}
+                label={chip.label}
+                selected={chip.value === 1}
+                onToggle={() => toggle(chip.field, chip.value)}
+              />
+            ))}
+          </View>
+        </View>
 
         <FormInput
-          label="LEP Pages"
-          value={value.lepPages}
-          inputMode="numeric"
-          maxLength={3}
-          placeholder="63"
-          editable={value.isSml === 0}
-          name="lepPages"
-          onChange={handleInputChange}
-        />
-
-        <FormInput
-          label="Time taken (minutes)"
-          name="timeTaken"
-          inputMode="numeric"
-          timePreview
-          maxLength={3}
-          editable={value.isND === 0}
-          value={value.timeTaken}
-          placeholder="60"
-          onChange={handleInputChange}
-        />
-        <FormInput
-          inputType="checkbox"
-          label="OT file?"
-          name="isOT"
-          value={value.isOT}
-          onChange={handleInputChange}
-        />
-        <FormInput
-          inputType="checkbox"
-          label="QC file?"
-          name="isQcFile"
-          value={value.isQcFile}
-          onChange={handleInputChange}
-        />
-        <FormInput
-          inputType="checkbox"
-          label="Compensatory file?"
-          name="isCompensatedFile"
-          value={value.isCompensatedFile}
-          onChange={handleInputChange}
-        />
-        <FormInput
-          label="Worked At"
+          label="Worked on"
           name="workedAt"
-          placeholder={"YYYY-MM-DD"}
+          placeholder="Select a date"
           value={value.workedAt}
           onChange={handleInputChange}
           inputType="date"
@@ -159,17 +180,17 @@ const FileWorklogForm = ({
           label="Remarks"
           name="remarks"
           inputType="textarea"
-          placeholder="Type your remarks here..."
+          placeholder="Anything worth remembering about this file…"
           value={value.remarks}
           onChange={handleInputChange}
         />
       </KeyboardAwareScrollView>
       <KeyboardStickyView
-        className="py-2.5 bg-bg-primary flex-row items-center screen-x-padding"
-        offset={{ closed: -bottom, opened: 0 }}
+        className="bg-background px-5 pt-4"
+        style={{ paddingBottom: keyboard.isVisible ? 12 : Math.max(bottom, 16) }}
       >
-        <Button className="py-3 w-full" onPress={() => onSubmit(value)}>
-          <Text className="btn-label">Save</Text>
+        <Button className="w-full" onPress={() => onSubmit(value)}>
+          <Text>Save log</Text>
         </Button>
       </KeyboardStickyView>
     </View>
