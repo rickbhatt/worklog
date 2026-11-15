@@ -13,6 +13,7 @@ import { useFonts } from "expo-font";
 import { PressableProvider } from "@/components/ui/pressable";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { initialiseDb } from "@/db/client";
+import { clearStaleExportSheets } from "@/db/mutations/export-sheet.mutations";
 import "@/global.css";
 import { useDb } from "@/hooks/useDb";
 import { useDrizzleStudioDev } from "@/hooks/useDrizzleStudioDev";
@@ -85,6 +86,13 @@ const Layout = () => {
           if (!mounted) return;
 
           ensureBackupDir();
+
+          /*
+           * Forget the export sheet saved for a previous month
+           */
+          await clearStaleExportSheets(db);
+
+          if (!mounted) return;
 
           setupNotifications();
 
