@@ -11,7 +11,6 @@ import React, { RefObject, useState } from "react";
 import { restoreBackupFromDrive } from "@/services/backupService";
 import LottieView from "lottie-react-native";
 import { Text, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const RestoreBottomsheet = ({
   ref,
@@ -27,8 +26,6 @@ const RestoreBottomsheet = ({
   };
 }) => {
   const [isRestoring, setIsRestoring] = useState(false);
-
-  const { bottom } = useSafeAreaInsets();
 
   const { colors } = useTheme();
 

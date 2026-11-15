@@ -88,7 +88,7 @@ const ExportData = () => {
       });
 
       return formattedLogs;
-    } catch (error) {
+    } catch {
       toast.error("Failed to load logs. Please try again.");
     }
   };
@@ -194,7 +194,7 @@ const ExportData = () => {
       );
 
       setExportedSheetUrl(sheet.spreadsheetUrl);
-    } catch (error) {
+    } catch {
       toast.error("Export failed. Please try again.");
     } finally {
       setIsExporting(false);

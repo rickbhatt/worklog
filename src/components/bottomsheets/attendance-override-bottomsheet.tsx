@@ -47,7 +47,7 @@ const AttendanceOverrideBottomsheet = ({
 
       setOverride(row ?? null);
       setSelectedType(row?.type);
-    } catch (error) {
+    } catch {
       toast.error("Failed to get attendance");
     }
   };
@@ -67,7 +67,7 @@ const AttendanceOverrideBottomsheet = ({
 
       toast.success("Attendance updated");
       ref.current?.close();
-    } catch (error) {
+    } catch {
       toast.error("Failed to update attendance");
     }
   };
@@ -79,7 +79,7 @@ const AttendanceOverrideBottomsheet = ({
 
       toast.success("Attendance reset to auto");
       ref.current?.close();
-    } catch (error) {
+    } catch {
       toast.error("Failed to reset attendance");
     }
   };

@@ -184,7 +184,7 @@ const History = () => {
 
   const router = useRouter();
 
-  const { data: logs, error } = useLiveQuery(
+  const { data: logs } = useLiveQuery(
     getFileLogs({
       db,
       filters: { journalId, articleId, startDate, endDate },

@@ -45,7 +45,7 @@ const LogDetailBottomsheet = ({
       const row = await getFileLogById(db, id);
 
       setFileLog(row);
-    } catch (error) {
+    } catch {
       toast.error("Failed to get log");
     }
   };
@@ -69,7 +69,7 @@ const LogDetailBottomsheet = ({
 
       setIsAlertDialogOpen(false);
       toast.success(`${row?.journalId}-${row?.articleId} deleted successfully`);
-    } catch (error) {
+    } catch {
       toast.error("Failed to delete log");
     }
   };

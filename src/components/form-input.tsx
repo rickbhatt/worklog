@@ -27,7 +27,7 @@ import { Platform, Text, TextInputProps, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { FieldName, InputModeOptions } from "type";
 
-interface FormInputProps<TExtraFields extends Record<string, unknown> = {}> {
+interface FormInputProps<TExtraFields extends Record<string, unknown> = Record<never, never>> {
   label?: string;
   name: FieldName<TExtraFields>;
   value?: string | null | number | undefined;
@@ -61,7 +61,7 @@ interface FormInputProps<TExtraFields extends Record<string, unknown> = {}> {
   as?: React.ComponentType<TextInputProps>;
 }
 
-const FormInput = <TExtraFields extends Record<string, unknown> = {}>({
+const FormInput = <TExtraFields extends Record<string, unknown> = Record<never, never>>({
   label,
   value,
   onChange,

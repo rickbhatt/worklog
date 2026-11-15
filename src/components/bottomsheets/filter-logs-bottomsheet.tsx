@@ -57,7 +57,7 @@ const FilterLogsBottomSheetModal = ({
 
   useEffect(() => {
     setFilters({ journalId, articleId, startDate, endDate });
-  }, [journalId, articleId, startDate]);
+  }, [journalId, articleId, startDate, endDate]);
 
   const handleClearFilters = () => {
     setFilters({

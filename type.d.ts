@@ -158,7 +158,7 @@ export type AttendanceOverrideCreateType = Omit<
 
 type FieldNameFrom<T> = Extract<keyof T, string>;
 
-export type FieldName<TExtraFields extends Record<string, unknown> = {}> =
+export type FieldName<TExtraFields extends Record<string, unknown> = Record<never, never>> =
   | FieldNameFrom<FileLogsInsertType>
   | FieldNameFrom<TargetInfoInsertType>
   | FieldNameFrom<TExtraFields>;

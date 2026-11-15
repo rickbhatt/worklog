@@ -40,7 +40,7 @@ const EditFileLog = () => {
       };
 
       setFormData(initialData);
-    } catch (error) {
+    } catch {
       toast.error("Failed to get log");
     }
   };
