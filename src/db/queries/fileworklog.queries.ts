@@ -3,6 +3,7 @@ import { and, asc, count, desc, eq, gte, lte, sql } from "drizzle-orm";
 import type { Db } from "type";
 
 import { fileLogs, targetInfo } from "../schema";
+import { countedLepPagesSum } from "./lep-pages";
 
 interface FileLogsWithFilers {
   db: Db;
@@ -64,9 +65,7 @@ export const getPreviousMonthSummary = ({
     .select({
       totalLogs: count(),
 
-      totalLepPages: sql<number>`
-        sum(${fileLogs.lepPages})
-      `,
+      totalLepPages: countedLepPagesSum,
     })
     .from(fileLogs)
     .where(and(gte(fileLogs.workedAt, start), lte(fileLogs.workedAt, end)));

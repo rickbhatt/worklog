@@ -3,6 +3,8 @@ import { getMonthRange } from "@/lib/utils";
 import { and, count, gte, lte, sql } from "drizzle-orm";
 import { Db } from "type";
 
+import { countedLepPagesSum } from "./lep-pages";
+
 export const getInsightsQuery = ({ db, month }: { db: Db; month: string }) => {
   const currentYear = new Date().getFullYear();
 
@@ -12,9 +14,7 @@ export const getInsightsQuery = ({ db, month }: { db: Db; month: string }) => {
     .select({
       totalLogs: count(),
 
-      totalLepPages: sql<number>`
-        sum(${fileLogs.lepPages})
-      `,
+      totalLepPages: countedLepPagesSum,
 
       smlCount: sql<number>`
         sum(case when ${fileLogs.isSml} = 1 then 1 else 0 end)
@@ -34,9 +34,7 @@ export const getMonthlyTotalLepPagesQuery = ({ db }: { db: Db }) => {
   return db
     .select({
       month: sql<string>`cast(strftime('%m', ${fileLogs.workedAt}) as integer)`,
-      totalLepPages: sql<number>`
-        sum(${fileLogs.lepPages})
-      `,
+      totalLepPages: countedLepPagesSum,
     })
     .from(fileLogs)
     .where(sql`strftime('%Y', ${fileLogs.workedAt}) = ${currentYear}`)
@@ -67,11 +65,11 @@ export const getAttendanceDatesQuery = ({
   return db
     .select({
       date: sql<number>`cast(strftime('%d', ${fileLogs.workedAt}) as integer)`,
-      totalLepPages: sql<number>`sum(${fileLogs.lepPages})`,
+      totalLepPages: countedLepPagesSum,
       type: sql<"full" | "half" | "absent">`
           case
-            when sum(${fileLogs.lepPages}) >= ${minFullTarget} then 'full'
-            when sum(${fileLogs.lepPages}) between ${halfTargetPages} and ${minFullTarget - 1} then 'half'
+            when ${countedLepPagesSum} >= ${minFullTarget} then 'full'
+            when ${countedLepPagesSum} between ${halfTargetPages} and ${minFullTarget - 1} then 'half'
             else 'absent'
           end
       `,
