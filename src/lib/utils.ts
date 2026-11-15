@@ -82,6 +82,11 @@ export const getCurrentDate = (): string => {
   return formatDateTime(new Date()).dateToISOString;
 };
 
+// yyyy-MM of the current month, e.g. "2026-11"
+export const getCurrentMonthKey = (): string => {
+  return format(new Date(), "yyyy-MM");
+};
+
 export const getMonthRange = (month: string, year: string) => {
   const monthIndex = parseInt(month) - 1; // Convert to zero-based index
   const yearNum = parseInt(year);

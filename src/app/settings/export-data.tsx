@@ -10,6 +10,8 @@ import { Screen } from "@/components/ui/screen";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { Text } from "@/components/ui/text";
 import { useAuth } from "@/contexts/AuthContext";
+import { saveCurrentMonthExportSheet } from "@/db/mutations/export-sheet.mutations";
+import { getCurrentMonthExportSheet } from "@/db/queries/export-sheet.queries";
 import { getFileLogs } from "@/db/queries/fileworklog.queries";
 import { useDb } from "@/hooks/useDb";
 import {
@@ -51,9 +53,22 @@ const ExportData = () => {
     end: formatDateTime(new Date()).dateToISOString,
   });
 
-  const [gsheetUrl, setGsheetUrl] = useState<string | null>(null);
+  // prefill with the sheet saved for this month, if any
+  const [savedSheet] = useState(() => {
+    try {
+      return getCurrentMonthExportSheet(db);
+    } catch {
+      return undefined;
+    }
+  });
 
-  const [sheetName, setSheetName] = useState<string | null>(null);
+  const [gsheetUrl, setGsheetUrl] = useState<string | null>(
+    savedSheet?.sheetUrl ?? null,
+  );
+
+  const [sheetName, setSheetName] = useState<string | null>(
+    savedSheet?.sheetName ?? null,
+  );
 
   const [exportedSheetUrl, setExportedSheetUrl] = useState<string | null>(null);
 
@@ -144,6 +159,13 @@ const ExportData = () => {
       if (!appendRes.ok) {
         const err = await appendRes.json();
         throw new Error(err.error?.message || "Append failed");
+      }
+
+      // remember this sheet for the rest of the month
+      try {
+        await saveCurrentMonthExportSheet({ db, sheetUrl: gsheetUrl, sheetName });
+      } catch (error) {
+        console.error("Failed to save export sheet", error);
       }
 
       setExportedSheetUrl(
