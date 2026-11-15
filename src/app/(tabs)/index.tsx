@@ -141,10 +141,12 @@ const DayGroup = ({
           {formatDayLabel(section.title)}
         </Text>
         <View className="flex-row items-center gap-2.5">
-          <Text className="number text-[17px]">
-            {section.totalLepPages}{" "}
-            <Text className="font-inter-medium text-xs text-muted">pages</Text>
-          </Text>
+          <View className="flex-row items-baseline gap-1">
+            <Text className="number text-[17px]">{section.totalLepPages}</Text>
+            <Text className="font-inter-medium text-xs leading-4 text-muted">
+              pages
+            </Text>
+          </View>
           <StatusPill percent={percent} />
         </View>
       </View>
@@ -214,7 +216,7 @@ const History = () => {
 
         const section = map.get(log.workedAt)!;
         section.data.push(log);
-        section.totalLepPages += log.lepPages;
+        if (!log.isQcFile && !log.isMdc) section.totalLepPages += log.lepPages;
         return map;
       },
       new Map<string, FileLogsSection>(),
