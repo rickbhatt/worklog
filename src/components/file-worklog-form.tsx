@@ -71,6 +71,7 @@ const FileWorklogForm = ({
       : []),
     { field: "isOT", label: "OT file", value: value.isOT },
     { field: "isQcFile", label: "QC file", value: value.isQcFile },
+    { field: "isMdc", label: "MDC", value: value.isMdc },
     {
       field: "isCompensatedFile",
       label: "Compensatory",

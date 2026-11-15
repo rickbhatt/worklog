@@ -35,6 +35,7 @@ const REQUIRED_COLUMNS = [
   { name: "Minutes", hint: "Time taken in minutes; for nd-sml time = 0" },
   { name: "Compensated file", hint: "yes/no (optional)" },
   { name: "QC file", hint: "yes/no (optional)" },
+  { name: "MDC", hint: "Mandatory checks, yes/no (optional)" },
 ];
 
 const ImportData = () => {
@@ -107,6 +108,7 @@ const ImportData = () => {
       const gSheetLogData = data?.values?.slice(1);
       const compensatedFileIndex = headers.indexOf("Compensated file");
       const qcFileIndex = headers.indexOf("QC file");
+      const mdcIndex = headers.indexOf("MDC");
       const parseBooleanCell = (value: unknown) =>
         ["1", "true", "yes", "y"].includes(
           value?.toString().trim().toLowerCase() ?? "",
@@ -118,6 +120,7 @@ const ImportData = () => {
         const fileType = item[4];
         const isCompensatedFile = parseBooleanCell(item[compensatedFileIndex]);
         const isQcFile = parseBooleanCell(item[qcFileIndex]);
+        const isMdc = mdcIndex === -1 ? 0 : parseBooleanCell(item[mdcIndex]);
 
         return {
           workedAt: item[0],
@@ -129,11 +132,21 @@ const ImportData = () => {
           timeTaken: Number(item[5]),
           isCompensatedFile,
           isQcFile,
+          isMdc,
         };
       });
 
-      await createBulkFileLogs(db, insertValues);
-      toast.success("Data from Google sheet load successfuly");
+      const { inserted, skipped } = await createBulkFileLogs(db, insertValues);
+      const skippedNote = skipped
+        ? ` Skipped ${skipped} duplicate ${skipped === 1 ? "log" : "logs"}.`
+        : "";
+      if (inserted === 0) {
+        toast.info(`Nothing new to import.${skippedNote}`);
+      } else {
+        toast.success(
+          `Imported ${inserted} ${inserted === 1 ? "log" : "logs"}.${skippedNote}`,
+        );
+      }
     } catch (error) {
       const message =
         error instanceof Error

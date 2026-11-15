@@ -113,6 +113,7 @@ const LogDetailBottomsheet = ({
                 )}
                 {fileLog?.isOT === 1 && <TypeTag label="OT" />}
                 {fileLog?.isQcFile === 1 && <TypeTag label="QC" />}
+                {fileLog?.isMdc === 1 && <TypeTag label="MDC" />}
                 {fileLog?.isCompensatedFile === 1 && (
                   <TypeTag label="COMP" />
                 )}

@@ -19,6 +19,8 @@ export const fileLogs = sqliteTable(
 
     isQcFile: integer("is_qc_file").notNull().default(0),
 
+    isMdc: integer("is_mdc").notNull().default(0), // mandatory checks
+
     timeTaken: integer("time_taken").notNull(), // time in minutes
 
     lepPages: integer("lep_pages").notNull(),

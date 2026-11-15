@@ -1,7 +1,10 @@
 import FileWorklogForm from "@/components/file-worklog-form";
 import ScreenHeader from "@/components/screen-header";
 import { Screen } from "@/components/ui/screen";
-import { updateFileLogById } from "@/db/mutations/fileworklog.mutations";
+import {
+  DuplicateFileLogError,
+  updateFileLogById,
+} from "@/db/mutations/fileworklog.mutations";
 import { getFileLogById } from "@/db/queries/fileworklog.queries";
 import { useDb } from "@/hooks/useDb";
 import { useLocalSearchParams } from "expo-router";
@@ -32,6 +35,7 @@ const EditFileLog = () => {
         isND: row.isND,
         isCompensatedFile: row.isCompensatedFile,
         isQcFile: row.isQcFile,
+        isMdc: row.isMdc,
         remarks: row.remarks,
       };
 
@@ -57,6 +61,10 @@ const EditFileLog = () => {
 
       toast.success(`Updated ${row?.journalId}-${row?.articleId} successfully`);
     } catch (error) {
+      if (error instanceof DuplicateFileLogError) {
+        toast.error(error.message);
+        return;
+      }
       console.error("Failed to submit file log", error);
       toast.error("Failed to submit file log");
     }

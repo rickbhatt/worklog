@@ -135,6 +135,7 @@ export type FileLogsListItemType = Pick<
   | "isND"
   | "isCompensatedFile"
   | "isQcFile"
+  | "isMdc"
 >;
 export type TargetInfoSelectType = typeof targetInfo.$inferSelect;
 export type TargetInfoInsertType = typeof targetInfo.$inferInsert;

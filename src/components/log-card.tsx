@@ -15,12 +15,13 @@ const FLAG_LABELS: Partial<Record<keyof FileLogsListItemType, string>> = {
   isND: "ND",
   isOT: "OT",
   isQcFile: "QC",
+  isMdc: "MDC",
   isCompensatedFile: "COMP",
 };
 
 /**
  * One log row inside a day's card: file icon tile, Journal-Article ID, file
- * type tag (SML / MNL, accented), flag tags (ND, OT, QC, COMP), page count and chevron. Long-press opens the log details sheet.
+ * type tag (SML / MNL, accented), flag tags (ND, OT, QC, MDC, COMP), page count and chevron. Long-press opens the log details sheet.
  */
 const LogCard = ({ item }: { item: FileLogsListItemType }) => {
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);

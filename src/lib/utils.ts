@@ -304,7 +304,7 @@ export const validateHeaders = (rows: string[][]): boolean => {
   if (!hasRequiredHeaders) return false;
 
   const optionalHeaders = headers.slice(REQUIRED_HEADERS.length);
-  const allowedOptionalHeaders = ["Compensated file", "QC file"];
+  const allowedOptionalHeaders = ["Compensated file", "QC file", "MDC"];
 
   return (
     optionalHeaders.length <= allowedOptionalHeaders.length &&

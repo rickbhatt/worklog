@@ -1,0 +1,1 @@
+ALTER TABLE `file_logs` ADD `is_mdc` integer DEFAULT 0 NOT NULL;
