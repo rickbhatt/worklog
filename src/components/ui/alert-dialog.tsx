@@ -7,6 +7,7 @@ import * as React from "react";
 import { Platform, View, type ViewProps } from "react-native";
 import { FadeIn, FadeOut } from "react-native-reanimated";
 import { FullWindowOverlay as RNFullWindowOverlay } from "react-native-screens";
+import { useTheme } from "@/theme/theme-provider";
 
 const AlertDialog = AlertDialogPrimitive.Root;
 
@@ -25,11 +26,13 @@ function AlertDialogOverlay({
   React.RefAttributes<AlertDialogPrimitive.OverlayRef> & {
     children?: React.ReactNode;
   }) {
+  const { colors } = useTheme();
   return (
     <FullWindowOverlay>
       <AlertDialogPrimitive.Overlay
+        style={{ backgroundColor: colors.backdrop }}
         className={cn(
-          "absolute bottom-0 left-0 right-0 top-0 z-50 flex items-center justify-center bg-black/50 p-2",
+          "absolute bottom-0 left-0 right-0 top-0 z-50 flex items-center justify-center p-2",
           Platform.select({
             web: "animate-in fade-in-0 fixed",
           }),
@@ -62,7 +65,7 @@ function AlertDialogContent({
       <AlertDialogOverlay>
         <AlertDialogPrimitive.Content
           className={cn(
-            "bg-background border-border z-50 flex w-full max-w-[calc(100%-2rem)] flex-col gap-4 rounded-lg border p-6 shadow-lg shadow-black/5 sm:max-w-lg",
+            "bg-surface border-line z-50 flex w-full max-w-[calc(100%-2rem)] flex-col gap-4 rounded-[22px] border p-6",
             Platform.select({
               web: "animate-in fade-in-0 zoom-in-95 duration-200",
             }),
@@ -102,7 +105,7 @@ function AlertDialogTitle({
   React.RefAttributes<AlertDialogPrimitive.TitleRef>) {
   return (
     <AlertDialogPrimitive.Title
-      className={cn("h3-bold text-text-primary", className)}
+      className={cn("font-manrope-bold text-[19px] text-foreground", className)}
       {...props}
     />
   );
@@ -115,7 +118,7 @@ function AlertDialogDescription({
   React.RefAttributes<AlertDialogPrimitive.DescriptionRef>) {
   return (
     <AlertDialogPrimitive.Description
-      className={cn("text-dark-300 text-sm", className)}
+      className={cn("font-inter text-muted text-sm leading-5", className)}
       {...props}
     />
   );

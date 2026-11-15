@@ -1,105 +1,84 @@
+import {
+  PressableScale,
+  type PressableScaleProps,
+} from "@/components/ui/pressable";
 import { TextClassContext } from "@/components/ui/text";
 import { cn } from "@/lib/utils";
+import { useTheme } from "@/theme/theme-provider";
 import { cva, type VariantProps } from "class-variance-authority";
 import * as Haptics from "expo-haptics";
+import { LinearGradient } from "expo-linear-gradient";
 import { useCallback } from "react";
-import { GestureResponderEvent, Platform, Pressable } from "react-native";
+import { StyleSheet, View } from "react-native";
 
 const buttonVariants = cva(
-  cn(
-    "group btn-touch-scale shrink-0 flex-row items-center justify-center gap-2 rounded-md shadow-none",
-    Platform.select({
-      web: "focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive whitespace-nowrap outline-none transition-all focus-visible:ring-[3px] disabled:pointer-events-none [&_svg:not([class*='size-'])]:size-4 [&_svg]:pointer-events-none [&_svg]:shrink-0",
-    }),
-  ),
+  "shrink-0 flex-row items-center justify-center gap-2.5",
   {
     variants: {
       variant: {
-        default: cn(
-          "bg-accent p-2 active:bg-accent/90 shadow-sm shadow-black/5",
-          Platform.select({ web: "hover:bg-primary/90" }),
-        ),
-        destructive: cn(
-          "bg-destructive active:bg-destructive/90 dark:bg-destructive/60 shadow-sm shadow-black/5",
-          Platform.select({
-            web: "hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40",
-          }),
-        ),
-        outline: cn(
-          "border border-light-100 bg-transparent",
-          Platform.select({
-            web: "hover:bg-accent dark:hover:bg-input/50",
-          }),
-        ),
-        secondary: cn(
-          "bg-secondary active:bg-secondary/80 shadow-sm shadow-black/5",
-          Platform.select({ web: "hover:bg-secondary/80" }),
-        ),
-        ghost: cn(
-          "bg-transparent",
-          Platform.select({ web: "hover:bg-accent dark:hover:bg-accent/50" }),
-        ),
-        iconOnly: cn("h-10 w-10"),
+        // Primary action: crimson gradient + coloured shadow (drawn in JSX).
+        gradient: "",
+        secondary: "bg-raised",
+        outline: "bg-surface border border-line",
+        ghost: "bg-transparent",
+        destructive: "bg-accent-soft",
+        // kept for existing call sites: a bare 44px icon button
+        iconOnly: "bg-transparent",
       },
       size: {
-        default: cn("px-4 py-2 ", Platform.select({ web: "has-[>svg]:px-3" })),
-        sm: cn(
-          "gap-1.5 rounded-md px-3 ",
-          Platform.select({ web: "has-[>svg]:px-2.5" }),
-        ),
-        lg: cn("rounded-md px-6 ", Platform.select({ web: "has-[>svg]:px-4" })),
-        icon: "h-10 w-10 p-0",
+        default: "h-14 px-5 rounded-[18px]",
+        sm: "h-11 px-4 rounded-[14px]",
+        icon: "h-11 w-11 rounded-[14px] p-0",
       },
     },
     defaultVariants: {
-      variant: "default",
+      variant: "gradient",
       size: "default",
     },
   },
 );
 
-const buttonTextVariants = cva(
-  cn(
-    "text-foreground text-sm font-medium",
-    Platform.select({ web: "pointer-events-none transition-colors" }),
-  ),
-  {
-    variants: {
-      variant: {
-        default: "text-primary-foreground",
-        destructive: "text-white",
-        outline: cn(
-          "group-active:text-accent-foreground",
-          Platform.select({ web: "group-hover:text-accent-foreground" }),
-        ),
-        secondary: "text-secondary-foreground",
-        ghost: "group-active:text-accent-foreground",
-        link: cn(
-          "text-primary group-active:underline",
-          Platform.select({
-            web: "underline-offset-4 hover:underline group-hover:underline",
-          }),
-        ),
-        iconOnly: "h-10 w-10",
-      },
-      size: {
-        default: "",
-        sm: "",
-        lg: "",
-        icon: "",
-      },
+const buttonTextVariants = cva("", {
+  variants: {
+    variant: {
+      gradient: "font-manrope-extrabold text-base text-on-accent",
+      secondary: "font-inter-semibold text-sm text-foreground",
+      outline: "font-inter-semibold text-sm text-foreground",
+      ghost: "font-inter-semibold text-sm text-foreground",
+      destructive: "font-inter-semibold text-sm text-accent",
+      iconOnly: "",
     },
-    defaultVariants: {
-      variant: "default",
-      size: "default",
+    size: {
+      default: "",
+      sm: "text-sm",
+      icon: "",
     },
   },
-);
+  defaultVariants: {
+    variant: "gradient",
+    size: "default",
+  },
+});
 
-type ButtonProps = React.ComponentProps<typeof Pressable> &
-  React.RefAttributes<typeof Pressable> &
-  VariantProps<typeof buttonVariants>;
+type ButtonProps = Omit<
+  PressableScaleProps,
+  "children" | "onPress" | "onLongPress"
+> &
+  VariantProps<typeof buttonVariants> & {
+    children?: React.ReactNode;
+    onPress?: () => void;
+    onLongPress?: () => void;
+  };
 
+/**
+ * App button, rendered with pressto's PressableScale (scale-on-press feedback)
+ * plus haptics. Handlers are called without arguments: pressto reports its own
+ * press-state object, not a React Native GestureResponderEvent.
+ *
+ * The default `gradient` variant is the primary action style (white text on
+ * the crimson gradient). Children should use `Text` from `ui/text` so they
+ * pick up the variant's text style.
+ */
 function Button({
   className,
   variant,
@@ -107,42 +86,65 @@ function Button({
   onPress,
   onLongPress,
   disabled,
+  style,
+  children,
   ...props
 }: ButtonProps) {
-  const handlePress = useCallback(
-    (event: GestureResponderEvent) => {
-      if (!disabled) {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-        onPress?.(event);
-      }
-    },
-    [onPress, disabled],
-  );
+  const { gradient, shadows } = useTheme();
+  const isGradient = (variant ?? "gradient") === "gradient";
+  const radius = size === "sm" || size === "icon" ? 14 : 18;
 
-  const handleLongPress = useCallback(
-    (event: GestureResponderEvent) => {
-      if (!disabled) {
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        onLongPress?.(event);
-      }
-    },
-    [onLongPress, disabled],
-  );
+  const handlePress = useCallback(() => {
+    if (disabled) return;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    onPress?.();
+  }, [onPress, disabled]);
+
+  const handleLongPress = useCallback(() => {
+    if (disabled) return;
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    onLongPress?.();
+  }, [onLongPress, disabled]);
 
   return (
     <TextClassContext.Provider value={buttonTextVariants({ variant, size })}>
-      <Pressable
+      <PressableScale
         className={cn(
           disabled && "opacity-50",
           buttonVariants({ variant, size }),
           className,
         )}
-        role="button"
+        style={style}
+        accessibilityRole="button"
+        accessibilityState={{ disabled: !!disabled }}
         onPress={handlePress}
-        onLongPress={handleLongPress}
+        onLongPress={onLongPress ? handleLongPress : undefined}
         disabled={disabled}
         {...props}
-      />
+      >
+        {isGradient && (
+          // The shadow lives on a plain rounded View: on the pressable itself
+          // Android draws it with square corners.
+          <View
+            pointerEvents="none"
+            style={[
+              StyleSheet.absoluteFill,
+              {
+                borderRadius: radius,
+                boxShadow: disabled ? undefined : shadows.glow,
+              },
+            ]}
+          >
+            <LinearGradient
+              colors={gradient.colors}
+              start={gradient.start}
+              end={gradient.end}
+              style={[StyleSheet.absoluteFill, { borderRadius: radius }]}
+            />
+          </View>
+        )}
+        {children}
+      </PressableScale>
     </TextClassContext.Provider>
   );
 }

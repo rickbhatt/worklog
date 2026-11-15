@@ -25,27 +25,24 @@ const AlertDialogBox = ({
   };
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent className=" bg-dark-200 border-0">
-        <AlertDialogHeader>
-          <AlertDialogTitle>{title}</AlertDialogTitle>
-          <AlertDialogDescription className="">
+      <AlertDialogContent>
+        <AlertDialogHeader className="gap-1.5">
+          <AlertDialogTitle className="text-left">{title}</AlertDialogTitle>
+          <AlertDialogDescription className="text-left">
             {description}
           </AlertDialogDescription>
         </AlertDialogHeader>
-        <AlertDialogFooter className="flex-row gap-2">
+        <AlertDialogFooter className="flex-row gap-2.5">
           <Button
-            variant="outline"
-            className="flex-1 h-12 justify-center"
+            variant="secondary"
+            size="sm"
+            className="h-12 flex-1"
             onPress={() => onOpenChange(false)}
           >
-            <Text className="text-text-primary font-bold text-base">
-              {cancelText}
-            </Text>
+            <Text>{cancelText}</Text>
           </Button>
-          <Button className="flex-1 h-12" onPress={handleAction}>
-            <Text className="text-text-primary font-bold text-base">
-              {actionText}
-            </Text>
+          <Button size="sm" className="h-12 flex-1" onPress={handleAction}>
+            <Text>{actionText}</Text>
           </Button>
         </AlertDialogFooter>
       </AlertDialogContent>

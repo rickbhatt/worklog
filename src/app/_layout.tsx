@@ -1,4 +1,16 @@
 import { DB_NAME } from "@/constants";
+import {
+  Inter_400Regular,
+  Inter_500Medium,
+  Inter_600SemiBold,
+} from "@expo-google-fonts/inter";
+import {
+  Manrope_700Bold,
+  Manrope_800ExtraBold,
+} from "@expo-google-fonts/manrope";
+import { ThemeProvider, useTheme } from "@/theme/theme-provider";
+import { useFonts } from "expo-font";
+import { PressableProvider } from "@/components/ui/pressable";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { initialiseDb } from "@/db/client";
 import "@/global.css";
@@ -18,9 +30,10 @@ import * as Sentry from "@sentry/react-native";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { SQLiteDatabase, SQLiteProvider } from "expo-sqlite";
+import * as NavigationBar from "expo-navigation-bar";
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useRef } from "react";
-import { InteractionManager } from "react-native";
+import { InteractionManager, Platform } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { Toaster } from "sonner-native";
@@ -44,7 +57,17 @@ const Layout = () => {
 
   useDrizzleStudioDev();
 
+  const { colors, isDark } = useTheme();
+
   const startupRanRef = useRef(false);
+
+  // Android 3-button navigation bar: dark buttons in light mode, light buttons
+  // in dark mode. ("light" here means a light bar with dark content.)
+  useEffect(() => {
+    if (Platform.OS === "android") {
+      NavigationBar.setStyle(isDark ? "dark" : "light");
+    }
+  }, [isDark]);
 
   /*
    * One-time startup tasks
@@ -105,13 +128,13 @@ const Layout = () => {
 
   return (
     <>
-      <StatusBar style="light" />
+      <StatusBar style={isDark ? "light" : "dark"} />
 
       <Stack
         screenOptions={{
           headerShown: false,
           animation: "ios_from_right",
-          contentStyle: { backgroundColor: "#000" },
+          contentStyle: { backgroundColor: colors.bg },
         }}
       >
         <Stack.Screen name="(tabs)" />
@@ -123,6 +146,14 @@ const Layout = () => {
 };
 
 const RootLayout = () => {
+  const [fontsLoaded, fontError] = useFonts({
+    Inter_400Regular,
+    Inter_500Medium,
+    Inter_600SemiBold,
+    Manrope_700Bold,
+    Manrope_800ExtraBold,
+  });
+
   const handleInit = async (db: SQLiteDatabase) => {
     await initialiseDb(db);
     await SplashScreen.hideAsync();
@@ -137,25 +168,33 @@ const RootLayout = () => {
     console.error("SQLiteProvider error", err);
   };
 
+  // Keep the splash screen up until fonts are ready (it's hidden after the
+  // database initialises). On a font error, fall back to system fonts.
+  if (!fontsLoaded && !fontError) return null;
+
   return (
     <KeyboardProvider>
       <GestureHandlerRootView style={{ flex: 1 }}>
-        <BottomSheetModalProvider>
-          <SQLiteProvider
-            databaseName={DB_NAME}
-            options={{ enableChangeListener: true }}
-            onInit={handleInit}
-            onError={handleError}
-          >
-            <AuthProvider>
-              <Layout />
-            </AuthProvider>
-          </SQLiteProvider>
+        <ThemeProvider>
+        <PressableProvider>
+          <BottomSheetModalProvider>
+            <SQLiteProvider
+              databaseName={DB_NAME}
+              options={{ enableChangeListener: true }}
+              onInit={handleInit}
+              onError={handleError}
+            >
+              <AuthProvider>
+                <Layout />
+              </AuthProvider>
+            </SQLiteProvider>
 
-          <PortalHost />
+            <PortalHost />
 
-          <Toaster position="top-center" offset={70} richColors />
-        </BottomSheetModalProvider>
+            <Toaster position="top-center" offset={70} richColors />
+          </BottomSheetModalProvider>
+        </PressableProvider>
+        </ThemeProvider>
       </GestureHandlerRootView>
     </KeyboardProvider>
   );

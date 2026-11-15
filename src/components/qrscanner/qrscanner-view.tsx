@@ -1,8 +1,10 @@
-import DynamicIcon from "@/components/dynamic-icon";
+import { Icon } from "@/components/ui/icon";
+import { PressableScale } from "@/components/ui/pressable";
 import { Portal } from "@rn-primitives/portal";
 import { CameraView } from "expo-camera";
+import { ChevronLeft } from "lucide-react-native";
 import { useEffect, useState } from "react";
-import { Pressable, View } from "react-native";
+import { View } from "react-native";
 import ScannerFrame from "./scanner-frame";
 
 interface QrScannerViewProps {
@@ -29,7 +31,7 @@ const QrScannerView = ({ visible, onClose, onScan }: QrScannerViewProps) => {
 
   return (
     <Portal name="qr-scanner">
-      <View className="absolute inset-0 bg-black">
+      <View className="absolute inset-0 bg-background">
         <CameraView
           style={{ flex: 1 }}
           facing="back"
@@ -37,18 +39,20 @@ const QrScannerView = ({ visible, onClose, onScan }: QrScannerViewProps) => {
           onBarcodeScanned={scanned ? undefined : handleBarcodeScanned}
         />
         <ScannerFrame />
-        <View className="flex-row absolute top-14 screen-x-padding">
-          <Pressable
+        <View className="flex-row absolute top-14 px-5">
+          <PressableScale
             onPress={onClose}
-            className="bg-black/60 h-12 w-12 flex-row items-center justify-center p-2 rounded-full"
+            accessibilityRole="button"
+            accessibilityLabel="Close scanner"
+            className="h-11 w-11 items-center justify-center rounded-[14px] border border-line bg-surface"
           >
-            <DynamicIcon
-              family="Ionicons"
-              name="chevron-back"
-              size={24}
-              color="#FFFFFF"
+            <Icon
+              as={ChevronLeft}
+              size={20}
+              strokeWidth={2}
+              className="text-foreground"
             />
-          </Pressable>
+          </PressableScale>
         </View>
       </View>
     </Portal>

@@ -1,55 +1,74 @@
-import DynamicIcon from "@/components/dynamic-icon";
-import { Button } from "@/components/ui/button";
+import { Icon } from "@/components/ui/icon";
+import { PressableScale } from "@/components/ui/pressable";
+import { useTheme } from "@/theme/theme-provider";
 import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
+import { ChevronLeft } from "lucide-react-native";
 import React from "react";
-import { Pressable, Text, View } from "react-native";
+import { Text, View } from "react-native";
 import { ScreenHeaderProps } from "type";
 
+/**
+ * Pushed-screen header: 44×44 rounded back button (surface + border), then the
+ * title, vertically centred, and an optional element on the right.
+ */
 const ScreenHeader = ({
   title,
   backButtonVisible = false,
-  rightButtons = [],
+  right,
 }: ScreenHeaderProps) => {
   const router = useRouter();
+  const { shadows } = useTheme();
 
   const handleBackPress = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-
     router.back();
   };
 
   return (
-    <View className="screen-header flex-row flex-between bg-bg-primary">
-      <View className="flex-row items-center gap-x-4">
-        {backButtonVisible && (
-          <Pressable
-            onPress={handleBackPress}
-            className="btn-touch-scale flex-row items-center justify-center rounded-full h-14 w-14 bg-dark-200"
-          >
-            <DynamicIcon
-              family="Ionicons"
-              name="chevron-back"
-              color="#FFFFFF"
-            />
-          </Pressable>
-        )}
-        <Text className="screen-title text-text-primary">{title}</Text>
-      </View>
-      <View className="flex flex-row items-center justify-end gap-x-2">
-        {rightButtons.map((button) => (
-          <Button
-            variant={"outline"}
-            className="h-12 w-12 rounded-full bg-dark-200"
-            key={button.name}
-            onPress={() => button.onPress()}
-          >
-            {button.icon}
-          </Button>
-        ))}
-      </View>
+    <View className="flex-row items-center gap-3.5 px-5 pb-3 pt-4">
+      {backButtonVisible && (
+        <PressableScale
+          onPress={handleBackPress}
+          accessibilityRole="button"
+          accessibilityLabel="Go back"
+          className="h-11 w-11 items-center justify-center rounded-[14px] border border-line bg-surface"
+          style={{ boxShadow: shadows.card }}
+        >
+          <Icon
+            as={ChevronLeft}
+            size={20}
+            strokeWidth={2}
+            className="text-foreground"
+          />
+        </PressableScale>
+      )}
+      <Text
+        numberOfLines={1}
+        accessibilityRole="header"
+        className="title-pushed min-w-0 flex-1"
+      >
+        {title}
+      </Text>
+      {right}
     </View>
   );
 };
+
+/** Tab-screen title: 32px title with an optional element aligned to it. */
+export const TabTitle = ({
+  title,
+  right,
+}: {
+  title: string;
+  right?: React.ReactNode;
+}) => (
+  <View className="flex-row items-center justify-between pt-3">
+    <Text accessibilityRole="header" className="title-tab">
+      {title}
+    </Text>
+    {right}
+  </View>
+);
 
 export default ScreenHeader;

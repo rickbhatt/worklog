@@ -1,7 +1,7 @@
 {
   "name": "workv2",
   "main": "expo-router/entry",
-  "version": "1.0.0",
+  "version": "2.2s.0",
   "scripts": {
     "start": "bunx expo start -c",
     "start:dev": "cross-env APP_VARIANT=development bunx expo start -c",
@@ -11,9 +11,12 @@
     "prebuild:dev": "cross-env APP_VARIANT=development bunx expo prebuild --clean",
     "prebuild": "bunx expo prebuild --clean",
     "generate:db": "drizzle-kit generate",
-    "ios": "expo run:ios"
+    "ios": "expo run:ios",
+    "lint": "expo lint"
   },
   "dependencies": {
+    "@expo-google-fonts/inter": "^0.4.2",
+    "@expo-google-fonts/manrope": "^0.4.3",
     "@expo/vector-icons": "^15.0.3",
     "@gorhom/bottom-sheet": "^5",
     "@react-native-community/datetimepicker": "8.4.4",
@@ -45,6 +48,7 @@
     "expo-image": "~3.0.11",
     "expo-linear-gradient": "~15.0.8",
     "expo-linking": "~8.0.11",
+    "expo-navigation-bar": "~5.0.10",
     "expo-notifications": "~0.32.17",
     "expo-router": "~6.0.21",
     "expo-secure-store": "~15.0.8",
@@ -58,6 +62,7 @@
     "lottie-react-native": "~7.3.1",
     "lucide-react-native": "^0.563.0",
     "nativewind": "^4.2.1",
+    "pressto": "^0.8.2",
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "react-native": "0.81.5",

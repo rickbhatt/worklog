@@ -1,6 +1,11 @@
 import FormInput from "@/components/form-input";
+import ScreenHeader from "@/components/screen-header";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Screen } from "@/components/ui/screen";
+import { Text } from "@/components/ui/text";
 import { useDb } from "@/hooks/useDb";
+import { useTheme } from "@/theme/theme-provider";
 import { useRouter } from "expo-router";
 import LottieView from "lottie-react-native";
 
@@ -15,8 +20,22 @@ import {
 import { getAccessToken } from "@/services/googleAuthService";
 import dataTable from "@assets/images/data-table.json";
 import React, { useState } from "react";
-import { ScrollView, Text, View } from "react-native";
+import { ScrollView } from "@/components/ui/gesture-scroll";
+import { Text as RNText, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { toast } from "sonner-native";
+
+// Required sheet columns, in order, with the existing hint text.
+const REQUIRED_COLUMNS = [
+  { name: "Date", hint: "yyyy-mm-dd" },
+  { name: "JID", hint: "Journal ID" },
+  { name: "AID", hint: "Article ID" },
+  { name: "Pages", hint: "Number of pages. For sml pages = 15; for nd-sml pages = 0" },
+  { name: "File type", hint: "manual/nd-sml/sml" },
+  { name: "Minutes", hint: "Time taken in minutes; for nd-sml time = 0" },
+  { name: "Compensated file", hint: "yes/no (optional)" },
+  { name: "QC file", hint: "yes/no (optional)" },
+];
 
 const ImportData = () => {
   const { isSignedIn } = useAuth();
@@ -25,6 +44,8 @@ const ImportData = () => {
   const [gsheetUrl, setGsheetUrl] = useState<string | null>(null);
   const [sheetName, setSheetName] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const { colors } = useTheme();
+  const { bottom } = useSafeAreaInsets();
 
   const handleOnChangeText = (fieldName: string, rawValue: string | number) => {
     if (typeof rawValue !== "string") return;
@@ -127,80 +148,73 @@ const ImportData = () => {
   };
 
   return (
-    <View className="flex-1 bg-bg-primary screen-x-padding pt-4 pb-safe">
+    <Screen header={<ScreenHeader title="Import data" backButtonVisible />}>
       {isSignedIn ? (
         <>
           {!isLoading ? (
             <ScrollView
               showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
               className="flex-1"
-              contentContainerClassName="flex-col gap-3 pb-safe-offset-6"
+              contentContainerClassName="gap-5 px-5 pt-2"
+              contentContainerStyle={{ paddingBottom: bottom + 24 }}
             >
               {/* form */}
-              <View className="form-group">
-                <Text className="form-label">G-Sheet Url</Text>
-                <QrScanner value={gsheetUrl} onScan={setGsheetUrl} />
-              </View>
-              <FormInput
-                label="Sheet Name"
-                name="sheet_name"
-                placeholder="Sheet1"
-                onChange={handleOnChangeText}
-                value={sheetName}
-              />
-              <Button onPress={handleSubmit}>
-                <Text className="btn-label">Load Data</Text>
-              </Button>
-              {/* instruction */}
-              <View className="flex-col gap-3">
-                <Text className="text-sm text-text-secondary">
-                  Please follow the instructions before importing data:
-                </Text>
-                <Text className="text-sm text-text-secondary">
-                  1. Ensure you are signed in with the Google account that has
-                  access to the sheet.
-                </Text>
-                <Text className="text-sm text-text-secondary">
-                  2. Verify the sheet name is correct.
-                </Text>
-                <Text className="text-sm text-text-secondary">
-                  3. Before loading the data, make sure that the sheet contains
-                  the following columns in order:
-                </Text>
+              <Card className="gap-4 p-4">
+                <View className="form-group">
+                  <RNText className="form-label">Sheet URL</RNText>
+                  <QrScanner value={gsheetUrl} onScan={setGsheetUrl} />
+                </View>
+                <FormInput
+                  label="Sheet name"
+                  name="sheet_name"
+                  placeholder="Sheet1"
+                  onChange={handleOnChangeText}
+                  value={sheetName}
+                />
+                <Button onPress={handleSubmit}>
+                  <Text>Load data</Text>
+                </Button>
+              </Card>
 
-                <Text className="text-sm text-text-secondary">
-                  Date | JID | AID | Pages | File type | Minutes | Compensated
-                  file | QC file
-                </Text>
-                <Text className="text-sm text-text-secondary">
-                  • Date: yyyy-mm-dd
-                </Text>
-                <Text className="text-sm text-text-secondary">
-                  • JID: Journal ID
-                </Text>
-                <Text className="text-sm text-text-secondary">
-                  • AID: Article ID
-                </Text>
-                <Text className="text-sm text-text-secondary">
-                  • Pages: Number of pages. For sml pages = 15; for nd-sml pages
-                  = 0
-                </Text>
-                <Text className="text-sm text-text-secondary">
-                  • File type: manual/nd-sml/sml
-                </Text>
-                <Text className="text-sm text-text-secondary">
-                  • Minutes: Time taken in minutes; for nd-sml time = 0
-                </Text>
-                <Text className="text-sm text-text-secondary">
-                  • Compensated file: yes/no (optional)
-                </Text>
-                <Text className="text-sm text-text-secondary">
-                  • QC file: yes/no (optional)
-                </Text>
+              {/* instructions */}
+              <View className="gap-3">
+                <RNText accessibilityRole="header" className="section-title px-1">
+                  Before you import
+                </RNText>
+                <RNText className="caption px-1 leading-5">
+                  Sign in with the Google account that has access to the sheet,
+                  and check the sheet name is correct. The sheet must contain
+                  these columns, in this order:
+                </RNText>
+                <Card className="overflow-hidden rounded-[18px]">
+                  {REQUIRED_COLUMNS.map((column, index) => (
+                    <View
+                      key={column.name}
+                      className={
+                        index > 0
+                          ? "flex-row items-start gap-3 border-t border-line px-4 py-3"
+                          : "flex-row items-start gap-3 px-4 py-3"
+                      }
+                    >
+                      <View className="h-6 w-6 items-center justify-center rounded-lg bg-accent-soft">
+                        <RNText className="font-manrope-bold text-xs tabular-nums text-accent">
+                          {index + 1}
+                        </RNText>
+                      </View>
+                      <View className="min-w-0 flex-1 gap-0.5">
+                        <RNText className="font-inter-semibold text-sm text-foreground">
+                          {column.name}
+                        </RNText>
+                        <RNText className="caption">{column.hint}</RNText>
+                      </View>
+                    </View>
+                  ))}
+                </Card>
               </View>
             </ScrollView>
           ) : (
-            <View className="flex-1 flex-col justify-center items-center">
+            <View className="flex-1 flex-col items-center justify-center gap-2">
               <LottieView
                 autoPlay
                 loop
@@ -209,49 +223,46 @@ const ImportData = () => {
                 colorFilters={[
                   {
                     keypath: "Layer 5 Outlines.Group 1.Stroke 1",
-                    color: "#FFFFFF",
+                    color: colors.accent,
                   },
                   {
                     keypath: "Layer 11 Outlines.Group 1.Stroke 1",
-                    color: "#FFFFFF",
+                    color: colors.accent,
                   },
                   {
                     keypath: "Layer 9 Outlines.Group 1.Stroke 1",
-                    color: "#FFFFFF",
+                    color: colors.accent,
                   },
                   {
                     keypath: "Layer 6 Outlines.Group 1.Stroke 1",
-                    color: "#FFFFFF",
+                    color: colors.accent,
                   },
                   {
                     keypath: "Layer 12 Outlines.Group 1.Stroke 1",
-                    color: "#FFFFFF",
+                    color: colors.accent,
                   },
                   {
                     keypath: "Layer 10 Outlines.Group 1.Stroke 1",
-                    color: "#FFFFFF",
+                    color: colors.accent,
                   },
                 ]}
               />
-              <Text className="base-paragraph">Importing data...</Text>
+              <RNText className="body">Importing data…</RNText>
             </View>
           )}
         </>
       ) : (
-        <View className="flex-col gap-4">
-          <Text className="base-paragraph">
-            Please singn in with your Google account to import data to Google
+        <View className="gap-4 px-5 pt-2">
+          <RNText className="body text-muted">
+            Please sign in with your Google account to import data from Google
             Sheets.
-          </Text>
-          <Button
-            className="flex-row items-center py-3 px-4"
-            onPress={() => router.push("/settings/manage-google-account")}
-          >
-            <Text className="btn-label">Manage Google Account</Text>
+          </RNText>
+          <Button onPress={() => router.push("/settings/manage-google-account")}>
+            <Text>Manage Google account</Text>
           </Button>
         </View>
       )}
-    </View>
+    </Screen>
   );
 };
 

@@ -1,8 +1,14 @@
+import DateRangeField from "@/components/date-range-field";
 import FormInput from "@/components/form-input";
 import HorzLoader from "@/components/horz-loader";
 import OpenExportSheetUrl from "@/components/open-exported-sheet-alert";
 import QrScanner from "@/components/qrscanner/qr-scanner";
+import ScreenHeader from "@/components/screen-header";
 import { Button } from "@/components/ui/button";
+import { Icon } from "@/components/ui/icon";
+import { Screen } from "@/components/ui/screen";
+import { SegmentedControl } from "@/components/ui/segmented-control";
+import { Text } from "@/components/ui/text";
 import { useAuth } from "@/contexts/AuthContext";
 import { getFileLogs } from "@/db/queries/fileworklog.queries";
 import { useDb } from "@/hooks/useDb";
@@ -16,32 +22,27 @@ import {
 import { getAccessToken } from "@/services/googleAuthService";
 import { useRouter } from "expo-router";
 
+import { Info } from "lucide-react-native";
 import React, { useState } from "react";
-import { Text, View } from "react-native";
+import { Text as RNText, View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { toast } from "sonner-native";
 
 const EXPORT_TYPES = [
-  {
-    label: "Append To Existing Sheet",
-    value: "append",
-  },
-  {
-    label: "Create New Sheet",
-    value: "create",
-  },
-];
+  { label: "Existing sheet", value: "append" },
+  { label: "New sheet", value: "create" },
+] as const;
 
 const ExportData = () => {
   const { isSignedIn } = useAuth();
   const router = useRouter();
   const db = useDb();
 
-  const [selectedMonth, setSelectedMonth] = useState<string | null>(null);
+  const { bottom } = useSafeAreaInsets();
   const [isExporting, setIsExporting] = useState(false);
-  const [exportType, setExportType] = useState<"append" | "create" | null>(
-    null,
-  );
+  // the segmented control always has a selection; "Existing sheet" first
+  const [exportType, setExportType] = useState<"append" | "create">("append");
   const [dateRange, setDateRange] = useState<{
     start: string | undefined;
     end: string | undefined;
@@ -57,11 +58,6 @@ const ExportData = () => {
   const [exportedSheetUrl, setExportedSheetUrl] = useState<string | null>(null);
 
   const [fileName, setFileName] = useState<string | null>(null);
-
-  const onSelectExportType = (fieldName: string, rawValue: string | number) => {
-    if (typeof rawValue !== "string") return;
-    setExportType(rawValue as "append" | "create");
-  };
 
   const handleOnChangeDateRange = (
     fieldName: string,
@@ -206,95 +202,90 @@ const ExportData = () => {
   };
 
   return (
-    <View className="bg-bg-primary flex-col gap-3 flex-1 pb-safe">
+    <Screen header={<ScreenHeader title="Export data" backButtonVisible />}>
       <KeyboardAwareScrollView
-        bottomOffset={0}
-        extraKeyboardSpace={0}
-        contentContainerClassName="flex-col gap-5 screen-x-padding"
+        bottomOffset={24}
+        keyboardShouldPersistTaps="handled"
+        contentContainerClassName="flex-col gap-5 px-5 pt-2"
+        contentContainerStyle={{ paddingBottom: bottom + 24 }}
         showsVerticalScrollIndicator={false}
       >
         {isSignedIn ? (
           <>
-            <View className="form-group gap-y-5">
-              {/* header */}
+            <SegmentedControl
+              options={EXPORT_TYPES}
+              value={exportType}
+              onChange={setExportType}
+            />
 
-              <FormInput
-                onChange={onSelectExportType}
-                name="exportType"
-                label="Export Type"
-                inputType="select"
-                placeholder="Select an export type"
-                selectOptions={EXPORT_TYPES}
-                value={exportType}
-              />
+            <DateRangeField
+              label="Date range"
+              start={dateRange.start}
+              end={dateRange.end}
+              maxDate={new Date(getCurrentDate())}
+              onChange={(field, value) =>
+                handleOnChangeDateRange(field, value)
+              }
+            />
 
-              {exportType && (
+            {/* append fields */}
+            {exportType === "append" && (
+              <>
                 <View className="form-group">
-                  <Text className="form-label">Select a date range</Text>
-                  <View className="flex-row items-center gap-x-2">
-                    <FormInput
-                      inputType="date"
-                      label="From"
-                      name="start"
-                      placeholder="YYYY-MM-DD"
-                      value={dateRange.start}
-                      maxDate={new Date(getCurrentDate())}
-                      onChange={handleOnChangeDateRange}
-                      rowMode
-                    />
-                    <FormInput
-                      inputType="date"
-                      label="To"
-                      name="end"
-                      placeholder="YYYY-MM-DD"
-                      value={dateRange.end}
-                      onChange={handleOnChangeDateRange}
-                      maxDate={new Date(getCurrentDate())}
-                      rowMode
-                    />
-                  </View>
+                  <RNText className="form-label">Sheet URL</RNText>
+                  <QrScanner value={gsheetUrl} onScan={setGsheetUrl} />
                 </View>
-              )}
-
-              {/* append fields */}
-              {exportType === "append" && (
-                <View className="form-group">
-                  <View className="form-group">
-                    <Text className="form-label">G-Sheet Url</Text>
-                    <QrScanner value={gsheetUrl} onScan={setGsheetUrl} />
-                  </View>
-                  <FormInput
-                    name="sheetName"
-                    label="Sheet Name"
-                    placeholder="sheet name or tab name here..."
-                    value={sheetName}
-                    onChange={(
-                      fieldnName: string,
-                      rawValue: string | number,
-                    ) => {
-                      if (typeof rawValue !== "string") return;
-                      setSheetName(rawValue);
-                    }}
-                  />
-                </View>
-              )}
-
-              {/* create fields */}
-              {exportType === "create" && (
                 <FormInput
-                  name="fileName"
-                  label="File Name"
-                  placeholder="file name here..."
-                  value={fileName}
+                  name="sheetName"
+                  label="Sheet or tab name"
+                  placeholder="Sheet1"
+                  value={sheetName}
                   onChange={(fieldnName: string, rawValue: string | number) => {
                     if (typeof rawValue !== "string") return;
-                    setFileName(rawValue);
+                    setSheetName(rawValue);
                   }}
                 />
-              )}
+              </>
+            )}
+
+            {/* create fields */}
+            {exportType === "create" && (
+              <FormInput
+                name="fileName"
+                label="File name"
+                placeholder="Worklog November"
+                value={fileName}
+                onChange={(fieldnName: string, rawValue: string | number) => {
+                  if (typeof rawValue !== "string") return;
+                  setFileName(rawValue);
+                }}
+              />
+            )}
+
+            {/* info */}
+            <View className="flex-row gap-3 rounded-2xl bg-raised p-4">
+              <Icon
+                as={Info}
+                size={18}
+                strokeWidth={1.8}
+                className="mt-0.5 text-accent"
+              />
+              <RNText className="flex-1 font-inter text-[13px] leading-5 text-muted">
+                {exportType === "append"
+                  ? "Logs in this date range are added as new rows at the end of the sheet. Make sure the account you signed in with can edit it."
+                  : "A new Google Sheet is created in your Drive with a header row and the logs in this date range."}
+              </RNText>
             </View>
+
             {/* export button */}
-            {exportType && !isExporting && (
+            {isExporting ? (
+              <View className="gap-3 py-2">
+                <RNText className="caption text-center">
+                  Exporting to Google Sheets…
+                </RNText>
+                <HorzLoader loading={isExporting} duration={1000} />
+              </View>
+            ) : (
               <Button
                 onPress={
                   exportType === "append"
@@ -302,36 +293,20 @@ const ExportData = () => {
                     : exportToNewSheet
                 }
               >
-                <Text className="btn-label">Export Data</Text>
+                <Text>Export data</Text>
               </Button>
-            )}
-
-            {isExporting && (
-              <View className="flex-col gap-4 mt-5">
-                <Text className="base-paragraph">
-                  Exporting to Google Sheets...
-                </Text>
-                <HorzLoader
-                  loading={isExporting}
-                  duration={1000}
-                  className="mt-2"
-                  trackClassName="h-1 bg-dark-200"
-                  indicatorClassName="bg-accent"
-                />
-              </View>
             )}
           </>
         ) : (
-          <View className="flex-col gap-4">
-            <Text className="base-paragraph">
-              Please singn in with your Google account to export data to Google
+          <View className="gap-4">
+            <RNText className="body text-muted">
+              Please sign in with your Google account to export data to Google
               Sheets.
-            </Text>
+            </RNText>
             <Button
-              className="flex-row items-center py-3 px-4"
               onPress={() => router.push("/settings/manage-google-account")}
             >
-              <Text className="btn-label">Manage Google Account</Text>
+              <Text>Manage Google account</Text>
             </Button>
           </View>
         )}
@@ -342,7 +317,7 @@ const ExportData = () => {
         onDismiss={() => setExportedSheetUrl(null)}
         url={exportedSheetUrl}
       />
-    </View>
+    </Screen>
   );
 };
 

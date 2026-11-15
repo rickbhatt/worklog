@@ -50,7 +50,7 @@ const HorzLoader = ({
     >
       <View
         className={cn(
-          "h-1 w-full overflow-hidden rounded-full bg-dark-200",
+          "h-1 w-full overflow-hidden rounded-full bg-raised",
           trackClassName,
         )}
       >

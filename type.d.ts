@@ -76,12 +76,6 @@ export type DynamicIconProps =
       color?: string;
     };
 
-interface TabBarIconProps {
-  focused: boolean;
-  icon: React.ReactNode;
-  title: string;
-}
-
 export type InputModeOptions =
   | "none"
   | "text"
@@ -101,11 +95,7 @@ export interface FileWorklogFormProps {
 interface ScreenHeaderProps {
   title: string;
   backButtonVisible?: boolean;
-  rightButtons?: {
-    icon: React.ReactNode;
-    onPress: () => void;
-    name: string;
-  }[];
+  right?: React.ReactNode;
 }
 
 export type FileLogsCreateInput = Omit<

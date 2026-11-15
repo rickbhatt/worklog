@@ -1,24 +1,14 @@
-import DynamicIcon from "@/components/dynamic-icon";
+import DateRangeField from "@/components/date-range-field";
 import FormInput from "@/components/form-input";
 import { Button } from "@/components/ui/button";
-import {
-  BottomSheetBackdrop,
-  BottomSheetModal,
-  BottomSheetView,
-} from "@gorhom/bottom-sheet";
+import { Icon } from "@/components/ui/icon";
+import { useSheetStyles } from "@/components/ui/sheet";
+import { BottomSheetModal, BottomSheetView } from "@gorhom/bottom-sheet";
 import { useRouter } from "expo-router";
+import { Check, Trash2 } from "lucide-react-native";
 import { RefObject, useEffect, useMemo, useState } from "react";
 import { Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-
-const renderBackdrop = (props: any) => (
-  <BottomSheetBackdrop
-    {...props}
-    disappearsOnIndex={-1}
-    appearsOnIndex={0}
-    opacity={0.6}
-  />
-);
 
 const FilterLogsBottomSheetModal = ({
   ref,
@@ -36,6 +26,8 @@ const FilterLogsBottomSheetModal = ({
   const { top } = useSafeAreaInsets();
 
   const router = useRouter();
+
+  const sheetStyles = useSheetStyles();
 
   const snapPoints = useMemo(() => ["50%", "80%"], []);
 
@@ -94,7 +86,7 @@ const FilterLogsBottomSheetModal = ({
     <BottomSheetModal
       ref={ref}
       name="log-filter"
-      backdropComponent={renderBackdrop}
+      {...sheetStyles}
       keyboardBehavior="interactive"
       keyboardBlurBehavior="restore"
       snapPoints={snapPoints}
@@ -104,50 +96,47 @@ const FilterLogsBottomSheetModal = ({
       enablePanDownToClose
       enableDynamicSizing={false}
       topInset={top}
-      handleIndicatorStyle={{
-        backgroundColor: "#FFFFFF",
-        width: 40,
-      }}
-      backgroundStyle={{ backgroundColor: "#242424" }}
     >
-      <BottomSheetView className="flex-col screen-x-padding gap-y-3">
-        <View className="flex-between flex-row">
-          <Text className="text-2xl font-bold text-text-primary">Filters</Text>
-          <View className="flex-row gap-x-3">
+      <BottomSheetView className="flex-col gap-5 px-5 pt-2">
+        <View className="flex-row items-center justify-between">
+          <Text className="title-pushed text-[22px]">Filters</Text>
+          <View className="flex-row gap-2">
             <Button
               onPress={handleClearFilters}
-              className="rounded-full flex-row items-center justify-center h-14 w-14 border-light-100 border"
-              variant={"outline"}
+              variant="secondary"
+              size="icon"
+              accessibilityLabel="Clear filters"
             >
-              <DynamicIcon
-                family="MaterialIcons"
-                name="delete-outline"
-                color="#EF4444"
-                size={24}
+              <Icon
+                as={Trash2}
+                size={18}
+                strokeWidth={1.8}
+                className="text-accent"
               />
             </Button>
             <Button
               onPress={handleApplyFilters}
-              className="rounded-full flex-row items-center justify-center h-14 w-14"
+              size="icon"
+              accessibilityLabel="Apply filters"
             >
-              <DynamicIcon
-                family="FontAwesome"
-                name="check"
-                color="#FFFFFF"
-                size={24}
+              <Icon
+                as={Check}
+                size={18}
+                strokeWidth={2.2}
+                className="text-on-accent"
               />
             </Button>
           </View>
         </View>
 
         {/* journal id and article id */}
-        <View className="items-center flex-row gap-x-2">
+        <View className="flex-row gap-3">
           <FormInput
             label="Journal ID"
-            autoCapitalize="words"
+            autoCapitalize="characters"
             name="journalId"
             maxLength={4}
-            placeholder="NPP2, MDR2,..."
+            placeholder="NPP2, MDR2…"
             value={filters.journalId}
             onChange={handleOnChangeFilters}
             rowMode
@@ -166,29 +155,14 @@ const FilterLogsBottomSheetModal = ({
           />
         </View>
         {/* start date and end date */}
-        <View className="flex-col mt-3">
-          <Text className="base-paragraph">Worked between</Text>
-          <View className="items-center flex-row gap-x-2 mt-3">
-            <FormInput
-              inputType="date"
-              label="From"
-              name="startDate"
-              placeholder="YYYY-MM-DD"
-              value={filters.startDate}
-              onChange={handleOnChangeFilters}
-              rowMode
-            />
-            <FormInput
-              inputType="date"
-              label="To"
-              name="endDate"
-              placeholder="YYYY-MM-DD"
-              value={filters.endDate}
-              onChange={handleOnChangeFilters}
-              rowMode
-            />
-          </View>
-        </View>
+        <DateRangeField
+          label="Worked between"
+          start={filters.startDate}
+          end={filters.endDate}
+          onChange={(field, value) =>
+            handleOnChangeFilters(field === "start" ? "startDate" : "endDate", value)
+          }
+        />
       </BottomSheetView>
     </BottomSheetModal>
   );

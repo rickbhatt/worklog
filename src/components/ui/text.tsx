@@ -6,7 +6,7 @@ import { Platform, Text as RNText, type Role } from 'react-native';
 
 const textVariants = cva(
   cn(
-    'text-foreground text-base',
+    'font-inter text-foreground text-[15px]',
     Platform.select({
       web: 'select-text',
     })
@@ -20,7 +20,7 @@ const textVariants = cva(
           Platform.select({ web: 'scroll-m-20 text-balance' })
         ),
         h2: cn(
-          'border-border border-b pb-2 text-3xl font-semibold tracking-tight',
+          'border-line border-b pb-2 text-3xl font-semibold tracking-tight',
           Platform.select({ web: 'scroll-m-20 first:mt-0' })
         ),
         h3: cn('text-2xl font-semibold tracking-tight', Platform.select({ web: 'scroll-m-20' })),
@@ -28,12 +28,12 @@ const textVariants = cva(
         p: 'mt-3 leading-7 sm:mt-6',
         blockquote: 'mt-4 border-l-2 pl-3 italic sm:mt-6 sm:pl-6',
         code: cn(
-          'bg-muted relative rounded px-[0.3rem] py-[0.2rem] font-mono text-sm font-semibold'
+          'bg-raised relative rounded px-[0.3rem] py-[0.2rem] font-mono text-sm font-semibold'
         ),
-        lead: 'text-muted-foreground text-xl',
+        lead: 'text-muted text-xl',
         large: 'text-lg font-semibold',
         small: 'text-sm font-medium leading-none',
-        muted: 'text-muted-foreground text-sm',
+        muted: 'text-muted text-[13px]',
       },
     },
     defaultVariants: {
@@ -79,6 +79,10 @@ function Text({
   return (
     <Component
       className={cn(textVariants({ variant }), textClass, className)}
+      // Android's default "highQuality" break strategy can measure custom
+      // fonts (Inter/Manrope) a hair short and wrap the last letter of
+      // content-sized labels onto a hidden second line.
+      textBreakStrategy="simple"
       role={variant ? ROLE[variant] : undefined}
       aria-level={variant ? ARIA_LEVEL[variant] : undefined}
       {...props}

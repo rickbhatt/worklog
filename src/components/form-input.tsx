@@ -9,11 +9,21 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { cn, convertTimeTakenToHoursMins, formatDateTime } from "@/lib/utils";
+import { Icon } from "@/components/ui/icon";
+import { Pill } from "@/components/ui/pill";
+import { PressableScale } from "@/components/ui/pressable";
+import {
+  cn,
+  convertTimeTakenToHoursMins,
+  formatDateTime,
+  getCurrentDate,
+} from "@/lib/utils";
+import { useTheme } from "@/theme/theme-provider";
+import { Calendar } from "lucide-react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import type { TriggerRef } from "@rn-primitives/select";
 import React, { useState } from "react";
-import { Platform, Pressable, Text, View } from "react-native";
+import { Platform, Text, TextInputProps, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { FieldName, InputModeOptions } from "type";
 
@@ -41,6 +51,14 @@ interface FormInputProps<TExtraFields extends Record<string, unknown> = {}> {
   onFocus?: () => void;
   onBlur?: () => void;
   icon?: React.ReactNode;
+  /** Muted unit inside the field ("pages", "min"). */
+  suffix?: string;
+  /** Element at the right edge inside the field (e.g. a QR button). */
+  right?: React.ReactNode;
+  /** Large Manrope number style. */
+  numeric?: boolean;
+  /** Swap the TextInput, e.g. BottomSheetTextInput inside a bottom sheet. */
+  as?: React.ComponentType<TextInputProps>;
 }
 
 const FormInput = <TExtraFields extends Record<string, unknown> = {}>({
@@ -65,9 +83,14 @@ const FormInput = <TExtraFields extends Record<string, unknown> = {}>({
   className,
   rowMode = false,
   icon,
+  suffix,
+  right,
+  numeric,
+  as,
   onBlur,
   onFocus,
 }: FormInputProps<TExtraFields>) => {
+  const { shadows } = useTheme();
   const [isDatePicketOpen, setIsDatePickerOpen] = useState(false);
   const numericFields = ["articleId", "lepPages", "timeTaken"];
 
@@ -111,11 +134,16 @@ const FormInput = <TExtraFields extends Record<string, unknown> = {}>({
     case "text":
       return (
         <View className={cn("form-group", rowMode && "flex-1")}>
-          <Text className="form-label">
-            {label}{" "}
-            {timePreview &&
-              `${value ? "| " + convertTimeTakenToHoursMins(Number(value)) : ""}`}
-          </Text>
+          {label ? (
+            <Text className="form-label">
+              {label}
+              {timePreview && value ? (
+                <Text className="font-inter text-muted">
+                  {"  ·  " + convertTimeTakenToHoursMins(Number(value))}
+                </Text>
+              ) : null}
+            </Text>
+          ) : null}
           <Input
             onChangeText={(text) => handleOnChangeTextInput(name, text)}
             inputMode={inputMode}
@@ -129,11 +157,12 @@ const FormInput = <TExtraFields extends Record<string, unknown> = {}>({
             value={value?.toString()}
             onFocus={onFocus}
             onBlur={onBlur}
-            className={cn(
-              "h-12 text-base py-0 bg-bg-primary",
-              rowMode ? "flex-1 w-full" : "w-full",
-              className, // Override if passed
-            )}
+            suffix={suffix}
+            right={right}
+            numeric={numeric}
+            as={as}
+            left={icon}
+            containerClassName={className}
           />
         </View>
       );
@@ -141,22 +170,36 @@ const FormInput = <TExtraFields extends Record<string, unknown> = {}>({
       return (
         <>
           <View className={cn("form-group", rowMode && "flex-1")}>
-            <Text className="form-label">{label}</Text>
-            <Pressable
+            {label ? <Text className="form-label">{label}</Text> : null}
+            <PressableScale
               onPress={() => setIsDatePickerOpen(true)}
+              accessibilityRole="button"
+              accessibilityLabel={`${label ?? "Date"}, ${value ?? "not set"}`}
               className={cn(
-                "bg-bg-primary border-input h-12 py-0 w-full flex-row items-center border px-3 text-base leading-5 rounded-md",
+                "h-[52px] w-full flex-row items-center gap-2.5 rounded-[14px] border border-line bg-surface px-4",
+                className,
               )}
+              style={{ boxShadow: shadows.card }}
             >
+              <Icon
+                as={Calendar}
+                size={18}
+                strokeWidth={1.8}
+                className="text-accent"
+              />
               <Text
+                numberOfLines={1}
                 className={cn(
-                  "text-base text-left",
-                  value ? "text-text-primary" : "text-text-primary/60",
+                  "flex-1 font-inter-medium text-base",
+                  value ? "text-foreground" : "text-muted",
                 )}
               >
-                {value ?? placeholder}
+                {value
+                  ? formatDateTime(value.toString()).shortDateWithYear
+                  : placeholder}
               </Text>
-            </Pressable>
+              {value === getCurrentDate() && <Pill tone="accent">Today</Pill>}
+            </PressableScale>
           </View>
 
           {isDatePicketOpen && (
@@ -166,8 +209,9 @@ const FormInput = <TExtraFields extends Record<string, unknown> = {}>({
               display="calendar"
               maximumDate={maxDate}
               minimumDate={minDate}
-              onChange={(_, selectedDate) => {
-                if (selectedDate) {
+              onChange={(event, selectedDate) => {
+                // Android passes the initial date on cancel too; only "set" is a pick.
+                if (event.type === "set" && selectedDate) {
                   let timestamp = formatDateTime(selectedDate).dateToISOString;
 
                   onChange(name, timestamp);
@@ -194,7 +238,7 @@ const FormInput = <TExtraFields extends Record<string, unknown> = {}>({
                 native: () => onChange(name, value === 1 ? 0 : 1),
               })}
               htmlFor={name}
-              className="text-base text-text-primary font-semibold"
+              className="font-inter-medium text-[15px] text-foreground"
             >
               {label}
             </Label>
@@ -205,21 +249,20 @@ const FormInput = <TExtraFields extends Record<string, unknown> = {}>({
     case "textarea":
       return (
         <View className={cn("form-group", rowMode && "flex-1")}>
-          <Text className="form-label">{label}</Text>
+          {label ? <Text className="form-label">{label}</Text> : null}
           <Textarea
             value={value?.toString()}
             placeholder={placeholder}
-            className="bg-bg-primary"
+            numberOfLines={4}
             onChangeText={(text) => handleOnChangeTextInput(name, text)}
           />
         </View>
       );
 
-    case "select":
+    case "select": {
       const valueStr = value?.toString() || "";
-      const selectedOption = React.useMemo(
-        () => selectOptions.find((opt) => opt.value.toString() === valueStr),
-        [valueStr, selectOptions],
+      const selectedOption = selectOptions.find(
+        (opt) => opt.value.toString() === valueStr,
       );
       return (
         <View className={cn("form-group", rowMode && "flex-1")}>
@@ -259,6 +302,7 @@ const FormInput = <TExtraFields extends Record<string, unknown> = {}>({
           </Select>
         </View>
       );
+    }
   }
 };
 

@@ -1,12 +1,19 @@
-import AttendanceIndicator from "@/components/attendance-indicator";
-import DynamicIcon from "@/components/dynamic-icon";
-import FormInput from "@/components/form-input";
+import AttendanceIndicator, {
+  AttendanceType,
+} from "@/components/attendance-indicator";
+import MonthPill from "@/components/month-pill";
+import { TabTitle } from "@/components/screen-header";
+import { useTabBarClearance } from "@/components/tab-bar";
+import { Card, HeroCard } from "@/components/ui/card";
+import { ScrollView } from "@/components/ui/gesture-scroll";
+import { Icon } from "@/components/ui/icon";
+import { Screen } from "@/components/ui/screen";
 import { MONTH_NAMES, MONTHS, WEEKDAY_LABELS } from "@/constants";
+import { getAttendanceOverridesForMonth } from "@/db/queries/attendance.queries";
 import {
   getLatestTargetHour,
   getPreviousMonthSummary,
 } from "@/db/queries/fileworklog.queries";
-import { getAttendanceOverridesForMonth } from "@/db/queries/attendance.queries";
 import {
   getAttendanceDatesQuery,
   getInsightsQuery,
@@ -17,21 +24,34 @@ import {
   calcMomGrowthPercent,
   checkDateGreaterThanToday,
   checkSunday,
+  cn,
   formatDateTime,
 } from "@/lib/utils";
+import { useTheme } from "@/theme/theme-provider";
 import { getDaysInMonth } from "date-fns";
 import { useLiveQuery } from "drizzle-orm/expo-sqlite";
+import { TrendingDown, TrendingUp } from "lucide-react-native";
 import { useMemo, useState } from "react";
-import { ScrollView, Text, View } from "react-native";
+import { Text, View } from "react-native";
 import { BarChart } from "react-native-gifted-charts";
-import { FieldName } from "type";
 
-type InsightTypes = {
-  month: string;
-};
+const CHART_HEIGHT = 150;
+const CHART_SPACING = 6;
+
+const LEGEND = [
+  ["full", "Full day"],
+  ["half", "Half day"],
+  ["absent", "Absent"],
+] as const;
 
 const Insights = () => {
   const db = useDb();
+
+  const { colors } = useTheme();
+
+  const bottomClearance = useTabBarClearance();
+
+  const [chartWidth, setChartWidth] = useState(0);
 
   const [selectedMonth, setSelectedMonth] = useState<string | undefined>(
     (new Date().getMonth() + 1).toString(),
@@ -65,8 +85,13 @@ const Insights = () => {
     previousTotal: previousMonthSummary[0]?.totalLogs,
   });
 
-  const chartBarWidth = 32;
-  const chartSpacing = 22;
+  // 12 bars fill the card's inner width
+  const chartBarWidth = chartWidth
+    ? Math.max(
+        Math.floor((chartWidth - CHART_SPACING * 11) / MONTHS.length),
+        8,
+      )
+    : 16;
 
   const monthlyTotalLepPagesChartData = useMemo(() => {
     const monthlyTotals = new Map(
@@ -77,18 +102,21 @@ const Insights = () => {
     );
 
     return MONTHS.map((month) => {
-      const isCurrentCalendarMonth = month.value === selectedMonth;
+      const isSelectedMonth = month.value === selectedMonth;
 
       return {
         value: monthlyTotals.get(month.value) ?? 0,
         label: month.label.slice(0, 3),
-        labelWidth: chartBarWidth,
-        // frontColor: isCurrentCalendarMonth ? "#FFFFFF" : "transparent",
-        // barBorderColor: "#FFFFFF",
-        // barBorderWidth: isCurrentCalendarMonth ? 0 : 1,
+        frontColor: isSelectedMonth ? colors.accent : colors.barInactive,
+        labelTextStyle: {
+          color: isSelectedMonth ? colors.accent : colors.muted,
+          fontFamily: isSelectedMonth ? "Inter_600SemiBold" : "Inter_500Medium",
+          fontSize: 10,
+          textAlign: "center" as const,
+        },
       };
     });
-  }, [chartBarWidth, selectedMonth, monthlyTotalLepPages]);
+  }, [selectedMonth, monthlyTotalLepPages, colors]);
 
   const { data: attendanceDatesData } = useLiveQuery(
     getAttendanceDatesQuery({ db, month: selectedMonth!, targetLEP }),
@@ -104,7 +132,9 @@ const Insights = () => {
   );
 
   const attendanceMap = useMemo(() => {
-    const map = new Map(attendanceDatesData.map((item) => [item.date, item.type]));
+    const map = new Map(
+      attendanceDatesData.map((item) => [item.date, item.type]),
+    );
 
     // manual overrides win over the dynamic calculation
     attendanceOverridesData.forEach((override) => {
@@ -153,10 +183,6 @@ const Insights = () => {
     );
   }, [calendarDates]);
 
-  const onSelect = (name: FieldName<InsightTypes>, value: string | number) => {
-    setSelectedMonth(value.toString());
-  };
-
   const getIsoDateForDay = (day: number) => {
     const selectedYear = new Date().getFullYear();
     const selectedMonthIndex = Number(selectedMonth) - 1;
@@ -165,119 +191,169 @@ const Insights = () => {
       .dateToISOString;
   };
 
-  return (
-    <>
-      <View className="flex-1 flex-col gap-y-4 bg-bg-primary screen-x-padding pb-safe">
-        <FormInput<InsightTypes>
-          onChange={onSelect}
-          name="month"
-          inputType="select"
-          placeholder="Select a month"
-          selectOptions={MONTHS}
-          value={selectedMonth}
-          className="max-w-52"
-          icon={
-            <DynamicIcon
-              family="Ionicons"
-              name={"calendar"}
-              size={20}
-              color="#c3c3c3"
-            />
-          }
+  const isFutureDay = (date: number) =>
+    !!checkDateGreaterThanToday(date, parseInt(selectedMonth!));
+
+  // Past working days come from the logs (no logs = absent, as before);
+  // Sundays and future days have no data, so they get an empty box.
+  const getDayType = (date: number): AttendanceType => {
+    const isSunday = checkSunday({
+      date,
+      currentMonth: parseInt(selectedMonth!),
+    });
+    if (isSunday || isFutureDay(date)) return "empty";
+    const type = attendanceMap.get(date);
+    return type === "full" || type === "half" ? type : "absent";
+  };
+
+  const attendanceSummary = { full: 0, half: 0, absent: 0 };
+  calendarDates.forEach((date) => {
+    if (!date) return;
+    const type = getDayType(date);
+    if (type !== "empty") attendanceSummary[type] += 1;
+  });
+
+  const now = new Date();
+  const isCurrentMonth = Number(selectedMonth) === now.getMonth() + 1;
+  const daysInSelectedMonth = getDaysInMonth(
+    new Date(now.getFullYear(), Number(selectedMonth) - 1),
+  );
+  const previousMonthShort = MONTHS[(Number(selectedMonth) + 10) % 12].label.slice(
+    0,
+    3,
+  );
+  const isToday = (date: number) => isCurrentMonth && date === now.getDate();
+
+  const header = (
+    <TabTitle
+      title="Insights"
+      right={
+        <MonthPill
+          month={selectedMonth}
+          onChange={(value) => setSelectedMonth(value)}
         />
-        {summary?.totalLogs > 0 ? (
-          <ScrollView
-            className="flex-1"
-            contentContainerClassName="flex-col gap-4 pb-32"
-            showsVerticalScrollIndicator={false}
-          >
-            {/* LEP pages */}
-            <View className="border border-white p-4 rounded-md flex-col gap-y-4">
-              <Text className="text-text-secondary base-bold">
-                Total LEP Pages
+      }
+    />
+  );
+
+  return (
+    <Screen>
+      {summary?.totalLogs > 0 ? (
+        <ScrollView
+          className="flex-1"
+          contentContainerClassName="flex-col gap-4 px-5 pt-4"
+          contentContainerStyle={{ paddingBottom: bottomClearance }}
+          showsVerticalScrollIndicator={false}
+        >
+          <View className="pb-1">{header}</View>
+
+          {/* LEP pages */}
+          <HeroCard className="gap-2.5">
+            <View className="flex-row items-center justify-between">
+              <Text className="font-inter-medium text-sm text-white/85">
+                Total LEP pages
               </Text>
-              <Text className="text-text-primary text-7xl">
-                {summary?.totalLepPages}
-              </Text>
-              <View className="flex-row gap-x-2 items-center">
-                <DynamicIcon
-                  family="Feather"
-                  name={
-                    lepMomGrowth.isNegative ? "trending-down" : "trending-up"
-                  }
-                  size={22}
-                  color="#FFFFFF"
+              <View className="flex-row items-center gap-1 rounded-lg bg-white/20 px-2 py-1">
+                <Icon
+                  as={lepMomGrowth.isNegative ? TrendingDown : TrendingUp}
+                  size={14}
+                  strokeWidth={2.2}
+                  className="text-white"
                 />
-                <Text className="base-paragraph">
-                  <Text className="font-bold">{lepMomGrowth.percent}</Text> vs
-                  last month
+                <Text className="font-inter-semibold text-xs tabular-nums text-white">
+                  {lepMomGrowth.percent} vs {previousMonthShort}
                 </Text>
               </View>
             </View>
+            <Text className="font-manrope-extrabold text-[64px] leading-[68px] tracking-[-1.9px] tabular-nums text-white">
+              {summary?.totalLepPages}
+            </Text>
+            <Text className="font-inter text-[13px] text-white/85">
+              {isCurrentMonth
+                ? `Month in progress · ${now.getDate()} of ${daysInSelectedMonth} days`
+                : `${MONTH_NAMES[selectedMonth!]} · ${daysInSelectedMonth} days`}
+            </Text>
+          </HeroCard>
 
-            {/* sml and manual */}
-            <View className="flex-row gap-x-4">
-              <View className="p-4 basis-0 flex-1 flex-col gap-y-4">
-                <Text className="text-text-secondary base-bold">SML Files</Text>
-                <Text className="text-text-primary text-7xl">
-                  {summary?.smlCount}
+          {/* sml and manual */}
+          <View className="flex-row gap-3">
+            {[
+              { label: "SML files", value: summary?.smlCount, dot: "bg-accent" },
+              {
+                label: "MNL files",
+                value: summary?.manualCount,
+                dot: "bg-success",
+              },
+            ].map((stat) => (
+              <Card key={stat.label} className="flex-1 basis-0 gap-2 p-[18px]">
+                <View className="flex-row items-center gap-2">
+                  <View className={cn("h-2 w-2 rounded-full", stat.dot)} />
+                  <Text className="font-inter-medium text-[13px] text-muted">
+                    {stat.label}
+                  </Text>
+                </View>
+                <Text className="font-manrope-extrabold text-[40px] leading-[44px] tabular-nums text-foreground">
+                  {stat.value ?? 0}
                 </Text>
-              </View>
+              </Card>
+            ))}
+          </View>
 
-              <View className="p-4 basis-0 flex-1 flex-col gap-y-4">
-                <Text className="text-text-secondary base-bold">
-                  Manual Files
-                </Text>
-                <Text className="text-text-primary text-7xl">
-                  {summary?.manualCount}
-                </Text>
-              </View>
-            </View>
-
-            {/* files */}
-            <View className="p-4 rounded-md basis-0 flex-1 flex-col gap-y-2">
-              <Text className="text-xl text-text-primary">
-                {summary?.totalLogs} Files
+          {/* files */}
+          <View className="flex-row items-center justify-between rounded-2xl bg-raised px-[18px] py-3.5">
+            <Text className="font-inter-semibold text-sm text-foreground">
+              {summary?.totalLogs} {summary?.totalLogs === 1 ? "file" : "files"}{" "}
+              {isCurrentMonth
+                ? "this month"
+                : `in ${MONTH_NAMES[selectedMonth!]}`}
+            </Text>
+            <View className="flex-row items-center gap-1">
+              <Icon
+                as={filesMomGrowth.isNegative ? TrendingDown : TrendingUp}
+                size={14}
+                strokeWidth={2.2}
+                className={
+                  filesMomGrowth.isNegative ? "text-warning" : "text-success"
+                }
+              />
+              <Text
+                className={cn(
+                  "font-inter-semibold text-[13px] tabular-nums",
+                  filesMomGrowth.isNegative ? "text-warning" : "text-success",
+                )}
+              >
+                {filesMomGrowth.percent} vs {previousMonthShort}
               </Text>
-              <View className="flex-row gap-x-2 items-center">
-                <DynamicIcon
-                  family="Feather"
-                  name={
-                    filesMomGrowth.isNegative ? "trending-down" : "trending-up"
-                  }
-                  size={22}
-                  color="#FFFFFF"
-                />
-                <Text className="base-paragraph">
-                  <Text className="font-bold">{filesMomGrowth.percent}</Text> vs
-                  last month
-                </Text>
-              </View>
+            </View>
+          </View>
+
+          {/* monthly trend */}
+          <Card className="gap-[18px] rounded-[24px] p-5">
+            <View className="flex-row items-center justify-between">
+              <Text accessibilityRole="header" className="section-title">
+                Monthly trend
+              </Text>
+              <Text className="font-inter-semibold text-xs text-muted">
+                LEP pages · {now.getFullYear()}
+              </Text>
             </View>
 
-            <View className="rounded-md flex-col gap-y-4">
-              <View className="flex-row items-center justify-between gap-x-3">
-                <Text className="text-text-secondary base-bold">
-                  Monthly Trends
-                </Text>
-                <Text className="text-text-secondary text-sm font-bold">
-                  LEP Pages
-                </Text>
-              </View>
-
-              <View className="overflow-hidden">
+            <View
+              className="overflow-hidden"
+              accessible
+              accessibilityLabel={`Bar chart of LEP pages per month in ${now.getFullYear()}`}
+              onLayout={(e) => setChartWidth(e.nativeEvent.layout.width)}
+            >
+              {chartWidth > 0 && (
                 <BarChart
                   data={monthlyTotalLepPagesChartData}
-                  minHeight={1}
+                  height={CHART_HEIGHT}
+                  minHeight={3}
                   barWidth={chartBarWidth}
-                  spacing={chartSpacing}
-                  initialSpacing={4}
+                  spacing={CHART_SPACING}
+                  initialSpacing={0}
                   endSpacing={0}
-                  frontColor={"#FFFFFF"}
-                  nestedScrollEnabled
-                  barBorderColor="#FFFFFF"
-                  barBorderWidth={1}
-                  showScrollIndicator={false}
+                  disableScroll
                   hideRules
                   hideYAxisText
                   yAxisLabelWidth={0}
@@ -285,107 +361,116 @@ const Insights = () => {
                   xAxisThickness={0}
                   backgroundColor="transparent"
                   noOfSections={3}
-                  barBorderRadius={2}
-                  labelWidth={chartBarWidth}
+                  barBorderRadius={6}
+                  labelWidth={chartBarWidth + CHART_SPACING}
                   xAxisTextNumberOfLines={1}
-                  xAxisLabelsHeight={32}
-                  xAxisLabelTextStyle={{
-                    color: "#c3c3c3",
-                    fontSize: 14,
-                    textAlign: "center",
-                  }}
-                  labelsDistanceFromXaxis={8}
+                  xAxisLabelsHeight={20}
+                  labelsDistanceFromXaxis={6}
                 />
-              </View>
+              )}
+            </View>
+          </Card>
+
+          {/* attendance */}
+          <Card className="gap-4 rounded-[24px] p-5">
+            <View className="flex-row items-center justify-between">
+              <Text accessibilityRole="header" className="section-title">
+                Attendance
+              </Text>
+              <Text className="font-inter-semibold text-xs tabular-nums text-muted">
+                {attendanceSummary.full} full · {attendanceSummary.half} half ·{" "}
+                {attendanceSummary.absent} absent
+              </Text>
             </View>
 
-            {/* Attendance */}
-            <View className="rounded-md flex-col gap-y-4">
-              <Text className="text-text-secondary base-bold">Attendance</Text>
-
-              <View className="flex-col gap-y-3">
-                <View className="flex-row justify-between">
-                  {WEEKDAY_LABELS.map((day, index) => (
-                    <Text
-                      key={`${day}-${index}`}
-                      className="basis-0 flex-1 text-center text-text-primary text-xs font-bold"
-                    >
-                      {day}
-                    </Text>
-                  ))}
-                </View>
-
-                {attendanceRows.map((row, rowIndex) => (
-                  <View key={rowIndex} className="flex-row">
-                    {WEEKDAY_LABELS.map((_, dayIndex) => {
-                      const date = row[dayIndex];
-                      const isSunday = checkSunday({
-                        date,
-                        currentMonth: parseInt(selectedMonth!),
-                      });
-                      const isDateGreaterThanToday = checkDateGreaterThanToday(
-                        date,
-                        parseInt(selectedMonth!),
-                      );
-
-                      return (
-                        <View
-                          key={`${rowIndex}-${dayIndex}`}
-                          className="basis-0 flex-1 flex-col items-center gap-y-1 min-h-11"
-                        >
-                          {date && !isSunday && !isDateGreaterThanToday ? (
-                            <>
-                              <Text className="text-text-primary text-xs font-bold">
-                                {date}
-                              </Text>
-                              <AttendanceIndicator
-                                type={
-                                  attendanceMap.get(date) === "full"
-                                    ? "filled"
-                                    : attendanceMap.get(date) === "half"
-                                      ? "stripped"
-                                      : "outline"
-                                }
-                                date={getIsoDateForDay(date)}
-                              />
-                            </>
-                          ) : date ? (
-                            <Text className="text-text-primary text-xs font-bold">
-                              {date}
-                            </Text>
-                          ) : null}
-                        </View>
-                      );
-                    })}
-                  </View>
+            <View className="flex-col gap-1">
+              <View className="flex-row pb-1.5">
+                {WEEKDAY_LABELS.map((day, index) => (
+                  <Text
+                    key={`${day}-${index}`}
+                    className="flex-1 basis-0 text-center font-inter-semibold text-[11px] tracking-[0.44px] text-muted"
+                  >
+                    {day}
+                  </Text>
                 ))}
               </View>
-              {/* labels */}
-              <View className="flex-row items-center justify-between mt-3">
-                <View className="flex-row items-center gap-x-2">
-                  <AttendanceIndicator type="filled" />
-                  <Text className="text-sm text-text-primary">Full Day</Text>
+
+              {attendanceRows.map((row, rowIndex) => (
+                <View key={rowIndex} className="flex-row">
+                  {WEEKDAY_LABELS.map((_, dayIndex) => {
+                    const date = row[dayIndex];
+                    const key = `${rowIndex}-${dayIndex}`;
+
+                    if (!date) {
+                      return <View key={key} className="flex-1 basis-0" />;
+                    }
+
+                    const type = getDayType(date);
+                    const today = isToday(date);
+
+                    return (
+                      <View
+                        key={key}
+                        className="flex-1 basis-0 items-center gap-[5px] py-1"
+                      >
+                        <View
+                          className={cn(
+                            "h-[22px] w-[26px] items-center justify-center rounded-full",
+                            today && "bg-accent",
+                          )}
+                        >
+                          <Text
+                            className={cn(
+                              "text-[13px] tabular-nums",
+                              today
+                                ? "font-manrope-bold text-on-accent"
+                                : "font-inter-semibold",
+                              !today &&
+                                (isFutureDay(date)
+                                  ? "text-muted"
+                                  : "text-foreground"),
+                            )}
+                          >
+                            {date}
+                          </Text>
+                        </View>
+                        <AttendanceIndicator
+                          type={type}
+                          date={
+                            type === "empty"
+                              ? undefined
+                              : getIsoDateForDay(date)
+                          }
+                        />
+                      </View>
+                    );
+                  })}
                 </View>
-                <View className="flex-row items-center gap-x-2">
-                  <AttendanceIndicator type="stripped" />
-                  <Text className="text-sm text-text-primary">Half Day</Text>
-                </View>
-                <View className="flex-row items-center gap-x-2">
-                  <AttendanceIndicator type="outline" />
-                  <Text className="text-sm text-text-primary">Absent</Text>
-                </View>
-              </View>
+              ))}
             </View>
-          </ScrollView>
-        ) : (
-          <View className="flex-1 flex-center">
-            <Text className="text-text-primary base-bold text-center">
+
+            {/* legend */}
+            <View className="flex-row gap-[18px] pt-1">
+              {LEGEND.map(([type, label]) => (
+                <View key={type} className="flex-row items-center gap-1.5">
+                  <AttendanceIndicator type={type} size={14} />
+                  <Text className="font-inter text-xs text-muted">{label}</Text>
+                </View>
+              ))}
+            </View>
+          </Card>
+        </ScrollView>
+      ) : (
+        <View className="flex-1 px-5 pt-4">
+          {header}
+          <View className="flex-1 items-center justify-center">
+            <Text className="body text-center text-muted">
               There are no insights yet for {MONTH_NAMES[selectedMonth!]}
             </Text>
           </View>
-        )}
-      </View>
-    </>
+        </View>
+      )}
+    </Screen>
   );
 };
 

@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
 import { View } from "react-native";
 
-const cornerBase = "absolute w-10 h-10 border-white";
+const cornerBase = "absolute w-10 h-10 border-accent";
 
 const ScannerFrame = () => (
   <View className="absolute top-1/2 left-1/2 w-64 h-64 -ml-32 -mt-32">

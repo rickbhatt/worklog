@@ -1,30 +1,31 @@
 import FilterLogsBottomSheetModal from "@/components/bottomsheets/filter-logs-bottomsheet";
-import DynamicIcon from "@/components/dynamic-icon";
-import FormInput from "@/components/form-input";
 import LoadingScreen from "@/components/loading-screen";
 import LogCard from "@/components/log-card";
+import MonthPill from "@/components/month-pill";
+import { TabTitle } from "@/components/screen-header";
+import { useTabBarClearance } from "@/components/tab-bar";
+import { Card } from "@/components/ui/card";
+import { Icon } from "@/components/ui/icon";
 import { Input } from "@/components/ui/input";
-import { MONTHS } from "@/constants";
+import { StatusPill } from "@/components/ui/pill";
+import { Screen } from "@/components/ui/screen";
 import {
   getFileLogs,
   getLatestTargetHour,
 } from "@/db/queries/fileworklog.queries";
 import { useDb } from "@/hooks/useDb";
 import { useDebounce } from "@/hooks/useDebounce";
-import {
-  calcTargetPagePercent,
-  determineTodayOrYesterday,
-  getCurrentDate,
-  getMonthRange,
-} from "@/lib/utils";
+import { calcTargetPagePercent, formatDayLabel, getMonthRange } from "@/lib/utils";
 import { BottomSheetModal } from "@gorhom/bottom-sheet";
 
 import { useLiveQuery } from "drizzle-orm/expo-sqlite";
 import { useLocalSearchParams, useRouter } from "expo-router";
 
+import { FlatList } from "@/components/ui/gesture-scroll";
+import { Search } from "lucide-react-native";
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { SectionList, Text, View } from "react-native";
-import { FieldName, FileLogsListItemType, FileLogsSection } from "type";
+import { Text, View } from "react-native";
+import { FileLogsListItemType, FileLogsSection } from "type";
 
 const ListHeader = ({
   currentMonth,
@@ -45,14 +46,7 @@ const ListHeader = ({
 
   const router = useRouter();
 
-  type ListHeaderFields = {
-    month: string;
-  };
-
-  const onSelectChange = (
-    _: FieldName<ListHeaderFields>,
-    value: string | number,
-  ) => {
+  const onSelectChange = (value: string | number) => {
     setSelectedMonth(value.toString());
     const monthRange = getMonthRange(value.toString(), currentYear.toString());
 
@@ -97,96 +91,72 @@ const ListHeader = ({
   }, [debouncedQuery]);
 
   return (
-    <View className="flex-row items-center justify-between gap-x-4">
-      <FormInput<ListHeaderFields>
-        onChange={onSelectChange}
-        name="month"
-        inputType="select"
-        placeholder="Select a month"
-        selectOptions={MONTHS}
-        value={selectedMonth}
-        icon={
-          <DynamicIcon
-            family="Ionicons"
-            name={"calendar"}
-            size={20}
-            color="#c3c3c3"
+    <View className="gap-5 pb-1">
+      <TabTitle
+        title="History"
+        right={<MonthPill month={selectedMonth} onChange={onSelectChange} />}
+      />
+      <Input
+        left={
+          <Icon
+            as={Search}
+            size={18}
+            strokeWidth={1.8}
+            className="text-muted"
           />
         }
+        accessibilityLabel="Search logs"
+        placeholder="Search JournalID-ArticleID"
+        value={query ?? ""}
+        onChangeText={setQuery}
+        maxLength={10}
+        autoCapitalize="characters"
+        returnKeyType="search"
+        containerClassName="h-[50px] rounded-2xl"
+        className="font-inter text-[15px]"
       />
-      <View className="flex-row h-full items-center gap-x-2 rounded-md border border-light-100 px-1 flex-1">
-        <Input
-          className="flex-1 rounded-none border-0"
-          placeholder="JournalID-ArticleID"
-          value={query ?? ""}
-          onChangeText={setQuery}
-          maxLength={10}
-        />
-
-        <DynamicIcon
-          family="MaterialCommunityIcons"
-          name="magnify"
-          size={20}
-          color="#c3c3c3"
-        />
-      </View>
     </View>
   );
 };
 
-const SectionHeader = ({
+/** One day: label, page total + status pill, then all entries in one card. */
+const DayGroup = ({
   section,
   targetLepPages,
 }: {
   section: FileLogsSection;
   targetLepPages: number;
 }) => {
-  const currentDateString = getCurrentDate();
-
-  const currentDateObj = new Date(currentDateString);
-
-  currentDateObj.setDate(currentDateObj.getDate() - 1);
+  const percent = Number(
+    calcTargetPagePercent({
+      targetLepPages: targetLepPages ?? 0,
+      lepPages: section?.totalLepPages ?? 0,
+    }),
+  );
 
   return (
-    <View className="mt-3 flex-row justify-between items-center">
-      {/* date */}
-      <View className="flex-row gap-x-2 items-center py-3">
-        <DynamicIcon
-          family="FontAwesome"
-          name="calendar-o"
-          color="#c3c3c3"
-          size={20}
-        />
-        <Text className="text-text-secondary h3-bold">
-          {determineTodayOrYesterday(section.title)}
+    <View className="mt-1 gap-2.5">
+      <View className="flex-row items-center justify-between px-1">
+        <Text accessibilityRole="header" className="section-title">
+          {formatDayLabel(section.title)}
         </Text>
+        <View className="flex-row items-center gap-2.5">
+          <Text className="number text-[17px]">
+            {section.totalLepPages}{" "}
+            <Text className="font-inter-medium text-xs text-muted">pages</Text>
+          </Text>
+          <StatusPill percent={percent} />
+        </View>
       </View>
-      {/* total lepPages */}
-      <View className="flex-row items-center gap-x-2">
-        <DynamicIcon
-          family="Foundation"
-          name="page"
-          size={20}
-          color="#c3c3c3"
-        />
-        <Text className="h3-bold text-text-secondary">
-          {section.totalLepPages}
-        </Text>
-        <Text className="h3-bold text-text-secondary">
-          |{" "}
-          {calcTargetPagePercent({
-            targetLepPages: targetLepPages ?? 0,
-            lepPages: section?.totalLepPages ?? 0,
-          })}
-          %
-        </Text>
-      </View>
+      <Card className="overflow-hidden rounded-[18px]">
+        {section.data.map((item: FileLogsListItemType, index: number) => (
+          <View key={item.id} className={index > 0 ? "border-t border-line" : ""}>
+            <LogCard item={item} />
+          </View>
+        ))}
+      </Card>
     </View>
   );
-};
-
-const SectionItem = ({ item }: { item: FileLogsListItemType }) => {
-  return <LogCard item={item} />;
 };
 
 const History = () => {
@@ -226,6 +196,8 @@ const History = () => {
   const { data: targetData } = useLiveQuery(getLatestTargetHour(db));
 
   const filterBottomSheetModalRef = useRef<BottomSheetModal>(null);
+
+  const bottomClearance = useTabBarClearance();
 
   const fileLogsGroupedByWorkedAt = useMemo<FileLogsSection[]>(() => {
     if (!logs) return [];
@@ -275,27 +247,36 @@ const History = () => {
   }
   return (
     <>
-      <SectionList
-        sections={fileLogsGroupedByWorkedAt}
-        showsVerticalScrollIndicator={false}
-        renderSectionHeader={({ section }) => (
-          <SectionHeader
-            section={section}
-            targetLepPages={targetData[0]?.targetLepPages || 0}
-          />
-        )}
-        ListHeaderComponent={
-          <ListHeader
-            currentMonth={currentMonth}
-            currentYear={currentYear}
-            bottomSheetRef={filterBottomSheetModalRef}
-          />
-        }
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => <SectionItem item={item} />}
-        className="bg-bg-primary"
-        contentContainerClassName="pb-32 screen-x-padding"
-      />
+      <Screen>
+        <FlatList
+          data={fileLogsGroupedByWorkedAt}
+          keyExtractor={(section) => section.title}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          renderItem={({ item: section }) => (
+            <DayGroup
+              section={section}
+              targetLepPages={targetData[0]?.targetLepPages || 0}
+            />
+          )}
+          ListHeaderComponent={
+            <ListHeader
+              currentMonth={currentMonth}
+              currentYear={currentYear}
+              bottomSheetRef={filterBottomSheetModalRef}
+            />
+          }
+          ListEmptyComponent={
+            logs ? (
+              <Text className="caption pt-10 text-center">
+                No logs to show here yet
+              </Text>
+            ) : null
+          }
+          contentContainerClassName="gap-5 px-5 pt-4"
+          contentContainerStyle={{ paddingBottom: bottomClearance }}
+        />
+      </Screen>
       <FilterLogsBottomSheetModal
         journalId={journalId}
         articleId={articleId}

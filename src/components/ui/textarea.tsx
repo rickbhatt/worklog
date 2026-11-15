@@ -1,29 +1,49 @@
 import { cn } from "@/lib/utils";
-import { Platform, TextInput, type TextInputProps } from "react-native";
+import { useTheme } from "@/theme/theme-provider";
+import {
+  Platform,
+  TextInput,
+  View,
+  type TextInputProps,
+} from "react-native";
 
+/**
+ * Multi-line field. The background, border, shadow and padding live on a
+ * wrapper View (like `Input`): on Android, redrawing a TextInput's own
+ * background (e.g. on a light/dark switch) resets its padding.
+ */
 function Textarea({
   className,
   multiline = true,
   numberOfLines = Platform.select({ web: 2, native: 8 }), // On web, numberOfLines also determines initial height. On native, it determines the maximum height.
-  placeholderClassName,
+  style,
   ...props
 }: TextInputProps & React.RefAttributes<TextInput>) {
+  const { colors, shadows } = useTheme();
+
   return (
-    <TextInput
+    <View
       className={cn(
-        "text-text-primary border-input flex min-h-16 w-full flex-row rounded-md border px-3 py-2 text-base shadow-sm shadow-black/5 md:text-sm",
-        Platform.select({
-          web: "placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive field-sizing-content resize-y outline-none transition-[color,box-shadow] focus-visible:ring-[3px] disabled:cursor-not-allowed",
-        }),
-        props.editable === false && "opacity-50",
-        className,
+        "min-h-[96px] w-full rounded-[14px] border border-line bg-surface px-5 py-[18px]",
+        props.editable === false && "opacity-60",
       )}
-      placeholderClassName={cn("text-muted-foreground", placeholderClassName)}
-      multiline={multiline}
-      numberOfLines={numberOfLines}
-      textAlignVertical="top"
-      {...props}
-    />
+      style={{ boxShadow: shadows.card }}
+    >
+      <TextInput
+        className={cn(
+          "flex-1 p-0 font-inter text-[15px] leading-[22px] text-foreground",
+          className,
+        )}
+        style={style}
+        placeholderTextColor={colors.muted}
+        selectionColor={colors.accent}
+        cursorColor={colors.accent}
+        multiline={multiline}
+        numberOfLines={numberOfLines}
+        textAlignVertical="top"
+        {...props}
+      />
+    </View>
   );
 }
 

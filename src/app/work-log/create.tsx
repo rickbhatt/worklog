@@ -1,9 +1,10 @@
 import FileWorklogForm from "@/components/file-worklog-form";
+import ScreenHeader from "@/components/screen-header";
+import { Screen } from "@/components/ui/screen";
 import { createFileLog } from "@/db/mutations/fileworklog.mutations";
 import { useDb } from "@/hooks/useDb";
 import { validateForm } from "@/lib/utils";
 import React, { useState } from "react";
-import { View } from "react-native";
 import { toast } from "sonner-native";
 import { FileLogsCreateInput } from "type";
 
@@ -84,13 +85,15 @@ const CreateWorkLog = () => {
     }
   };
   return (
-    <View className="pt-2 flex-1 bg-bg-primary">
+    <Screen
+      header={<ScreenHeader title="New log" backButtonVisible />}
+    >
       <FileWorklogForm
         value={formData}
         onChange={setFormData}
         onSubmit={handleSubmit}
       />
-    </View>
+    </Screen>
   );
 };
 export default CreateWorkLog;
