@@ -84,6 +84,7 @@ const EditFileLog = () => {
         value={formData}
         onChange={setFormData}
         onSubmit={handleSubmit}
+        submitLabel="Update log"
       />
     </Screen>
   );

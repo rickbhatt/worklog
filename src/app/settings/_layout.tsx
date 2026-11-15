@@ -20,6 +20,7 @@ const SettingsLayout = () => {
       <Stack.Screen name="target-hour" options={{ title: "Target and Hour" }} />
       <Stack.Screen name="import-data" options={{ title: "Import Data" }} />
       <Stack.Screen name="export-data" options={{ title: "Export Data" }} />
+      <Stack.Screen name="manage-jid" options={{ title: "Manage JID" }} />
       <Stack.Screen
         name="manage-google-account"
         options={{ title: "Manage Account" }}
