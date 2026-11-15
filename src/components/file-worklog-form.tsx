@@ -75,14 +75,14 @@ const FileWorklogForm = ({
   // "Mark as" chips (they replace the old checkboxes). ND only applies to SML.
   const markAs: { field: FieldName; label: string; value?: number | null }[] = [
     ...(value.isSml === 1
-      ? [{ field: "isND" as FieldName, label: "ND file", value: value.isND }]
+      ? [{ field: "isND" as FieldName, label: "ND", value: value.isND }]
       : []),
-    { field: "isOT", label: "OT file", value: value.isOT },
-    { field: "isQcFile", label: "QC file", value: value.isQcFile },
+    { field: "isOT", label: "OT", value: value.isOT },
+    { field: "isQcFile", label: "QC", value: value.isQcFile },
     { field: "isMdc", label: "MDC", value: value.isMdc },
     {
       field: "isCompensatedFile",
-      label: "Compensatory",
+      label: "COMP",
       value: value.isCompensatedFile,
     },
   ];
@@ -132,7 +132,9 @@ const FileWorklogForm = ({
           <RNText className="form-label">File type</RNText>
           <SegmentedControl
             options={FILE_TYPES}
-            value={value.isSml === 1 ? "1" : value.isSml === 0 ? "0" : undefined}
+            value={
+              value.isSml === 1 ? "1" : value.isSml === 0 ? "0" : undefined
+            }
             onChange={(v) => handleInputChange("isSml", v)}
           />
         </View>
@@ -201,7 +203,9 @@ const FileWorklogForm = ({
       </KeyboardAwareScrollView>
       <KeyboardStickyView
         className="bg-background px-5 pt-4"
-        style={{ paddingBottom: keyboard.isVisible ? 12 : Math.max(bottom, 16) }}
+        style={{
+          paddingBottom: keyboard.isVisible ? 12 : Math.max(bottom, 16),
+        }}
       >
         <Button className="w-full" onPress={() => onSubmit(value)}>
           <Text>{submitLabel}</Text>
