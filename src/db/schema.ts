@@ -3,3 +3,4 @@ export * from "./models/log.schema";
 export * from "./models/attendance.schema";
 export * from "./models/export-sheet.schema";
 export * from "./models/journal.schema";
+export * from "./models/ctr.schema";

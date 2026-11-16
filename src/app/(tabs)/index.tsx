@@ -1,4 +1,5 @@
 import FilterLogsBottomSheetModal from "@/components/bottomsheets/filter-logs-bottomsheet";
+import CtrCard from "@/components/ctr-card";
 import LoadingScreen from "@/components/loading-screen";
 import LogCard from "@/components/log-card";
 import MonthPill from "@/components/month-pill";
@@ -13,6 +14,7 @@ import {
   getFileLogs,
   getLatestTargetHour,
 } from "@/db/queries/fileworklog.queries";
+import { getCtrLogs } from "@/db/queries/ctr.queries";
 import { useDb } from "@/hooks/useDb";
 import { useDebounce } from "@/hooks/useDebounce";
 import { calcTargetPagePercent, formatDayLabel, getMonthRange } from "@/lib/utils";
@@ -140,15 +142,20 @@ const DayGroup = ({
         <Text accessibilityRole="header" className="section-title">
           {formatDayLabel(section.title)}
         </Text>
-        <View className="flex-row items-center gap-2.5">
-          <View className="flex-row items-baseline gap-1">
-            <Text className="number text-[17px]">{section.totalLepPages}</Text>
-            <Text className="font-inter-medium text-xs leading-4 text-muted">
-              pages
-            </Text>
+        {/* A CTR-only day has no pages, so it gets no page total or status. */}
+        {section.data.length > 0 && (
+          <View className="flex-row items-center gap-2.5">
+            <View className="flex-row items-baseline gap-1">
+              <Text className="number text-[17px]">
+                {section.totalLepPages}
+              </Text>
+              <Text className="font-inter-medium text-xs leading-4 text-muted">
+                pages
+              </Text>
+            </View>
+            <StatusPill percent={percent} />
           </View>
-          <StatusPill percent={percent} />
-        </View>
+        )}
       </View>
       <Card className="overflow-hidden rounded-[18px]">
         {section.data.map((item: FileLogsListItemType, index: number) => (
@@ -156,6 +163,11 @@ const DayGroup = ({
             <LogCard item={item} />
           </View>
         ))}
+        {section.ctr && (
+          <View className={section.data.length > 0 ? "border-t border-line" : ""}>
+            <CtrCard ctr={section.ctr} />
+          </View>
+        )}
       </Card>
     </View>
   );
@@ -195,6 +207,11 @@ const History = () => {
     [journalId, articleId, startDate, endDate], //deps: re-run live query when filters change
   );
 
+  const { data: ctrLogs } = useLiveQuery(
+    getCtrLogs({ db, startDate, endDate }),
+    [startDate, endDate],
+  );
+
   const { data: targetData } = useLiveQuery(getLatestTargetHour(db));
 
   const filterBottomSheetModalRef = useRef<BottomSheetModal>(null);
@@ -204,17 +221,23 @@ const History = () => {
   const fileLogsGroupedByWorkedAt = useMemo<FileLogsSection[]>(() => {
     if (!logs) return [];
 
+    const sectionFor = (
+      map: Map<string, FileLogsSection>,
+      workedAt: string,
+    ) => {
+      if (!map.has(workedAt)) {
+        map.set(workedAt, {
+          title: workedAt,
+          totalLepPages: 0,
+          data: [],
+        });
+      }
+      return map.get(workedAt)!;
+    };
+
     const groupedLogs = logs.reduce(
       (map: Map<string, FileLogsSection>, log: FileLogsListItemType) => {
-        if (!map.has(log.workedAt)) {
-          map.set(log.workedAt, {
-            title: log.workedAt,
-            totalLepPages: 0,
-            data: [],
-          });
-        }
-
-        const section = map.get(log.workedAt)!;
+        const section = sectionFor(map, log.workedAt);
         section.data.push(log);
         if (!log.isQcFile && !log.isMdc) section.totalLepPages += log.lepPages;
         return map;
@@ -222,10 +245,17 @@ const History = () => {
       new Map<string, FileLogsSection>(),
     );
 
+    // CTRs have no Journal/Article ID, so a JID-AID search leaves them out.
+    if (!journalId && !articleId) {
+      for (const ctr of ctrLogs ?? []) {
+        sectionFor(groupedLogs, ctr.workedAt).ctr = ctr;
+      }
+    }
+
     return Array.from<FileLogsSection>(groupedLogs.values()).sort((a, b) =>
       b.title.localeCompare(a.title),
     );
-  }, [logs]);
+  }, [logs, ctrLogs, journalId, articleId]);
 
   useEffect(() => {
     if (!isParams) {
