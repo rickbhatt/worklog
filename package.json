@@ -1,7 +1,7 @@
 {
   "name": "workv2",
   "main": "expo-router/entry",
-  "version": "2.4.0",
+  "version": "2.5.0",
   "scripts": {
     "start": "bunx expo start -c",
     "start:dev": "cross-env APP_VARIANT=development bunx expo start -c",
