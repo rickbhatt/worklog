@@ -18,6 +18,8 @@ import m0013 from './0013_material_nighthawk.sql';
 import m0014 from './0014_fantastic_the_executioner.sql';
 import m0015 from './0015_melted_juggernaut.sql';
 import m0016 from './0016_many_jack_power.sql';
+import m0017 from './0017_grey_cardiac.sql';
+import m0018 from './0018_noisy_husk.sql';
 
   export default {
     journal,
@@ -38,7 +40,9 @@ m0012,
 m0013,
 m0014,
 m0015,
-m0016
+m0016,
+m0017,
+m0018
     }
   }
   

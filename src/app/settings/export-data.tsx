@@ -12,6 +12,7 @@ import { Text } from "@/components/ui/text";
 import { useAuth } from "@/contexts/AuthContext";
 import { saveCurrentMonthExportSheet } from "@/db/mutations/export-sheet.mutations";
 import { getCurrentMonthExportSheet } from "@/db/queries/export-sheet.queries";
+import { getCtrLogs } from "@/db/queries/ctr.queries";
 import { getFileLogs } from "@/db/queries/fileworklog.queries";
 import { useDb } from "@/hooks/useDb";
 import {
@@ -90,7 +91,12 @@ const ExportData = () => {
         filters: { startDate: dateRange.start, endDate: dateRange.end },
         sortOrder: "asc",
       }).all();
-      if (logs.length < 1) {
+      const ctrLogs = getCtrLogs({
+        db,
+        startDate: dateRange.start,
+        endDate: dateRange.end,
+      }).all();
+      if (logs.length < 1 && ctrLogs.length < 1) {
         toast.error(
           `No logs found for the selected date range. Please select a different month.`,
         );
@@ -99,6 +105,7 @@ const ExportData = () => {
 
       const formattedLogs = formatLogsForSheet({
         logs,
+        ctrLogs,
         exportType: exportType!,
       });
 

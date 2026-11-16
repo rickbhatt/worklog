@@ -1,6 +1,12 @@
+import CtrLogForm from "@/components/ctr-log-form";
 import FileWorklogForm from "@/components/file-worklog-form";
 import ScreenHeader from "@/components/screen-header";
 import { Screen } from "@/components/ui/screen";
+import { SegmentedControl } from "@/components/ui/segmented-control";
+import {
+  createCtrLog,
+  DuplicateCtrLogError,
+} from "@/db/mutations/ctr.mutations";
 import {
   createFileLog,
   DuplicateFileLogError,
@@ -8,10 +14,21 @@ import {
 import { useDb } from "@/hooks/useDb";
 import { validateForm } from "@/lib/utils";
 import React, { useState } from "react";
+import { View } from "react-native";
 import { toast } from "sonner-native";
 import { FileLogsCreateInput } from "type";
 
+const LOG_KINDS = [
+  { label: "File log", value: "file" },
+  { label: "CTR", value: "ctr" },
+] as const;
+
+type LogKind = (typeof LOG_KINDS)[number]["value"];
+
 const CreateWorkLog = () => {
+  const [kind, setKind] = useState<LogKind>("file");
+  const [ctrWorkedAt, setCtrWorkedAt] = useState<string | undefined>();
+
   const [formData, setFormData] = useState<Partial<FileLogsCreateInput>>({
     journalId: undefined,
     articleId: undefined,
@@ -94,15 +111,46 @@ const CreateWorkLog = () => {
       toast.error("Failed to submit file log");
     }
   };
+  const handleCtrSubmit = async () => {
+    if (!ctrWorkedAt) {
+      toast.error("Please select worked on date");
+      return;
+    }
+
+    try {
+      await createCtrLog(db, ctrWorkedAt);
+      setCtrWorkedAt(undefined);
+      toast.success("CTR saved successfully");
+    } catch (error) {
+      if (error instanceof DuplicateCtrLogError) {
+        toast.error(error.message);
+        return;
+      }
+      console.error("Failed to submit CTR log", error);
+      toast.error("Failed to save CTR");
+    }
+  };
+
   return (
     <Screen
       header={<ScreenHeader title="New log" backButtonVisible />}
     >
-      <FileWorklogForm
-        value={formData}
-        onChange={setFormData}
-        onSubmit={handleSubmit}
-      />
+      <View className="px-5 pt-3">
+        <SegmentedControl options={LOG_KINDS} value={kind} onChange={setKind} />
+      </View>
+      {kind === "file" ? (
+        <FileWorklogForm
+          value={formData}
+          onChange={setFormData}
+          onSubmit={handleSubmit}
+        />
+      ) : (
+        <CtrLogForm
+          workedAt={ctrWorkedAt}
+          onChange={setCtrWorkedAt}
+          onSubmit={handleCtrSubmit}
+        />
+      )}
     </Screen>
   );
 };

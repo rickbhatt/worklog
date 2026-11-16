@@ -2,6 +2,7 @@ import { clsx, type ClassValue } from "clsx";
 import { format } from "date-fns";
 import { extendTailwindMerge } from "tailwind-merge";
 import {
+  CtrLogsSelectType,
   FileLogsSelectType,
   RequiredField,
   SheetExportData,
@@ -260,9 +261,11 @@ export const checkDateGreaterThanToday = (date: number, month: number) => {
 
 export const formatLogsForSheet = ({
   logs,
+  ctrLogs = [],
   exportType,
 }: {
   logs: FileLogsSelectType[];
+  ctrLogs?: CtrLogsSelectType[];
   exportType: "append" | "create";
 }): SheetExportData => {
   const headerElements: string[] = [
@@ -274,11 +277,11 @@ export const formatLogsForSheet = ({
     "Remarks",
   ];
 
-  const logsArray: SheetRow[] = logs.map((log) => {
+  const fileRows = logs.map((log) => {
     const pagesValue: number | "SML" | "ND-SML" =
       log.isSml === 0 ? log.lepPages : log.isND === 1 ? "ND-SML" : "SML";
 
-    return [
+    const row: SheetRow = [
       formatDateTime(log.workedAt).dateForSheet,
       `${log.journalId}_${log.articleId}`,
       log.isOT === 0 ? pagesValue : "",
@@ -286,7 +289,29 @@ export const formatLogsForSheet = ({
       "",
       log.remarks ?? "",
     ];
+    return { workedAt: log.workedAt, row };
   });
+
+  // A CTR is a task, not a file: it has no pages, just its own row.
+  const ctrRows = ctrLogs.map((ctr) => {
+    const row: SheetRow = [
+      formatDateTime(ctr.workedAt).dateForSheet,
+      "CTR",
+      "",
+      "",
+      "",
+      "",
+    ];
+    return { workedAt: ctr.workedAt, row };
+  });
+
+  // Oldest date first; within a date, file rows come before the CTR row.
+  const logsArray: SheetRow[] = [...fileRows, ...ctrRows]
+    .map((entry, index) => ({ ...entry, index }))
+    .sort(
+      (a, b) => a.workedAt.localeCompare(b.workedAt) || a.index - b.index,
+    )
+    .map((entry) => entry.row);
 
   return exportType === "create" ? [headerElements, ...logsArray] : logsArray;
 };

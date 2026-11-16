@@ -1,4 +1,5 @@
 import { attendanceOverrides } from "@/db/models/attendance.schema";
+import { ctrLogs } from "@/db/models/ctr.schema";
 import { fileLogs, targetInfo } from "@/db/models/log.schema";
 import * as schema from "@/db/schema";
 import { cloudAccount } from "@/db/schema";
@@ -109,6 +110,8 @@ export interface FileLogsSection {
   title: string;
   totalLepPages: number;
   data: FileLogsListItemType[];
+  /** The CTR analysis logged for this day, if any. */
+  ctr?: CtrLogsSelectType;
 }
 
 export interface AlertDialogBoxProps {
@@ -124,6 +127,7 @@ export interface AlertDialogBoxProps {
 export type FileLogsInsertType = typeof fileLogs.$inferInsert;
 export type FileLogsUpdateType = typeof fileLogs.$inferUpdate;
 export type FileLogsSelectType = typeof fileLogs.$inferSelect;
+export type CtrLogsSelectType = typeof ctrLogs.$inferSelect;
 export type FileLogsListItemType = Pick<
   FileLogsSelectType,
   | "id"
