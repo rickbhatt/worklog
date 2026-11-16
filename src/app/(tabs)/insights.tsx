@@ -222,7 +222,6 @@ const Insights = () => {
     0,
     3,
   );
-  const isToday = (date: number) => isCurrentMonth && date === now.getDate();
 
   const header = (
     <TabTitle
@@ -406,29 +405,19 @@ const Insights = () => {
                     }
 
                     const type = getDayType(date);
-                    const today = isToday(date);
 
                     return (
                       <View
                         key={key}
                         className="flex-1 basis-0 items-center gap-[5px] py-1"
                       >
-                        <View
-                          className={cn(
-                            "h-[22px] w-[26px] items-center justify-center rounded-full",
-                            today && "bg-accent",
-                          )}
-                        >
+                        <View className="h-[22px] w-[26px] items-center justify-center">
                           <Text
                             className={cn(
-                              "text-[13px] tabular-nums",
-                              today
-                                ? "font-manrope-bold text-on-accent"
-                                : "font-inter-semibold",
-                              !today &&
-                                (isFutureDay(date)
-                                  ? "text-muted"
-                                  : "text-foreground"),
+                              "font-inter-semibold text-[13px] tabular-nums",
+                              isFutureDay(date)
+                                ? "text-muted"
+                                : "text-foreground",
                             )}
                           >
                             {date}
